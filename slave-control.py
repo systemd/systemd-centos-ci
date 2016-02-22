@@ -7,7 +7,7 @@
 # based on a script by Karanbir Singh
 #
 
-import json, urllib, subprocess, sys, argparse
+import os, json, urllib, subprocess, sys, argparse, fcntl, time
 
 github_base = "https://github.com/systemd/"
 git_name = "systemd-centos-ci"
@@ -15,27 +15,40 @@ git_name = "systemd-centos-ci"
 def duffy_cmd(cmd, params):
 	url_base = "http://admin.ci.centos.org:8080"
 	url = "%s%s?%s" % (url_base, cmd, urllib.urlencode(params))
-	print "debug:: url = " + url
+	print "Duffy API debug: url = " + url
 	return urllib.urlopen(url).read()
 
-def remote_exec(host, cmd, log):
-	ssh_cmd = "ssh -t -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@%s '%s'" % (host, cmd)
-	print "debug:: cmd = " + ssh_cmd
+def remote_exec(host, remote_cmd, logfile):
+	cmd = [ '/usr/bin/ssh',
+		'-t',
+		'-o', 'UserKnownHostsFile=/dev/null',
+		'-o', 'StrictHostKeyChecking=no',
+		'-l', 'root',
+		host, remote_cmd ]
 
-	try:
-		output = subprocess.check_output(ssh_cmd, shell = True)
+	l = "Executing remote command: '%s' on %s" % (remote_cmd, host)
+	print l
 
-		if log:
-			log.write(output)
-			log.close
+	if logfile:
+		logfile.write(l + "\n")
+		logfile.write("======================================================\n");
+		logfd = logfile.fileno()
+	else:
+		logfd = None
 
-	except subprocess.CalledProcessError as e:
-		if log:
-			log.write(str(e))
-			log.write(e.output)
-			log.close
+	p = subprocess.Popen(cmd, stdout = logfd, stderr = logfd, shell = False, bufsize = 1)
+	p.communicate()
+	p.wait()
 
-		raise
+	l = "Remote command finished: '%s' on %s, return code = %d" % (remote_cmd, host, p.returncode)
+	print l
+
+	if logfile:
+		logfile.write(l + "\n")
+		logfile.write("======================================================\n");
+
+	if p.returncode != 0:
+		raise Exception("Remote command returned code %d, bailing out." % p.returncode)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -50,9 +63,9 @@ def main():
 	key = open("duffy.key", "r").read().rstrip()
 
 	if args.log:
-		log = open(args.log, "w")
+		logfile = open(args.log, "w")
 	else:
-		log = None
+		logfile = None
 
 	if args.host:
 		host = args.host
@@ -65,20 +78,46 @@ def main():
 		host = json_data['hosts'][0]
 		ssid = json_data['ssid']
 
+		print "Host provisioning successful, hostname = %s, ssid = %s" % (host, ssid)
+
 	ret = 0
 
 	try:
-		bootstrap_cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr)
-		remote_exec(host, bootstrap_cmd, log)
+		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr)
+		remote_exec(host, cmd, logfile)
+
+		for i in range(10):
+			try:
+				remote_exec(host, "journalctl -b --no-pager && reboot", logfile)
+			except:
+				pass
+
+			# wait for the host to reappear
+			time.sleep(60)
+
+			cmd = "journalctl -b --no-pager"
+			remote_exec(host, cmd, logfile)
+
+			cmd = "systemctl --failed --all | grep -q '^0 loaded'"
+			remote_exec(host, cmd, logfile)
 
 	except Exception as e:
-		print "Execution failed! See logfile for details: %s" % str(e)
+		l = "Execution failed! See logfile for details: %s" % str(e)
+		if logfile:
+			logfile.write("ERROR: " + l + "\n")
+
 		ret = 255
 
 	finally:
-		if ssid and not args.keep:
-			params = { "key": key, "ssid": ssid }
-			duffy_cmd("/Node/done", params)
+		if ssid:
+			if args.keep:
+				print "Keeping host %s" % host
+			else:
+				params = { "key": key, "ssid": ssid }
+				duffy_cmd("/Node/done", params)
+				print "Host %s marked as done, ssid = %s" % (host, ssid)
+
+		logfile.close()
 
 	sys.exit(ret)
 

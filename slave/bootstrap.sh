@@ -5,8 +5,8 @@ set -e
 pr=$1
 
 curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
-yum -y update
-yum -y install systemd-ci-environment
+yum -qy update
+yum -qy install systemd-ci-environment
 
 test -f systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
