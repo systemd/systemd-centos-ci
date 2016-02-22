@@ -11,6 +11,8 @@ yum -y install systemd-ci-environment
 test -f systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
+cd systemd
+
 git fetch -fu origin refs/pull/$pr/head:pr
 git checkout pr
 

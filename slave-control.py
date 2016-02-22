@@ -43,6 +43,7 @@ def main():
 	parser.add_argument('--ver',  help = 'CentOS version', default = '7')
 	parser.add_argument('--arch', help = 'Architecture', default = 'x86_64')
 	parser.add_argument('--host', help = 'Use an already provisioned build host')
+	parser.add_argument('--keep', help = 'Do not kill provisioned build host')
 	parser.add_argument('--pr',   help = 'Pull request ID')
 	args = parser.parse_args()
 
@@ -75,7 +76,7 @@ def main():
 		ret = 255
 
 	finally:
-		if ssid:
+		if ssid and !args.keep:
 			params = { "key": key, "ssid": ssid }
 			duffy_cmd("/Node/done", params)
 
