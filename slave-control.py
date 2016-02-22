@@ -23,10 +23,11 @@ def remote_exec(host, remote_cmd, logfile):
 		'-t',
 		'-o', 'UserKnownHostsFile=/dev/null',
 		'-o', 'StrictHostKeyChecking=no',
+		'-o', 'ConnectTimeout=180',
 		'-l', 'root',
 		host, remote_cmd ]
 
-	l = "Executing remote command: '%s' on %s" % (remote_cmd, host)
+	l = ">>> Executing remote command: '%s' on %s" % (remote_cmd, host)
 	print l
 
 	if logfile:
@@ -40,7 +41,7 @@ def remote_exec(host, remote_cmd, logfile):
 	p.communicate()
 	p.wait()
 
-	l = "Remote command finished: '%s' on %s, return code = %d" % (remote_cmd, host, p.returncode)
+	l = "<<< Remote command finished: '%s' on %s, return code = %d" % (remote_cmd, host, p.returncode)
 	print l
 
 	if logfile:
@@ -49,6 +50,16 @@ def remote_exec(host, remote_cmd, logfile):
 
 	if p.returncode != 0:
 		raise Exception("Remote command returned code %d, bailing out." % p.returncode)
+
+def reboot_host(host, logfile):
+	try:
+		# the reboot command races against the graceful exit, so ignore the return code in this case
+		remote_exec(host, "journalctl -b --no-pager && reboot", logfile)
+	except:
+		pass
+
+	# wait for the host to reappear
+	time.sleep(60)
 
 def main():
 	parser = argparse.ArgumentParser()
@@ -78,7 +89,7 @@ def main():
 		host = json_data['hosts'][0]
 		ssid = json_data['ssid']
 
-		print "Host provisioning successful, hostname = %s, ssid = %s" % (host, ssid)
+		print "Duffy: Host provisioning successful, hostname = %s, ssid = %s" % (host, ssid)
 
 	ret = 0
 
@@ -86,14 +97,13 @@ def main():
 		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr)
 		remote_exec(host, cmd, logfile)
 
-		for i in range(10):
-			try:
-				remote_exec(host, "journalctl -b --no-pager && reboot", logfile)
-			except:
-				pass
+		reboot_host(host, logfile)
 
-			# wait for the host to reappear
-			time.sleep(60)
+		cmd = "%s/slave/cockpit.sh" % git_name
+		remote_exec(host, cmd, logfile)
+
+		for i in range(3):
+			reboot_host(host, logfile)
 
 			cmd = "journalctl -b --no-pager"
 			remote_exec(host, cmd, logfile)
@@ -102,7 +112,7 @@ def main():
 			remote_exec(host, cmd, logfile)
 
 	except Exception as e:
-		l = "Execution failed! See logfile for details: %s" % str(e)
+		l = "XXX Execution failed! See logfile for details: %s" % str(e)
 		if logfile:
 			logfile.write("ERROR: " + l + "\n")
 
@@ -115,7 +125,7 @@ def main():
 			else:
 				params = { "key": key, "ssid": ssid }
 				duffy_cmd("/Node/done", params)
-				print "Host %s marked as done, ssid = %s" % (host, ssid)
+				print "Duffy: Host %s marked as done, ssid = %s" % (host, ssid)
 
 		logfile.close()
 
