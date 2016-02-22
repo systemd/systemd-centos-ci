@@ -76,7 +76,7 @@ def main():
 		ret = 255
 
 	finally:
-		if ssid and !args.keep:
+		if ssid and not args.keep:
 			params = { "key": key, "ssid": ssid }
 			duffy_cmd("/Node/done", params)
 
