@@ -18,7 +18,7 @@ def duffy_cmd(cmd, params):
 	print "Duffy API debug: url = " + url
 	return urllib.urlopen(url).read()
 
-def remote_exec(host, remote_cmd, logfile):
+def remote_exec(host, remote_cmd, logfile, expected_ret = 0):
 	cmd = [ '/usr/bin/ssh',
 		'-t',
 		'-o', 'UserKnownHostsFile=/dev/null',
@@ -48,15 +48,12 @@ def remote_exec(host, remote_cmd, logfile):
 		logfile.write(l + "\n")
 		logfile.write("======================================================\n");
 
-	if p.returncode != 0:
+	if p.returncode != expected_ret:
 		raise Exception("Remote command returned code %d, bailing out." % p.returncode)
 
 def reboot_host(host, logfile):
-	try:
-		# the reboot command races against the graceful exit, so ignore the return code in this case
-		remote_exec(host, "journalctl -b --no-pager && reboot", logfile)
-	except:
-		pass
+	# the reboot command races against the graceful exit, so ignore the return code in this case
+	remote_exec(host, "journalctl -b --no-pager && reboot", logfile, 255)
 
 	# wait for the host to reappear
 	time.sleep(60)
@@ -99,10 +96,13 @@ def main():
 
 		reboot_host(host, logfile)
 
-		cmd = "%s/slave/cockpit.sh" % git_name
-		remote_exec(host, cmd, logfile)
+#		cmd = "%s/slave/cockpit.sh" % git_name
+#		remote_exec(host, cmd, logfile)
 
 		for i in range(3):
+			cmd = "exit `journalctl --list-boots | wc -l`"
+			remote_exec(host, cmd, logfile, i + 1)
+
 			reboot_host(host, logfile)
 
 			cmd = "journalctl -b --no-pager"
