@@ -1,11 +1,6 @@
 #!/usr/bin/python
 
-# This script uses the Duffy node management api to get fresh machines to run
-# your CI tests on. Once allocated you will be able to ssh into that machine
-# as the root user and setup the environ
-#
-# based on a script by Karanbir Singh
-#
+# GPLv2 etc.
 
 import os, json, urllib, subprocess, sys, argparse, fcntl, time
 
@@ -79,7 +74,7 @@ def main():
 		host = args.host
 		ssid = None
 	else:
-		params = { "key": key, "ver": args.ver, "arch":  args.arch }
+		params = { "key": key, "ver": args.ver, "arch": args.arch }
 		data = duffy_cmd("/Node/get", params)
 
 		json_data = json.loads(data)
@@ -114,7 +109,7 @@ def main():
 	except Exception as e:
 		l = "XXX Execution failed! See logfile for details: %s" % str(e)
 		if logfile:
-			logfile.write("ERROR: " + l + "\n")
+			logfile.write("ERROR: %s\n" % l)
 
 		ret = 255
 
