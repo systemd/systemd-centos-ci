@@ -123,7 +123,7 @@ def main():
 	finally:
 		if ssid:
 			if args.keep:
-				print "Keeping host %s" % host
+				print "Keeping host %s, ssid = %s" % (host, ssid)
 			else:
 				params = { "key": key, "ssid": ssid }
 				duffy_cmd("/Node/done", params)
