@@ -55,7 +55,7 @@ def reboot_host(host, logfile):
 	remote_exec(host, "journalctl -b --no-pager && reboot", logfile, 255)
 
 	# wait for the host to reappear
-	time.sleep(60)
+	time.sleep(90)
 
 def main():
 	parser = argparse.ArgumentParser()
