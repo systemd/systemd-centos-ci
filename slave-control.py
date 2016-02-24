@@ -92,7 +92,10 @@ def main():
 	try:
 		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr)
 		remote_exec(host, cmd, logfile)
+		reboot_host(host, logfile)
 
+		cmd = "%s/slave/testsuite.sh" % git_name
+		remote_exec(host, cmd, logfile)
 		reboot_host(host, logfile)
 
 #		cmd = "%s/slave/cockpit.sh" % git_name
