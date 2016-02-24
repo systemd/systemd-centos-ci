@@ -32,11 +32,15 @@ def remote_exec(host, remote_cmd, logfile, expected_ret = 0):
 	else:
 		logfd = None
 
+	start = time.time()
+
 	p = subprocess.Popen(cmd, stdout = logfd, stderr = logfd, shell = False, bufsize = 1)
 	p.communicate()
 	p.wait()
 
-	l = "<<< Remote command finished: '%s' on %s, return code = %d" % (remote_cmd, host, p.returncode)
+	end = time.time()
+
+	l = "<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, p.returncode)
 	print l
 
 	if logfile:
