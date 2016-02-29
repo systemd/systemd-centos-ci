@@ -11,7 +11,7 @@ yum -qy install systemd-ci-environment
 test -f systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
-cd systemd
+pushd systemd
 
 git fetch -fu origin refs/pull/$pr/head:pr
 git checkout pr
@@ -22,6 +22,14 @@ git checkout pr
 make -j10
 make install
 
+popd
+
 # readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
+
+# beakerlib for functional testing
+git clone https://git.fedorahosted.org/git/beakerlib.git
+pushd beakerlib
+make install
+popd
 
