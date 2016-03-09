@@ -32,14 +32,16 @@
 PACKAGE="systemd"
 USER=systemdtester
 SESSION_NUM=3
+export SYSTEMD_PAGER=
 
 rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
         rlRun "TmpDir=\$(mktemp -d)" 0 "Creating tmp directory"
         rlRun "useradd $USER"
-        rlRun "tar xvf ssh.tar -C /home/$USER/"
-        rlRun "tar xvf ssh.tar -C $TmpDir/"
+        rlRun "rsync -rav ssh/ /home/$USER/.ssh"
+        rlRun "cp -v ssh/id_rsa* $TmpDir/"
+        rlRun "chown -R ${USER}.${USER} /home/$USER/"
         rlRun "restorecon -v -R /home/$USER"
         rlRun "find /home/$USER"
         rlRun "pushd $TmpDir"
@@ -54,7 +56,7 @@ rlJournalStart
         rlRun "loginctl"
         for action in list-seats list-sessions list-users seat-status session-status show-seat show-session show-user user-status
         do
-            PAGER= rlRun "loginctl $action"
+            rlRun "loginctl $action"
         done
         rlRun -s "readlink -f `which systemd-loginctl`"
         rlLog "Check if systemd-loginctl points to loginctl binary"
@@ -67,7 +69,7 @@ rlJournalStart
     rlPhaseStartTest "setup advanced"
         for i in `seq 1 $SESSION_NUM`
         do
-            ssh -i $TmpDir/.ssh/id_rsa -o StrictHostKeyChecking=no $USER@localhost 'sleep 1h' &
+            ssh -i $TmpDir/id_rsa -o StrictHostKeyChecking=no $USER@localhost 'sleep 1h' &
             sshPid=$!
             sleep 2
             rlRun "ps $sshPid" 0 "ssh connection for $USER is up and running"
@@ -114,8 +116,7 @@ rlJournalStart
     # ADVANCED - cleanup
     #
     rlPhaseStartTest "cleanup advanced"
-        kill $(ps -u $USER | awk '{print $1}')
-        rlRun "ps -u $USER" 1 "There are no processes for $USER"
+        rlRun "pkill -u $USER"
     rlPhaseEnd
 
     rlPhaseStartCleanup
