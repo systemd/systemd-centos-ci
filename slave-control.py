@@ -90,7 +90,7 @@ def ping_host(host):
 
 def reboot_host(host):
 	# the reboot command races against the graceful exit, so ignore the return code in this case
-	remote_exec(host, "journalctl -b && reboot", 255)
+	remote_exec(host, "journalctl --no-pager -b && reboot", 255)
 
 	time.sleep(30)
 	ping_host(host)
@@ -172,9 +172,6 @@ def main():
 			remote_exec(host, cmd, reboot_count)
 
 			reboot_host(host)
-
-			cmd = "journalctl -b --no-pager"
-			remote_exec(host, cmd)
 
 			cmd = "systemctl --failed --all | grep -q '^0 loaded'"
 			remote_exec(host, cmd)
