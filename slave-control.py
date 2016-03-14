@@ -89,6 +89,8 @@ def ping_host(host):
 	log_msg("Host %s appears reachable again" % host)
 
 def reboot_host(host):
+	global reboot_count
+
 	# the reboot command races against the graceful exit, so ignore the return code in this case
 	remote_exec(host, "journalctl --no-pager -b && reboot", 255)
 
@@ -101,6 +103,7 @@ def reboot_host(host):
 def main():
 	global debug
 	global logfile
+	global reboot_count
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--log',            help = 'Logfile for command output')
