@@ -38,6 +38,7 @@ rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
         rlRun "TmpDir=\$(mktemp -d)" 0 "Creating tmp directory"
+        rlRun "chmod 600 ssh/id_rsa"
         rlRun "useradd $USER"
         rlRun "rsync -rav ssh/ /home/$USER/.ssh"
         rlRun "cp -v ssh/id_rsa* $TmpDir/"
