@@ -9,6 +9,7 @@ git_name = "systemd-centos-ci"
 
 logfile = None
 debug = False
+reboot_count = 0
 
 def dprint(msg):
 	global debug
@@ -95,6 +96,8 @@ def reboot_host(host):
 	ping_host(host)
 	time.sleep(20)
 
+	reboot_count += 1
+
 def main():
 	global debug
 	global logfile
@@ -160,12 +163,13 @@ def main():
 		remote_exec(host, cmd)
 		reboot_host(host)
 
-#		cmd = "%s/slave/cockpit.sh" % git_name
-#		remote_exec(host, cmd)
+		cmd = "%s/slave/system-tests.sh" % git_name
+		remote_exec(host, cmd)
+		reboot_host(host)
 
 		for i in range(4):
 			cmd = "exit `journalctl --list-boots | wc -l`"
-			remote_exec(host, cmd, i + 2)
+			remote_exec(host, cmd, reboot_count)
 
 			reboot_host(host)
 
