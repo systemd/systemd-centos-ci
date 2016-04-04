@@ -1,0 +1,20 @@
+#!/bin/bash
+
+function catchit()
+{
+    echo 'Main process got SIGTERM'
+    exit 0
+}
+
+for i in `seq 1 5`
+do
+    /usr/bin/trapka.sub &
+done
+
+trap "catchit" SIGTERM
+
+
+while :
+do
+    sleep 0.1
+done
