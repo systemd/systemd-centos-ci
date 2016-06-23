@@ -162,9 +162,9 @@ def main():
 		remote_exec(host, cmd)
 		reboot_host(host)
 
-		cmd = "%s/slave/testsuite.sh" % git_name
-		remote_exec(host, cmd)
-		reboot_host(host)
+		#cmd = "%s/slave/testsuite.sh" % git_name
+		#remote_exec(host, cmd)
+		#reboot_host(host)
 
 		cmd = "cd %s/slave; ./system-tests.sh" % git_name
 		remote_exec(host, cmd)
