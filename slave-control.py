@@ -158,7 +158,7 @@ def main():
 	start = time.time()
 
 	try:
-		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr)
+		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr or '')
 		remote_exec(host, cmd)
 		reboot_host(host)
 

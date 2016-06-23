@@ -13,8 +13,10 @@ git clone https://github.com/systemd/systemd.git
 
 cd systemd
 
-git fetch -fu origin refs/pull/$pr/head:pr
-git checkout pr
+if [ "$pr" ]; then
+	git fetch -fu origin refs/pull/$pr/head:pr
+	git checkout pr
+fi
 
 ./autogen.sh
 ./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64
