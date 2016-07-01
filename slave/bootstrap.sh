@@ -21,9 +21,20 @@ fi
 ./autogen.sh
 ./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64
 
-make -j10
+make -j16
 make install
 
 # readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
+
+# --------------- rebuild initrd -------------
+
+cd ~
+git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
+cd dracut
+git checkout 044
+./configure --disable-documentation
+make -j 16
+make install
+dracut -f
 
