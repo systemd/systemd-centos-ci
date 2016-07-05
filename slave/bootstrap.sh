@@ -6,7 +6,7 @@ pr=$1
 
 curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
 yum -qy update
-yum -qy install systemd-ci-environment
+yum -qy install systemd-ci-environment python-lxml
 
 test -f systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
@@ -23,6 +23,9 @@ fi
 
 make -j16
 make install
+
+# temporary hack until the upstream database is updated
+chcon -v --type=lib_t /usr/lib/systemd/libsystemd-shared-230.so
 
 # readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
