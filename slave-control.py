@@ -42,6 +42,8 @@ def remote_exec(host, remote_cmd, expected_ret = 0):
 		'-o', 'UserKnownHostsFile=/dev/null',
 		'-o', 'StrictHostKeyChecking=no',
 		'-o', 'ConnectTimeout=180',
+		'-o', 'TCPKeepAlive=yes',
+		'-o', 'ServerAliveInterval=2',
 		'-l', 'root',
 		host, remote_cmd ]
 
@@ -54,7 +56,7 @@ def remote_exec(host, remote_cmd, expected_ret = 0):
 	print("<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, ret))
 
 	if ret != expected_ret:
-		raise Exception("Remote command returned code %d, bailing out." % ret)
+		raise Exception("Remote command returned code %d, expected %d. Bailing out." % (ret, expected_ret))
 
 def ping_host(host):
 
