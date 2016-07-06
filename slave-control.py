@@ -7,7 +7,6 @@ import os, json, urllib, subprocess, sys, argparse, fcntl, time
 github_base = "https://github.com/systemd/"
 git_name = "systemd-centos-ci"
 
-logfile = None
 debug = False
 reboot_count = 0
 
@@ -28,26 +27,10 @@ def host_done(key, ssid):
 	duffy_cmd("/Node/done", params)
 	print "Duffy: Host with ssid %s marked as done" % ssid
 
-def log_msg(msg):
-	global logfile
-
-	print msg
-
-	if logfile:
-		logfile.write(msg + "\n")
-		logfile.write("======================================================\n");
-
 def exec_cmd(cmd):
-	global logfile
-
-	if logfile:
-		logfd = logfile.fileno()
-	else:
-		logfd = None
-
 	dprint("Executing command: '%s'" % ("' '".join(cmd)))
 
-	p = subprocess.Popen(cmd, stdout = logfd, stderr = logfd, shell = False, bufsize = 1)
+	p = subprocess.Popen(cmd, stdout = None, stderr = None, shell = False, bufsize = 1)
 	p.communicate()
 	p.wait()
 
@@ -62,13 +45,13 @@ def remote_exec(host, remote_cmd, expected_ret = 0):
 		'-l', 'root',
 		host, remote_cmd ]
 
-	log_msg(">>> Executing remote command: '%s' on %s" % (remote_cmd, host))
+	print(">>> Executing remote command: '%s' on %s" % (remote_cmd, host))
 
 	start = time.time()
 	ret = exec_cmd(cmd)
 	end = time.time()
 
-	log_msg("<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, ret))
+	print("<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, ret))
 
 	if ret != expected_ret:
 		raise Exception("Remote command returned code %d, bailing out." % ret)
@@ -76,7 +59,7 @@ def remote_exec(host, remote_cmd, expected_ret = 0):
 def ping_host(host):
 
 	cmd = [ '/usr/bin/ping', '-q', '-c', '1', '-W', '10', host ]
-	log_msg("Pinging host %s ..." % host)
+	print("Pinging host %s ..." % host)
 
 	for i in range(20):
 		ret = exec_cmd(cmd)
@@ -86,7 +69,7 @@ def ping_host(host):
 	if ret != 0:
 		raise Exception("Timeout waiting for ping")
 
-	log_msg("Host %s appears reachable again" % host)
+	print("Host %s appears reachable again" % host)
 
 def reboot_host(host):
 	global reboot_count
@@ -102,11 +85,9 @@ def reboot_host(host):
 
 def main():
 	global debug
-	global logfile
 	global reboot_count
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--log',            help = 'Logfile for command output')
 	parser.add_argument('--ver',            help = 'CentOS version', default = '7')
 	parser.add_argument('--arch',           help = 'Architecture', default = 'x86_64')
 	parser.add_argument('--host',           help = 'Use an already provisioned build host')
@@ -118,11 +99,6 @@ def main():
 	args = parser.parse_args()
 
 	key = open("duffy.key", "r").read().rstrip()
-
-	if args.log:
-		logfile = open(args.log, "w")
-	else:
-		logfile = None
 
 	debug = args.debug
 
@@ -179,10 +155,10 @@ def main():
 			cmd = "systemctl --failed --all | grep -q '^0 loaded'"
 			remote_exec(host, cmd)
 
-		log_msg("All tests succeeded.")
+		print("All tests succeeded.")
 
 	except Exception as e:
-		log_msg("Execution failed! See logfile for details: %s" % str(e))
+		print("Execution failed! See logfile for details: %s" % str(e))
 		ret = 255
 
 	finally:
@@ -193,10 +169,7 @@ def main():
 				host_done(key, ssid);
 
 		end = time.time()
-		log_msg("Total time %.1f seconds" % (end - start))
-
-		if logfile:
-			logfile.close()
+		print("Total time %.1f seconds" % (end - start))
 
 	sys.exit(ret)
 
