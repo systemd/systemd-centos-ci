@@ -74,6 +74,8 @@ def ping_host(host):
 def reboot_host(host):
 	global reboot_count
 
+	print("Rebooting host %s ..." % host)
+
 	# the reboot command races against the graceful exit, so ignore the return code in this case
 	remote_exec(host, "journalctl --no-pager -b && reboot", 255)
 
