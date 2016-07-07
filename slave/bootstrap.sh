@@ -24,8 +24,9 @@ fi
 make -j16
 make install
 
-# temporary hack until the upstream database is updated
-chcon -v --type=lib_t /usr/lib/systemd/libsystemd-shared-230.so
+# It's impossible to keep the local SELinux policy database up-to-date with arbitrary pull request branches we're testing against.
+# Disable SELinux on the test hosts and avoid false positives.
+echo SELINUX=disabled >/etc/selinux/config
 
 # readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
