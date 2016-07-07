@@ -8,7 +8,7 @@ make -C beakerlib install
 # Run testsuite
 for t in tests/*; do
     pushd $t
-    ./runtest.sh
+    test -e .disabled || ./runtest.sh
     popd
 done
 

@@ -146,9 +146,9 @@ def main():
 		remote_exec(host, cmd)
 		reboot_host(host)
 
-		#cmd = "cd %s/slave; ./system-tests.sh" % git_name
-		#remote_exec(host, cmd)
-		#reboot_host(host)
+		cmd = "cd %s/slave; ./system-tests.sh" % git_name
+		remote_exec(host, cmd)
+		reboot_host(host)
 
 		for i in range(4):
 			cmd = "exit `journalctl --list-boots | wc -l`"
