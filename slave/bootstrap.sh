@@ -32,6 +32,7 @@ replace() {
 }
 
 replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
+replace IFLA_BRPORT_PROXYARP 10
 
 ./autogen.sh
 ./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64
