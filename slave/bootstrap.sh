@@ -27,6 +27,12 @@ case $1 in
 		;;
 esac
 
+replace() {
+	git grep -l $1 | grep \.c$ | xargs -r -n 1 sed -i -e s/$1/$2/g
+}
+
+replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
+
 ./autogen.sh
 ./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64
 
