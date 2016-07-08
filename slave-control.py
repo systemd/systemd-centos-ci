@@ -95,7 +95,8 @@ def main():
 	parser.add_argument('--ver',            help = 'CentOS version', default = '7')
 	parser.add_argument('--arch',           help = 'Architecture', default = 'x86_64')
 	parser.add_argument('--host',           help = 'Use an already provisioned build host')
-	parser.add_argument('--pr',             help = 'Pull request ID')
+	parser.add_argument('--pr',             help = 'Pull request ID to check out')
+	parser.add_argument('--branch',         help = 'Commit/tag/branch to checkout')
 	parser.add_argument('--keep',           help = 'Do not kill provisioned build host', action = 'store_const', const = True)
 	parser.add_argument('--kill-host',      help = 'Mark a provisioned host as done and bail out')
 	parser.add_argument('--kill-all-hosts', help = 'Mark all provisioned hosts as done and bail out', action = 'store_const', const = True)
@@ -138,7 +139,14 @@ def main():
 	start = time.time()
 
 	try:
-		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, args.pr or '')
+		if args.pr:
+			branch="pr:%s" % args.pr
+		elif args.branch:
+			branch = args.branch
+		else:
+			branch = ''
+
+		cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, branch)
 		remote_exec(host, cmd)
 		reboot_host(host)
 
