@@ -83,7 +83,7 @@ def reboot_host(host):
 
 	time.sleep(45)
 	ping_host(host)
-	time.sleep(20)
+	time.sleep(30)
 
 	reboot_count += 1
 
