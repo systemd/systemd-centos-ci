@@ -92,15 +92,16 @@ def main():
 	global reboot_count
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--ver',            help = 'CentOS version', default = '7')
-	parser.add_argument('--arch',           help = 'Architecture', default = 'x86_64')
-	parser.add_argument('--host',           help = 'Use an already provisioned build host')
-	parser.add_argument('--pr',             help = 'Pull request ID to check out')
-	parser.add_argument('--branch',         help = 'Commit/tag/branch to checkout')
-	parser.add_argument('--keep',           help = 'Do not kill provisioned build host', action = 'store_const', const = True)
-	parser.add_argument('--kill-host',      help = 'Mark a provisioned host as done and bail out')
-	parser.add_argument('--kill-all-hosts', help = 'Mark all provisioned hosts as done and bail out', action = 'store_const', const = True)
-	parser.add_argument('--debug',          help = 'Enable debug output', action = 'store_const', const = True)
+	parser.add_argument('--ver',             help = 'CentOS version', default = '7')
+	parser.add_argument('--arch',            help = 'Architecture', default = 'x86_64')
+	parser.add_argument('--host',            help = 'Use an already provisioned build host')
+	parser.add_argument('--pr',              help = 'Pull request ID to check out')
+	parser.add_argument('--branch',          help = 'Commit/tag/branch to checkout')
+	parser.add_argument('--keep',            help = 'Do not kill provisioned build host', action = 'store_const', const = True)
+	parser.add_argument('--keep-on-failure', help = 'Do not kill provisioned build host unless all tests succeeded', action = 'store_const', const = True)
+	parser.add_argument('--kill-host',       help = 'Mark a provisioned host as done and bail out')
+	parser.add_argument('--kill-all-hosts',  help = 'Mark all provisioned hosts as done and bail out', action = 'store_const', const = True)
+	parser.add_argument('--debug',           help = 'Enable debug output', action = 'store_const', const = True)
 	args = parser.parse_args()
 
 	key = open("duffy.key", "r").read().rstrip()
@@ -137,6 +138,7 @@ def main():
 	ret = 0
 
 	start = time.time()
+	keep = args.keep
 
 	try:
 		if args.pr:
@@ -172,10 +174,12 @@ def main():
 	except Exception as e:
 		print("Execution failed! See logfile for details: %s" % str(e))
 		ret = 255
+		if args.keep_on_failure:
+			keep = True
 
 	finally:
 		if ssid:
-			if args.keep:
+			if keep:
 				print "Keeping host %s, ssid = %s" % (host, ssid)
 			else:
 				host_done(key, ssid);
