@@ -40,6 +40,21 @@ replace IFLA_BRPORT_PROXYARP 10
 make -j16
 make install
 
+
+
+
+cat >/usr/lib/systemd/system-shutdown/debug.sh <<_EOF_
+#!/bin/sh
+mount -o remount,rw /
+dmesg > /shutdown-log.txt
+mount -o remount,ro /
+_EOF_
+
+chmod a+x /usr/lib/systemd/system-shutdown/debug.sh
+
+
+
+
 # It's impossible to keep the local SELinux policy database up-to-date with arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
 echo SELINUX=disabled >/etc/selinux/config
