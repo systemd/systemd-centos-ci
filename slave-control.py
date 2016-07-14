@@ -160,14 +160,14 @@ def main():
 		remote_exec(host, cmd)
 		reboot_host(host)
 
-		for i in range(4):
-			cmd = "exit `journalctl --list-boots | wc -l`"
-			remote_exec(host, cmd, reboot_count)
-
-			reboot_host(host)
-
-			cmd = "systemctl --failed --all | grep -q '^0 loaded'"
-			remote_exec(host, cmd)
+		#for i in range(4):
+		#	cmd = "exit `journalctl --list-boots | wc -l`"
+		#	remote_exec(host, cmd, reboot_count)
+		#
+		#	reboot_host(host)
+		#
+		#	cmd = "systemctl --failed --all | grep -q '^0 loaded'"
+		#	remote_exec(host, cmd)
 
 		print("All tests succeeded.")
 
