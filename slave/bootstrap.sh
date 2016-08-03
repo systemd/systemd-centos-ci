@@ -5,13 +5,15 @@ set -e
 pr=$1
 
 curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
-yum -qy update
-yum -qy install systemd-ci-environment python-lxml
+yum -q -y update
+yum -q -y install systemd-ci-environment python-lxml
 
 test -f systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
 cd systemd
+
+echo "$0 called with argument '$1'"
 
 case $1 in
 	pr:*)
@@ -26,6 +28,9 @@ case $1 in
 		git checkout $1
 		;;
 esac
+
+echo -n "Checked out version "
+git describe
 
 replace() {
 	git grep -l $1 | grep \.c$ | xargs -r -n 1 sed -i -e s/$1/$2/g
