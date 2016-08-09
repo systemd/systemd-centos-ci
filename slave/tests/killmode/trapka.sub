@@ -1,0 +1,14 @@
+#!/bin/bash
+
+function catchit()
+{
+    echo 'Sub process got SIGTERM'
+    exit 0
+}
+
+trap "catchit" SIGTERM
+
+while :
+do
+    sleep 0.1
+done
