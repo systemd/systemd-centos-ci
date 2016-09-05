@@ -29,6 +29,8 @@
 # Include Beaker environment
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
+yum install -y chrony
+
 PACKAGE="systemd"
 
 rlJournalStart
