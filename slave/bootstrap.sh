@@ -8,7 +8,7 @@ curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environmen
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml
 
-test -f systemd && rm -rf systemd
+test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
 cd systemd
