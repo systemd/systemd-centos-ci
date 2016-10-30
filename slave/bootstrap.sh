@@ -8,7 +8,7 @@ curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environmen
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml
 
-test -f systemd && rm -rf systemd
+test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
 cd systemd
@@ -70,11 +70,12 @@ rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 # --------------- rebuild initrd -------------
 
 cd ~
+test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
 cd dracut
 git checkout 044
 ./configure --disable-documentation
 make -j 16
 make install
-dracut -f
+dracut -f --regenerate-all
 

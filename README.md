@@ -66,3 +66,20 @@ cd /home/systemd/systemd-centos-ci
 
 ./slave-control.py $ARGS
 ```
+
+# Manually running the tests
+```sh
+# bootstrap
+yum install -q -y git
+git clone https://github.com/systemd/systemd-centos-ci
+systemd-centos-ci/slave/bootstrap.sh pr:pr-number # for example pr:4456
+systemctl reboot
+
+# testsuite
+systemd-centos-ci/slave/testsuite.sh
+systemctl reboot
+
+# system-tests
+cd systemd-centos-ci/slave; ./system-tests.sh
+systemctl poweroff
+```
