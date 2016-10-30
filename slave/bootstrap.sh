@@ -77,5 +77,5 @@ git checkout 044
 ./configure --disable-documentation
 make -j 16
 make install
-dracut -f
+dracut -f --regenerate-all
 
