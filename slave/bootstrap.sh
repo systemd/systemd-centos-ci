@@ -70,6 +70,7 @@ rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 # --------------- rebuild initrd -------------
 
 cd ~
+test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
 cd dracut
 git checkout 044
