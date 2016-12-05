@@ -125,15 +125,24 @@ def main():
 	if args.host:
 		host = args.host
 		ssid = None
-	else:
-		params = { "key": key, "ver": args.ver, "arch": args.arch }
-		json_data = duffy_cmd("/Node/get", params)
-		data = json.loads(json_data)
+        else:
+                params = { "key": key, "ver": args.ver, "arch": args.arch }
+                i = 0
+                while True:
+                        try:
+                                eprint("Duffy: Trying to get a node ver: %s, arch: %s" % (args.ver, args.arch))
+                                json_data = duffy_cmd("/Node/get", params)
+                                data = json.loads(json_data)
+                        except ValueError:
+                                i = i + 1
+                                if i > 60:
+                                        eprint("Duffy: Could not get Node!")
+                                        sys.exit(255)
 
-		host = data['hosts'][0]
-		ssid = data['ssid']
-
-		print "Duffy: Host provisioning successful, hostname = %s, ssid = %s" % (host, ssid)
+                                time.sleep(i)
+                                continue
+                        else:
+                                break
 
 	ret = 0
 
