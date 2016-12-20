@@ -40,7 +40,7 @@ replace() {
 #replace IFLA_BRPORT_PROXYARP 10
 
 ./autogen.sh
-./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64
+./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64 --with-dbuspolicydir=/etc/dbus-1/system.d
 
 make -j16
 make install
