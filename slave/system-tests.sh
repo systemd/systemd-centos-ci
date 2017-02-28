@@ -3,7 +3,7 @@
 set -e
 
 # Prepare environment
-git clone https://git.fedorahosted.org/git/beakerlib.git
+git clone https://github.com/beakerlib/beakerlib.git
 make -C beakerlib
 make -C beakerlib install
 
