@@ -8,6 +8,11 @@ curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environmen
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml
 
+# install python3
+yum -q -y install centos-release-scl
+yum-config-manager --enable rhel-server-rhscl-7-rpms
+yum -q -y install rh-python35
+
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
