@@ -6,7 +6,9 @@ pr=$1
 
 curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
 yum -q -y update
-yum -q -y install systemd-ci-environment python-lxml
+yum -q -y install systemd-ci-environment python-lxml epel-release
+yum -q -y install python34 python34-pip ninja-build
+pip3.4 install meson
 
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
@@ -39,11 +41,9 @@ replace() {
 #replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
 #replace IFLA_BRPORT_PROXYARP 10
 
-./autogen.sh
-./configure CFLAGS='-g -O0 -ftrapv' --sysconfdir=/etc --localstatedir=/var --libdir=/usr/lib64 --with-dbuspolicydir=/etc/dbus-1/system.d
-
-make -j16
-make install
+CFLAGS='-g -O0 -ftrapv' meson build -Ddbuspolicydir=/etc/dbus-1/system.d
+ninja-build -C build
+ninja-build -C build install
 
 
 
