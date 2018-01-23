@@ -18,24 +18,24 @@ cd systemd
 echo "$0 called with argument '$1'"
 
 case $1 in
-	pr:*)
-		git fetch -fu origin refs/pull/${1#pr:}/head:pr
-		git checkout pr
-		;;
+    pr:*)
+        git fetch -fu origin refs/pull/${1#pr:}/head:pr
+        git checkout pr
+        ;;
 
-	"")
-		;;
+    "")
+        ;;
 
-	*)
-		git checkout $1
-		;;
+    *)
+        git checkout $1
+        ;;
 esac
 
 echo -n "Checked out version "
 git describe
 
 replace() {
-	git grep -l $1 | grep \.c$ | xargs -r -n 1 sed -i -e s/$1/$2/g
+    git grep -l $1 | grep \.c$ | xargs -r -n 1 sed -i -e s/$1/$2/g
 }
 
 #replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
