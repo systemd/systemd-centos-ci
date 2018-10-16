@@ -11,6 +11,10 @@ yum -q -y install python36 ninja-build
 python3.6 -m ensurepip
 pip3.6 install meson
 
+# python36 package doesn't create the python3 symlink
+rm -f /usr/bin/python3
+ln -s `which python3.6` /usr/bin/python3
+
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
 
