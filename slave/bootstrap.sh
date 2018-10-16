@@ -7,8 +7,9 @@ pr=$1
 curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml epel-release
-yum -q -y install python34 python34-pip ninja-build
-pip3.4 install meson
+yum -q -y install python36 ninja-build
+python3.6 -m ensurepip
+pip3.6 install meson
 
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
