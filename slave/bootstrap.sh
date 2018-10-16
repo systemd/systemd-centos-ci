@@ -4,7 +4,7 @@ set -e
 
 pr=$1
 
-curl 'http://copr.fedorainfracloud.org/coprs/lnykryn/systemd-centosci-environment/repo/epel-7/lnykryn-systemd-centosci-environment-epel-7.repo' -o /etc/yum.repos.d/lnykryn-systemd-centosci-environment-epel-7.repo
+curl 'https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo' -o /etc/yum.repos.d/mrc0mmand-systemd-centos-ci-epel-7.repo
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml epel-release
 yum -q -y install python36 ninja-build
