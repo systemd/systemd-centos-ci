@@ -2,12 +2,13 @@
 
 set -e
 
-pr=$1
+COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
 
-curl 'https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo' -o /etc/yum.repos.d/mrc0mmand-systemd-centos-ci-epel-7.repo
+curl "$COPR_REPO" -o "/etc/yum.repos.d/${COPR_REPO##*/}"
+yum -q -y install epel-release yum-utils
+yum-config-manager -q --enable epel
 yum -q -y update
-yum -q -y install systemd-ci-environment python-lxml epel-release
-yum -q -y install python36 ninja-build
+yum -q -y install systemd-ci-environment python-lxml python36 ninja-build
 python3.6 -m ensurepip
 pip3.6 install meson
 
