@@ -2,7 +2,7 @@
 
 set -e
 
-yum -qy install net-tools strace
+yum -q -y install net-tools strace
 
 cd systemd
 
