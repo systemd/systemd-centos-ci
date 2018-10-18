@@ -27,9 +27,8 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Include Beaker environment
+. /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
-
-yum install -y chrony
 
 PACKAGE="systemd"
 
@@ -78,6 +77,22 @@ rlJournalStart
         fi
     rlPhaseEnd
 
+    if [ `uname -m` != s390x ] ; then # because: BZ#1261095
+    rlPhaseStartTest 'wtf set-local-rtc'
+        rlRun "timedatectl set-local-rtc 1"
+        rlRun "timedatectl | grep 'RTC in local TZ.*yes'"
+        rlRun "timedatectl | grep 'Warning'"
+        rlRun "timedatectl set-local-rtc 0"
+        rlRun "timedatectl | grep 'RTC in local TZ.*no'"
+    rlPhaseEnd
+    fi
+
+    rlPhaseStartTest "timedatectl crashes under certain locales [BZ#1503942]"
+        for locale in $(localectl --no-pager list-locales); do
+            rlRun "LANG=$locale timedatectl"
+        done
+    rlPhaseEnd
+
     rlPhaseStartCleanup
         rlRun "timedatectl set-timezone $TZ_ORIG"
         rlRun "timedatectl set-ntp on"
@@ -90,5 +105,3 @@ rlJournalStart
     rlPhaseEnd
 rlJournalPrintText
 rlJournalEnd
-
-rlGetTestState

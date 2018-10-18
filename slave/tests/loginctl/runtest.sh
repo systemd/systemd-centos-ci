@@ -27,22 +27,27 @@
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Include Beaker environment
+. /usr/bin/rhts-environment.sh || exit 1
 . /usr/share/beakerlib/beakerlib.sh || exit 1
 
 PACKAGE="systemd"
 USER=systemdtester
 SESSION_NUM=3
-export SYSTEMD_PAGER=
+SSH_OPTS="-o StrictHostKeyChecking=no"
 
 rlJournalStart
     rlPhaseStartSetup
         rlAssertRpm $PACKAGE
+        rlFileBackup --clean /root/.ssh
+        rlRun "rm -fr /root/.ssh/*"
         rlRun "TmpDir=\$(mktemp -d)" 0 "Creating tmp directory"
-        rlRun "chmod 600 ssh/id_rsa"
         rlRun "useradd $USER"
-        rlRun "rsync -rav ssh/ /home/$USER/.ssh"
-        rlRun "cp -v ssh/id_rsa* $TmpDir/"
-        rlRun "chown -R ${USER}.${USER} /home/$USER/"
+        rlRun "ssh-keygen -t rsa -q -N '' -f ~/.ssh/id_rsa"
+        rlRun "sudo -u $USER ssh-keygen -t rsa -q -N '' -f /home/$USER/.ssh/id_rsa"
+        rlRun "cat /root/.ssh/id_rsa.pub >> /home/$USER/.ssh/authorized_keys"
+        rlRun "cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+        rlRun "cat /home/$USER/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys"
+        rlRun "chown -R $USER /home/$USER"
         rlRun "restorecon -v -R /home/$USER"
         rlRun "find /home/$USER"
         rlRun "pushd $TmpDir"
@@ -55,13 +60,34 @@ rlJournalStart
     rlPhaseStartTest "basics"
         rlRun "loginctl --help"
         rlRun "loginctl"
-        for action in list-seats list-sessions list-users seat-status session-status show-seat show-session show-user user-status
+        for action in list-seats list-sessions list-users show-seat show-session show-user user-status
         do
-            rlRun "loginctl $action"
+            SYSTEMD_PAGER= rlRun "loginctl $action"
         done
-        rlRun -s "readlink -f `which systemd-loginctl`"
-        rlLog "Check if systemd-loginctl points to loginctl binary"
-        rlAssertGrep $(which loginctl) $rlRun_LOG
+
+        if rlIsRHEL 7; then
+            rlRun -s "readlink -f `which systemd-loginctl`"
+            rlLog "Check if systemd-loginctl points to loginctl binary"
+            rlAssertGrep $(which loginctl) $rlRun_LOG
+        fi
+    rlPhaseEnd
+
+    #
+    # BASICS - no pager
+    #
+    rlPhaseStartTest "basics no pager"
+        rlRun "loginctl --help"
+        rlRun "loginctl"
+        for action in list-seats list-sessions list-users show-seat show-session show-user user-status
+        do
+            rlRun "loginctl --no-pager $action"
+        done
+
+        if rlIsRHEL 7; then
+            rlRun -s "readlink -f `which systemd-loginctl`"
+            rlLog "Check if systemd-loginctl points to loginctl binary"
+            rlAssertGrep $(which loginctl) $rlRun_LOG
+        fi
     rlPhaseEnd
 
     #
@@ -70,10 +96,15 @@ rlJournalStart
     rlPhaseStartTest "setup advanced"
         for i in `seq 1 $SESSION_NUM`
         do
-            ssh -i $TmpDir/id_rsa -o StrictHostKeyChecking=no $USER@localhost 'sleep 1h' &
+            ssh $SSH_OPTS $USER@localhost 'sleep 1h' &
             sshPid=$!
             sleep 2
             rlRun "ps $sshPid" 0 "ssh connection for $USER is up and running"
+
+            ssh $SSH_OPTS root@localhost 'sleep 1h' &
+            sshPidRoot=$!
+            sleep 2
+            rlRun "ps $sshPidRoot" 0 "ssh connection for root is up and running"
         done
     rlPhaseEnd
 
@@ -117,10 +148,17 @@ rlJournalStart
     # ADVANCED - cleanup
     #
     rlPhaseStartTest "cleanup advanced"
-        rlRun "pkill -u $USER"
+        ps -u $USER | awk '{print $1}' | while read pid
+        do
+            test "$pid" = "PID" && continue
+            rlRun "kill -9 $pid" 0-255
+        done
+        sleep 5
+        rlRun "ps -u $USER" 1 "There are no processes for $USER"
     rlPhaseEnd
 
     rlPhaseStartCleanup
+        rlFileRestore
         rlServiceRestore sshd
         rlRun "userdel -r $USER"
         rlRun "popd"
@@ -128,5 +166,3 @@ rlJournalStart
     rlPhaseEnd
 rlJournalPrintText
 rlJournalEnd
-
-rlGetTestState
