@@ -26,12 +26,14 @@ for t in $(find tests/Sanity -mindepth 1 -maxdepth 1 -type d); do
     pushd $t
 
     # Install test dependencies
-    DEPS="$(awk '
-        match($0, /\"Requires:[[:space:]]*(.*)\"/, m) {
-            print m[1];
-        }' Makefile)"
-    if [ ! -z "$DEPS" ]; then
-        yum -y -q install $DEPS
+    if [ -f Makefile ]; then
+        DEPS="$(awk '
+            match($0, /\"Requires:[[:space:]]*(.*)\"/, m) {
+                print m[1];
+            }' Makefile)"
+        if [ ! -z "$DEPS" ]; then
+            yum -y -q install $DEPS
+        fi
     fi
 
     # Execute the test
