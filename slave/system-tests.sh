@@ -15,14 +15,14 @@ while read file; do
     if ! grep -Pzq "rlGetTestState[[:space:]]*\z" "$file"; then
         echo -ne "\nrlGetTestState\n" >> "$file"
     fi
-done <<< "$(find tests/ -type f -name "runtest.sh")"
+done <<< "$(find systemd/ -type f -name "runtest.sh")"
 
 set +x
 
 declare -i EC=0
 
 # Run testsuite
-for t in $(find tests/Sanity -mindepth 1 -maxdepth 1 -type d); do
+for t in $(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d); do
     pushd $t
 
     # Install test dependencies
