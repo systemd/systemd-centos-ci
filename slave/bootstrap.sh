@@ -47,7 +47,7 @@ replace() {
 #replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
 #replace IFLA_BRPORT_PROXYARP 10
 
-CFLAGS='-g -O0 -ftrapv' meson build -Ddbuspolicydir=/etc/dbus-1/system.d
+CFLAGS='-g -O0 -ftrapv' meson build -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
 ninja-build -C build
 ninja-build -C build install
 
