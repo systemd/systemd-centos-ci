@@ -1,0 +1,5 @@
+PURPOSE of /CoreOS/systemd/Sanity/tmpfiles
+Description: Test for BZ#1365870 (Systemd-tmpfiles does not set owner/group defined)
+Author: Branislav Blaskovic <bblaskov@redhat.com>
+Bug summary: Systemd-tmpfiles does not set owner/group defined by z-directive
+Bugzilla link: https://bugzilla.redhat.com/show_bug.cgi?id=1365870
