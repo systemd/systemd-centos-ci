@@ -14,6 +14,10 @@ while read file; do
     fi
 done <<< "$(find tests/ -type f -name "runtest.sh")"
 
+set +x
+
+declare -i EC=0
+
 # Run testsuite
 for t in tests/*; do
     pushd $t
@@ -29,7 +33,11 @@ for t in tests/*; do
 
     # Execute the test
     ./runtest.sh
+    if [ $? -ne 0 ]; then
+        EC=1
+    fi
 
     popd
 done
 
+exit $EC
