@@ -79,3 +79,7 @@ make -j 16
 make install
 dracut -f --regenerate-all
 
+echo "-----------------------------"
+echo "- REBOOT THE MACHINE BEFORE -"
+echo "-         CONTINUING        -"
+echo "-----------------------------"
