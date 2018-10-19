@@ -18,4 +18,11 @@ ninja -C build test
 test/run-integration-tests.sh
 
 # Other integration tests
+TEST_LIST=(
+    "test/test-exec-deserialization.py"
+)
 
+for t in "${TEST_LIST[@]}"; do
+    echo "--- RUNNING $t ---"
+    ./$t
+done
