@@ -10,7 +10,7 @@ yum-config-manager -q --enable epel
 yum -q -y update
 yum -q -y install systemd-ci-environment python-lxml python36 ninja-build
 python3.6 -m ensurepip
-pip3.6 install meson
+python3.6 -m pip install meson
 
 # python36 package doesn't create the python3 symlink
 rm -f /usr/bin/python3
