@@ -10,6 +10,9 @@ make -C beakerlib install
 # WORKAROUND: Replace all rlIsRHEL calls with rlIsCentos
 echo 'rlIsRHEL() { rlIsCentOS "$@"; }' >> /usr/share/beakerlib/testing.sh
 
+# Workaround for obsolete rhts-environment.sh
+touch /usr/bin/rhts-environment.sh
+
 # Append 'rlGetTestState' to each test, so it returns a correct exit code
 while read file; do
     if ! grep -Pzq "rlGetTestState[[:space:]]*\z" "$file"; then
