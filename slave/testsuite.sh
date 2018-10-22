@@ -7,7 +7,7 @@ if [ ! -f /usr/bin/ninja ]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
 fi
 
-yum -q -y install net-tools strace nc busybox e2fsprogs
+yum -q -y install net-tools strace nc busybox e2fsprogs quota net-tools strace
 
 cd systemd
 
