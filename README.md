@@ -6,12 +6,12 @@ using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
 # Setup
 
-The code in this repository is used from two sides; the slave control host (named `slave01` in the CentOS CI environment),
+The code in this repository is used from two sides; the agent control host (named `slave01` in the CentOS CI environment),
 and on the provisioned machines themselves.
 
-On the slave control host, the entry point for running new tests is called `slave-control.py`. This script uses
+On the agent control host, the entry point for running new tests is called `agent-control.py`. This script uses
 [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) to provision new machines, and then uses SSH to log into them and run
-scripts from the `slave/` subdirectory.
+scripts from the `agent/` subdirectory.
 
 # Duffy
 
@@ -25,11 +25,11 @@ See below for the usage of this tool.
 
 # Usage
 
-The only script end users should be accessing is `slave-control.py` on the `slave01` host.
+The only script end users should be accessing is `agent-control.py` on the `slave01` host.
 
 ```
-$ ./slave-control.py --help
-usage: slave-control.py [-h] [--ver VER] [--arch ARCH] [--host HOST] [--pr PR]
+$ ./agent-control.py --help
+usage: agent-control.py [-h] [--ver VER] [--arch ARCH] [--host HOST] [--pr PR]
                         [--keep] [--kill-host KILL_HOST] [--kill-all-hosts]
                         [--debug]
 
@@ -64,7 +64,7 @@ fi
 
 cd /home/systemd/systemd-centos-ci
 
-./slave-control.py $ARGS
+./agent-control.py $ARGS
 ```
 
 # Manually running the tests
@@ -72,14 +72,14 @@ cd /home/systemd/systemd-centos-ci
 # bootstrap
 yum install -q -y git
 git clone https://github.com/systemd/systemd-centos-ci
-systemd-centos-ci/slave/bootstrap.sh pr:pr-number # for example pr:4456
+systemd-centos-ci/agent/bootstrap.sh pr:pr-number # for example pr:4456
 systemctl reboot
 
 # testsuite
-systemd-centos-ci/slave/testsuite.sh
+systemd-centos-ci/agent/testsuite.sh
 systemctl reboot
 
 # system-tests
-cd systemd-centos-ci/slave; ./system-tests.sh
+cd systemd-centos-ci/agent; ./system-tests.sh
 systemctl poweroff
 ```

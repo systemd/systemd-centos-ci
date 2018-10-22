@@ -157,15 +157,15 @@ def main():
         else:
             branch = ''
 
-        cmd = "yum install -y git && git clone %s%s.git && %s/slave/bootstrap.sh %s" % (github_base, git_name, git_name, branch)
+        cmd = "yum install -y git && git clone %s%s.git && %s/agent/bootstrap.sh %s" % (github_base, git_name, git_name, branch)
         remote_exec(host, cmd)
         reboot_host(host)
 
-        cmd = "%s/slave/testsuite.sh" % git_name
+        cmd = "%s/agent/testsuite.sh" % git_name
         remote_exec(host, cmd)
         reboot_host(host)
 
-        cmd = "cd %s/slave; ./system-tests.sh" % git_name
+        cmd = "cd %s/agent; ./system-tests.sh" % git_name
         remote_exec(host, cmd)
         reboot_host(host)
 
