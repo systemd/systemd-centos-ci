@@ -81,8 +81,8 @@ dracut -f --regenerate-all
 
 # Set user_namespace.enable=1
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
-
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
+echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
