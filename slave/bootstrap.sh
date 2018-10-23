@@ -8,7 +8,7 @@ curl "$COPR_REPO" -o "/etc/yum.repos.d/${COPR_REPO##*/}"
 yum -q -y install epel-release yum-utils
 yum-config-manager -q --enable epel
 yum -q -y update
-yum -q -y install systemd-ci-environment python-lxml python36 ninja-build
+yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan
 python3.6 -m ensurepip
 python3.6 -m pip install meson
 
@@ -47,7 +47,7 @@ replace() {
 #replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
 #replace IFLA_BRPORT_PROXYARP 10
 
-CFLAGS='-g -O0 -ftrapv' meson build -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
+CFLAGS='-g -O0 -ftrapv' meson build -Dslow-tests=true -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
 ninja-build -C build
 ninja-build -C build install
 
