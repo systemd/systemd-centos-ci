@@ -40,13 +40,6 @@ esac
 echo -n "Checked out version "
 git describe
 
-replace() {
-    git grep -l $1 | grep \.c$ | xargs -r -n 1 sed -i -e s/$1/$2/g
-}
-
-#replace IN6_ADDR_GEN_MODE_STABLE_PRIVACY 2
-#replace IFLA_BRPORT_PROXYARP 10
-
 CFLAGS='-g -O0 -ftrapv' meson build -Dslow-tests=true -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
 ninja-build -C build
 ninja-build -C build install
