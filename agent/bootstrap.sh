@@ -1,9 +1,17 @@
 #!/usr/bin/sh
 
+# All commands from this script are fundamental, ensure they all pass
+# before continuing (or die trying)
 set -e
 
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
 
+# Enable necessary repositories and install required packages
+#   - enable custom Copr repo with newer versions of certain packages (necessary
+#     to sucessfully compile upstream systemd on CentOS)
+#   - enable EPEL repo for additional dependencies
+#   - update current system
+#   - install python 3.6 (required by meson) and install meson + other build deps
 curl "$COPR_REPO" -o "/etc/yum.repos.d/${COPR_REPO##*/}"
 yum -q -y install epel-release yum-utils
 yum-config-manager -q --enable epel
@@ -16,13 +24,20 @@ python3.6 -m pip install meson
 rm -f /usr/bin/python3
 ln -s `which python3.6` /usr/bin/python3
 
+# Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
-
 cd systemd
 
 echo "$0 called with argument '$1'"
 
+# Checkout to the requsted branch:
+#   1) if pr:XXX where XXX is a pull request ID is passed to the script,
+#      the corresponding branch for this PR is be checked out
+#   2) if any other string except pr:* is passed, it's used as a branch
+#      name to check out
+#   3) if the script is called without arguments, the default (possibly master)
+#      branch is used
 case $1 in
     pr:*)
         git fetch -fu origin refs/pull/${1#pr:}/head:pr
@@ -40,6 +55,10 @@ esac
 echo -n "Checked out version "
 git describe
 
+# Compile systemd
+#   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
+#     installed above
+#   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 CFLAGS='-g -O0 -ftrapv' meson build -Dslow-tests=true -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
 ninja-build -C build
 ninja-build -C build install
@@ -53,15 +72,15 @@ _EOF_
 
 chmod a+x /usr/lib/systemd/system-shutdown/debug.sh
 
-# It's impossible to keep the local SELinux policy database up-to-date with arbitrary pull request branches we're testing against.
+# It's impossible to keep the local SELinux policy database up-to-date with
+#arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
 echo SELINUX=disabled >/etc/selinux/config
 
-# readahead is dead in systemd upstream
+# Readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 
-# --------------- rebuild initrd -------------
-
+# Build and install dracut from upstream && rebuild initrd
 cd ~
 test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
@@ -72,7 +91,7 @@ make -j 16
 make install
 dracut -f --regenerate-all
 
-# Set user_namespace.enable=1
+# Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
