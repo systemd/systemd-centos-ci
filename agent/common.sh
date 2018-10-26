@@ -1,6 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
-LOGDIR="$(mktemp -d $PWD/testsuite-logs.XXX)"
+if [ -n "$1" ]; then
+    LOGDIR="$(mktemp -d $PWD/$1.XXX)"
+else
+    LOGDIR="$(mktemp -d $PWD/testsuite-logs.XXX)"
+fi
 PASSED=0
 FAILED=0
 FAILED_LIST=()

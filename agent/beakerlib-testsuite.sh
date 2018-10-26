@@ -1,14 +1,18 @@
 #!/usr/bin/sh
 
+SCRIPT_PATH="$(dirname $0)"
+. "$SCRIPT_PATH/common.sh" "beakerlib-testsuite-logs" || exit 1
+
 set -e
+cd "$SCRIPT_PATH"
 
 # Prepare environment
 test -e beakerlib && rm -fr beakerlib
 git clone https://github.com/beakerlib/beakerlib.git
-make -C beakerlib
-make -C beakerlib install
+make --quiet -C beakerlib
+make --quiet -C beakerlib install
 
-# WORKAROUND: Replace all rlIsRHEL calls with rlIsCentos
+# WORKAROUND: Replace all rlIsRHEL calls with rlIsCentOS
 echo 'rlIsRHEL() { rlIsCentOS "$@"; }' >> /usr/share/beakerlib/testing.sh
 
 # Workaround for obsolete rhts-environment.sh
@@ -21,13 +25,11 @@ while read file; do
     fi
 done <<< "$(find systemd/ -type f -name "runtest.sh")"
 
-set +x
+set +e
 
-declare -i EC=0
-
-# Run testsuite
+# Run the testsuite
 for t in $(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d); do
-    pushd $t
+    pushd $t >/dev/null
 
     # Install test dependencies
     if [ -f Makefile ]; then
@@ -36,17 +38,28 @@ for t in $(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d); do
                 print m[1];
             }' Makefile)"
         if [ ! -z "$DEPS" ]; then
-            yum -y -q install $DEPS
+            exectask "$t - dependencies" "${t##*/}-deps.log" "yum -y -q install $DEPS"
         fi
     fi
 
     # Execute the test
-    ./runtest.sh
-    if [ $? -ne 0 ]; then
-        EC=1
-    fi
+    exectask "$t" "${t##*/}.log" "./runtest.sh"
 
-    popd
+    popd >/dev/null
 done
 
-exit $EC
+# Summary
+echo
+echo "TEST SUMMARY:"
+echo "-------------"
+echo "PASSED: $PASSED"
+echo "FAILED: $FAILED"
+echo "TOTAL:  $((PASSED + FAILED))"
+echo
+echo "FAILED TASKS:"
+echo "-------------"
+for task in "${FAILED_LIST[@]}"; do
+    echo  "$task"
+done
+
+exit $FAILED

@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 
-. "$(dirname $0)/common.sh" || exit 1
+. "$(dirname $0)/common.sh" "testsuite-logs" || exit 1
 
 ### SETUP PHASE ###
 # Exit on error in the setup phase

@@ -165,7 +165,7 @@ def main():
         remote_exec(host, cmd)
         reboot_host(host)
 
-        cmd = "cd %s/agent; ./beakerlib-testsuite.sh" % git_name
+        cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
         remote_exec(host, cmd)
         reboot_host(host)
 
