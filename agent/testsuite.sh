@@ -28,8 +28,10 @@ cd systemd
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
 # Run the internal integration testsuite
+INITRD_PATH="/boot/initramfs-$(uname -r).img"
+KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
 for t in test/TEST-??-*; do
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
+    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH"
 done
 
 # Other integration tests

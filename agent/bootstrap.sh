@@ -27,7 +27,7 @@ ln -s `which python3.6` /usr/bin/python3
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
-cd systemd
+pushd systemd
 
 echo "$0 called with argument '$1'"
 
@@ -79,9 +79,9 @@ echo SELINUX=disabled >/etc/selinux/config
 
 # Readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
+popd
 
 # Build and install dracut from upstream && rebuild initrd
-cd ~
 test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
 cd dracut
