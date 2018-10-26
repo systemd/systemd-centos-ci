@@ -89,7 +89,10 @@ git checkout 044
 ./configure --disable-documentation
 make -j 16
 make install
-dracut -f --regenerate-all
+# The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
+# However, the ext4 module is not included in initramfs by default, because
+# CentOS uses xfs as the default filesystem
+dracut -f --regenerate-all --filesystems ext4
 
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
