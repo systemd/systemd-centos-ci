@@ -70,9 +70,14 @@ exectask() {
 
     echo -e "\n[TASK] $1"
     local LOGFILE="$LOGDIR/$2"
-    $3 &> "$LOGFILE" &
-    local PID=$!
-    waitforpid $PID
+    touch "$LOGFILE"
+    if [ "$CI_DEBUG" ]; then
+        $3
+    else
+        $3 &> "$LOGFILE" &
+        local PID=$!
+        waitforpid $PID
+    fi
     local EC=$?
     printresult $EC "$LOGFILE"
 
