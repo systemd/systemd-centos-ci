@@ -1,6 +1,6 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 
-SCRIPT_PATH="$(dirname $0)"
+SCRIPT_PATH="$(dirname "$0")"
 . "$SCRIPT_PATH/common.sh" "beakerlib-testsuite-logs" || exit 1
 
 set -e
@@ -19,7 +19,7 @@ echo 'rlIsRHEL() { rlIsCentOS "$@"; }' >> /usr/share/beakerlib/testing.sh
 touch /usr/bin/rhts-environment.sh
 
 # Append 'rlGetTestState' to each test, so it returns a correct exit code
-while read file; do
+while read -r file; do
     if ! grep -Pzq "rlGetTestState[[:space:]]*\z" "$file"; then
         echo -ne "\nrlGetTestState\n" >> "$file"
     fi
@@ -28,8 +28,8 @@ done <<< "$(find systemd/ -type f -name "runtest.sh")"
 set +e
 
 # Run the testsuite
-for t in $(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d); do
-    pushd $t >/dev/null
+while read -r t; do
+    pushd "$t" >/dev/null
 
     # Install test dependencies
     if [ -f Makefile ]; then
@@ -46,7 +46,7 @@ for t in $(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d); do
     exectask "$t" "${t##*/}.log" "./runtest.sh"
 
     popd >/dev/null
-done
+done <<< "$(find systemd/Sanity -mindepth 1 -maxdepth 1 -type d)"
 
 # Summary
 echo

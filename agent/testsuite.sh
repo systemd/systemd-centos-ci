@@ -1,6 +1,6 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 
-. "$(dirname $0)/common.sh" "testsuite-logs" || exit 1
+. "$(dirname "$0")/common.sh" "testsuite-logs" || exit 1
 
 ### SETUP PHASE ###
 # Exit on error in the setup phase
@@ -10,7 +10,7 @@ if [ ! -f /usr/bin/ninja ]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
 fi
 
-if [ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]; then
+if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     echo >&2 "user.max_user_namespaces must be > 0"
     exit 1
 fi

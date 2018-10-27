@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/usr/bin/bash
 
 if [ -n "$1" ]; then
-    LOGDIR="$(mktemp -d $PWD/$1.XXX)"
+    LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
-    LOGDIR="$(mktemp -d $PWD/testsuite-logs.XXX)"
+    LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
 fi
 PASSED=0
 FAILED=0
@@ -44,7 +44,7 @@ printresult() {
         return 1
     fi
 
-    if [ $1 -eq 0 ]; then
+    if [[ $1 -eq 0 ]]; then
         PASSED=$((PASSED + 1))
         echo "[RESULT] PASS (log file: $2)"
     else

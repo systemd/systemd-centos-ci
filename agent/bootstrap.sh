@@ -1,4 +1,4 @@
-#!/usr/bin/sh
+#!/usr/bin/bash
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
@@ -22,7 +22,7 @@ python3.6 -m pip install meson
 
 # python36 package doesn't create the python3 symlink
 rm -f /usr/bin/python3
-ln -s `which python3.6` /usr/bin/python3
+ln -s "$(which python3.6)" /usr/bin/python3
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -40,7 +40,7 @@ echo "$0 called with argument '$1'"
 #      branch is used
 case $1 in
     pr:*)
-        git fetch -fu origin refs/pull/${1#pr:}/head:pr
+        git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
         git checkout pr
         ;;
 
@@ -48,7 +48,7 @@ case $1 in
         ;;
 
     *)
-        git checkout $1
+        git checkout "$1"
         ;;
 esac
 
