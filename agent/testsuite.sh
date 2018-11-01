@@ -17,7 +17,7 @@ fi
 
 # Install test dependencies
 exectask "Install test dependencies" "yum-depinstall.log" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota net-tools strace"
+    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq"
 
 set +e
 
