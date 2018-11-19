@@ -36,7 +36,7 @@ def exec_cmd(cmd):
 
     return p.returncode
 
-def remote_exec(host, remote_cmd, expected_ret = 0):
+def remote_exec(host, remote_cmd, expected_ret = 0, ignore_ret = False):
     cmd = [ '/usr/bin/ssh',
         '-t',
         '-o', 'UserKnownHostsFile=/dev/null',
@@ -55,7 +55,7 @@ def remote_exec(host, remote_cmd, expected_ret = 0):
 
     print("<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, ret))
 
-    if ret != expected_ret:
+    if not ignore_ret and ret != expected_ret:
         raise Exception("Remote command returned code %d, expected %d. Bailing out." % (ret, expected_ret))
 
 def ping_host(host):
@@ -79,7 +79,7 @@ def reboot_host(host):
     print("Rebooting host %s ..." % host)
 
     # the reboot command races against the graceful exit, so ignore the return code in this case
-    remote_exec(host, "journalctl --no-pager -b && reboot", 255)
+    remote_exec(host, "journalctl --no-pager -b && systemctl reboot", 255, True)
 
     time.sleep(60)
     ping_host(host)
