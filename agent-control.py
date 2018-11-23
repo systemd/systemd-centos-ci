@@ -79,7 +79,7 @@ def reboot_host(host):
     print("Rebooting host %s ..." % host)
 
     # the reboot command races against the graceful exit, so ignore the return code in this case
-    remote_exec(host, "journalctl --no-pager -b && systemctl reboot -ff", 255, True)
+    remote_exec(host, "journalctl --no-pager -b && systemctl reboot", 255, True)
 
     time.sleep(60)
     ping_host(host)
@@ -169,9 +169,9 @@ def main():
         remote_exec(host, cmd)
         reboot_host(host)
 
-        cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
-        remote_exec(host, cmd)
-        reboot_host(host)
+        #cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
+        #remote_exec(host, cmd)
+        #reboot_host(host)
 
         #for i in range(4):
         #   cmd = "exit `journalctl --list-boots | wc -l`"
