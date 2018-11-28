@@ -25,6 +25,8 @@ set +e
 cd systemd
 
 # Run the internal unit tests (make check)
+# Temporarily disable test-exec-privatenetwork
+sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
 # Run the internal integration testsuite
@@ -37,7 +39,7 @@ done
 # Other integration tests
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+#    "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
