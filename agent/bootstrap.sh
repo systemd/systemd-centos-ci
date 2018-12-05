@@ -3,7 +3,7 @@
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
 set -e
-
+/bin/false
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
 
 # Enable necessary repositories and install required packages
