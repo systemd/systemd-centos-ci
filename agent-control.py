@@ -95,7 +95,8 @@ def main():
     parser.add_argument('--ver',             help = 'CentOS version', default = '7')
     parser.add_argument('--arch',            help = 'Architecture', default = 'x86_64')
     parser.add_argument('--host',            help = 'Use an already provisioned build host')
-    parser.add_argument('--pr',              help = 'Pull request ID to check out')
+    parser.add_argument('--pr',              help = 'Pull request ID to check out (systemd repository)')
+    parser.add_argument('--ci-pr',           help = 'Pull request ID to check out (systemd-centos-ci repository)')
     parser.add_argument('--branch',          help = 'Commit/tag/branch to checkout')
     parser.add_argument('--keep',            help = 'Do not kill provisioned build host', action = 'store_const', const = True)
     parser.add_argument('--keep-on-failure', help = 'Do not kill provisioned build host unless all tests succeeded', action = 'store_const', const = True)
@@ -161,7 +162,14 @@ def main():
         else:
             branch = ''
 
-        cmd = "yum install -y git && git clone %s%s.git && %s/agent/bootstrap.sh %s" % (github_base, git_name, git_name, branch)
+        cmd = "yum install -y git && git clone %s%s.git" % (github_base, git_name)
+        remote_exec(host, cmd)
+
+        if args.ci_pr:
+            cmd = "cd %s && git fetch -fu origin 'refs/pull/%s/merge:pr' && git checkout pr" % (git_name, args.ci_pr)
+            remote_exec(host, cmd)
+
+        cmd = "%s/agent/bootstrap.sh %s" % (git_name, branch)
         remote_exec(host, cmd)
         reboot_host(host)
 
