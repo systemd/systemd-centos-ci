@@ -40,7 +40,7 @@ echo "$0 called with argument '$1'"
 #      branch is used
 case $1 in
     pr:*)
-        git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
+        git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"
         git checkout pr
         ;;
 
