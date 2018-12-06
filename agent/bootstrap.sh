@@ -59,7 +59,12 @@ git describe
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
 #     installed above
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
-CFLAGS='-g -O0 -ftrapv' meson build -Dslow-tests=true -Dinstall-tests=true -Ddbuspolicydir=/etc/dbus-1/system.d
+CFLAGS='-g -O0 -ftrapv' meson build \
+      -Dslow-tests=true \
+      -Dinstall-tests=true \
+      -Ddbuspolicydir=/etc/dbus-1/system.d \
+      -Dnobody-user=nfsnobody \
+      -Dnobody-group=nfsnobody
 ninja-build -C build
 ninja-build -C build install
 
