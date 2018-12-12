@@ -105,7 +105,7 @@ def main():
     parser.add_argument('--debug',           help = 'Enable debug output', action = 'store_const', const = True)
     args = parser.parse_args()
 
-    key = open("duffy.key", "r").read().rstrip()
+    key = open("/home/systemd/duffy.key", "r").read().rstrip()
 
     debug = args.debug
 
