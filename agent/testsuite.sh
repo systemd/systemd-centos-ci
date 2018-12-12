@@ -32,7 +32,15 @@ exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 # Run the internal integration testsuite
 INITRD_PATH="/boot/initramfs-$(uname -r).img"
 KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+SKIP_LIST=(
+    "test/TEST-16-EXTEND-TIMEOUT"
+)
+
 for t in test/TEST-??-*; do
+    if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+        echo -e "\n[SKIP] Skipping test $t"
+        continue
+    fi
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH"
 done
 
