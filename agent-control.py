@@ -58,6 +58,8 @@ def remote_exec(host, remote_cmd, expected_ret = 0, ignore_ret = False):
     if not ignore_ret and ret != expected_ret:
         raise Exception("Remote command returned code %d, expected %d. Bailing out." % (ret, expected_ret))
 
+    return ret
+
 def ping_host(host):
 
     cmd = [ '/usr/bin/ping', '-q', '-c', '1', '-W', '10', host ]
@@ -183,8 +185,10 @@ def main():
         reboot_host(host)
 
         cmd = "%s/agent/testsuite.sh" % git_name
-        remote_exec(host, cmd)
+        ret = remote_exec(host, cmd, ignore_ret=True)
         fetch_artifacts(host, "~/testsuite-logs*", artifact_dir)
+        if ret != 0:
+            raise Exception("Command returned non-zero exit code (%d)" % ret)
         reboot_host(host)
 
         #cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
