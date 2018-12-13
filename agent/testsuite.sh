@@ -2,6 +2,14 @@
 
 . "$(dirname "$0")/common.sh" "testsuite-logs" || exit 1
 
+# EXIT signal handler
+function at_exit {
+    set +e
+    exectask "Dump system journal" "journalctl.log" "journalctl -b --no-pager"
+}
+
+trap at_exit EXIT
+
 ### SETUP PHASE ###
 # Exit on error in the setup phase
 set -e

@@ -2,7 +2,7 @@
 
 # GPLv2 etc.
 
-import os, json, urllib, subprocess, sys, argparse, fcntl, time
+import os, json, urllib, subprocess, sys, argparse, fcntl, time, tempfile
 
 github_base = "https://github.com/systemd/"
 git_name = "systemd-centos-ci"
@@ -87,6 +87,12 @@ def reboot_host(host):
 
     reboot_count += 1
 
+def fetch_artifacts(host, remote_dir, local_dir):
+    exec_cmd(["/usr/bin/scp", "-r",
+            "-o UserKnownHostsFile=/dev/null",
+            "-o StrictHostKeyChecking=no",
+            "root@%s:%s" % (host, remote_dir), local_dir])
+
 def main():
     global debug
     global reboot_count
@@ -162,6 +168,9 @@ def main():
         else:
             branch = ''
 
+        # Create a temporary directory for artifacts
+        artifact_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
+
         cmd = "yum install -y git && git clone %s%s.git" % (github_base, git_name)
         remote_exec(host, cmd)
 
@@ -175,6 +184,7 @@ def main():
 
         cmd = "%s/agent/testsuite.sh" % git_name
         remote_exec(host, cmd)
+        fetch_artifacts(host, "~/testsuite-logs*", artifact_dir)
         reboot_host(host)
 
         #cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
