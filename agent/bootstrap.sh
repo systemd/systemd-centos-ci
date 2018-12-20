@@ -16,7 +16,7 @@ curl "$COPR_REPO" -o "/etc/yum.repos.d/${COPR_REPO##*/}"
 yum -q -y install epel-release yum-utils
 yum-config-manager -q --enable epel
 yum -q -y update
-yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan
+yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
 python3.6 -m ensurepip
 python3.6 -m pip install meson
 
@@ -66,6 +66,16 @@ CFLAGS='-g -O0 -ftrapv' meson build \
       -Dnobody-user=nfsnobody \
       -Dnobody-group=nfsnobody
 ninja-build -C build
+
+# Let's check if the new systemd at least boots before installing it
+# As the CentOS' systemd-nspawn version is too old, we have to use QEMU
+INITRD_PATH="/boot/initramfs-$(uname -r).img"
+KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
+rm -f /usr/bin/qemu-kvm
+
+# Install the compiled systemd
 ninja-build -C build install
 
 cat >/usr/lib/systemd/system-shutdown/debug.sh <<_EOF_
