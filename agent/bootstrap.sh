@@ -73,7 +73,6 @@ INITRD_PATH="/boot/initramfs-$(uname -r).img"
 KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
-rm -f /usr/bin/qemu-kvm
 
 # Install the compiled systemd
 ninja-build -C build install
