@@ -25,7 +25,7 @@ fi
 
 # Install test dependencies
 exectask "Install test dependencies" "yum-depinstall.log" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq"
+    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm"
 
 set +e
 
@@ -37,12 +37,15 @@ cd systemd
 sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
-# Run the internal integration testsuite
-INITRD_PATH="/boot/initramfs-$(uname -r).img"
-KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+## Integration test suite ##
 SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"
 )
+INITRD_PATH="/boot/initramfs-$(uname -r).img"
+KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+
+[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+qemu-kvm --version
 
 for t in test/TEST-??-*; do
     if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
@@ -52,7 +55,7 @@ for t in test/TEST-??-*; do
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH"
 done
 
-# Other integration tests
+## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
 #    "test/test-network/systemd-networkd-tests.py"
