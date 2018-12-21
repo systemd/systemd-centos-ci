@@ -52,7 +52,7 @@ for t in test/TEST-??-*; do
         echo -e "\n[SKIP] Skipping test $t"
         continue
     fi
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH"
+    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND='user_namespace.enable=1'"
 done
 
 ## Other integration tests ##
