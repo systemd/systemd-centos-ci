@@ -181,7 +181,10 @@ def main():
             remote_exec(host, cmd)
 
         cmd = "%s/agent/bootstrap.sh %s" % (git_name, branch)
-        remote_exec(host, cmd)
+        ret = remote_exec(host, cmd, ignore_ret=True)
+        fetch_artifacts(host, "~/bootstrap-logs*", artifact_dir)
+        if ret != 0:
+            raise Exception("Command returned non-zero exit code (%d)" % ret)
         reboot_host(host)
 
         cmd = "%s/agent/testsuite.sh" % git_name

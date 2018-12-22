@@ -1,5 +1,18 @@
 #!/usr/bin/bash
 
+. "$(dirname "$0")/common.sh" "bootstrap-logs" || exit 1
+
+# EXIT signal handler
+function at_exit {
+    # Let's collect some build-related logs
+    set +e
+    [ -d systemd/build/meson-logs ] && cp -r systemd/build/meson-logs "$LOGDIR"
+    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    exectask "Dump system journal" "journalctl-bootstrap.log" "journalctl -b --no-pager"
+}
+
+trap at_exit EXIT
+
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
 set -e
@@ -89,11 +102,12 @@ popd
 # Build and install dracut from upstream && rebuild initrd
 test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-cd dracut
+pushd dracut
 git checkout 044
 ./configure --disable-documentation
 make -j 16
 make install
+popd
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
