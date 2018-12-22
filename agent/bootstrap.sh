@@ -16,6 +16,7 @@ trap at_exit EXIT
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
 set -e
+set -o pipefail
 
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
 
@@ -82,10 +83,12 @@ ninja-build -C build
 
 # Let's check if the new systemd at least boots before installing it
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
-INITRD_PATH="/boot/initramfs-$(uname -r).img"
-KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
-[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
+(
+    INITRD_PATH="/boot/initramfs-$(uname -r).img"
+    KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
+) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 # Install the compiled systemd
 ninja-build -C build install
