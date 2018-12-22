@@ -5,7 +5,7 @@
 # EXIT signal handler
 function at_exit {
     set +e
-    exectask "Dump system journal" "journalctl.log" "journalctl -b --no-pager"
+    exectask "Dump system journal" "journalctl-testsuite.log" "journalctl -b --no-pager"
 }
 
 trap at_exit EXIT
@@ -54,7 +54,11 @@ for t in test/TEST-??-*; do
         echo -e "\n[SKIP] Skipping test $t"
         continue
     fi
+
+    rm -fr /var/tmp/systemd-test*
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND='user_namespace.enable=1'"
+    # Each integration test dumps the system journal when something breaks
+    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
 
 ## Other integration tests ##

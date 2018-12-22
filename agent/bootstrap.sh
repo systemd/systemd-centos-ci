@@ -1,5 +1,18 @@
 #!/usr/bin/bash
 
+. "$(dirname "$0")/common.sh" "bootstrap-logs" || exit 1
+
+# EXIT signal handler
+function at_exit {
+    # Let's collect some build-related logs
+    set +e
+    [ -d systemd/build/meson-logs ] && cp -r systemd/build/meson-logs "$LOGDIR"
+    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    exectask "Dump system journal" "journalctl-bootstrap.log" "journalctl -b --no-pager"
+}
+
+trap at_exit EXIT
+
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
 set -e
@@ -77,15 +90,6 @@ make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$
 # Install the compiled systemd
 ninja-build -C build install
 
-cat >/usr/lib/systemd/system-shutdown/debug.sh <<_EOF_
-#!/bin/sh
-mount -o remount,rw /
-dmesg > /shutdown-log.txt
-mount -o remount,ro /
-_EOF_
-
-chmod a+x /usr/lib/systemd/system-shutdown/debug.sh
-
 # It's impossible to keep the local SELinux policy database up-to-date with
 #arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
@@ -98,11 +102,12 @@ popd
 # Build and install dracut from upstream && rebuild initrd
 test -e dracut && rm -rf dracut
 git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-cd dracut
+pushd dracut
 git checkout 044
 ./configure --disable-documentation
 make -j 16
 make install
+popd
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
