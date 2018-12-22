@@ -77,15 +77,6 @@ make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$
 # Install the compiled systemd
 ninja-build -C build install
 
-cat >/usr/lib/systemd/system-shutdown/debug.sh <<_EOF_
-#!/bin/sh
-mount -o remount,rw /
-dmesg > /shutdown-log.txt
-mount -o remount,ro /
-_EOF_
-
-chmod a+x /usr/lib/systemd/system-shutdown/debug.sh
-
 # It's impossible to keep the local SELinux policy database up-to-date with
 #arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
