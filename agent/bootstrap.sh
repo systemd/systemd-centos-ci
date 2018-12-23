@@ -19,6 +19,7 @@ set -e
 set -o pipefail
 
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
+COPR_REPO_PATH="/etc/yum.repos.d/${COPR_REPO##*/}"
 
 # Enable necessary repositories and install required packages
 #   - enable custom Copr repo with newer versions of certain packages (necessary
@@ -26,7 +27,17 @@ COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/r
 #   - enable EPEL repo for additional dependencies
 #   - update current system
 #   - install python 3.6 (required by meson) and install meson + other build deps
-curl "$COPR_REPO" -o "/etc/yum.repos.d/${COPR_REPO##*/}"
+curl "$COPR_REPO" -o "$COPR_REPO_PATH"
+# Add a copr repo mirror
+# Note: if a URL starts on a new line, it MUST begin with leading spaces,
+#       otherwise it will be ignored
+sed -i '/baseurl=/a\    https://rpm.sumsal.cz/mrc0mmand-systemd-centos-ci/' "$COPR_REPO_PATH"
+sed -i '/gpgkey=/d' "$COPR_REPO_PATH"
+sed -i 's/skip_if_unavailable=True/skip_if_unavailable=False/' "$COPR_REPO_PATH"
+# As the gpgkey directive doesn't support mirrors, let's install the GPG key manually
+if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/systemd-centos-ci/pubkey.gpg; then
+    rpm --import https://rpm.sumsal.cz/mrc0mmand-systemd-centos-ci/pubkey.gpg
+fi
 yum -q -y install epel-release yum-utils
 yum-config-manager -q --enable epel
 yum -q -y update
