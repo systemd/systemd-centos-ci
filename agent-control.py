@@ -34,7 +34,21 @@ class AgentControl(object):
             self.free_session(self._node["ssid"])
 
     def _execute_api_command(self, endpoint, payload={}):
-        """Execute a Duffy command"""
+        """Execute a Duffy command
+
+        See also: https://wiki.centos.org/QaWiki/CI/Duffy
+
+        Params:
+        -------
+        endpoint : str
+            API endpoint to use, including a leading slash (e.g. /Inventory)
+        payload : dict
+            A dictionary of arguments for given request
+
+        Returns:
+        --------
+        Server response as a stringified JSON
+        """
         url = "{}{}".format(API_BASE, endpoint)
         payload["key"] = self._duffy_key
         logging.info("Duffy request URL: {}".format(url))
@@ -44,7 +58,22 @@ class AgentControl(object):
         return r.text
 
     def allocate_node(self, version, architecture, clean_on_exit=True):
-        """Allocate a node with specified CentOS version and architecture"""
+        """Allocate a node with specified CentOS version and architecture
+
+        Params:
+        -------
+        version : str/int
+            CentOS version (e.g. 7)
+        architecture: string
+            Desired node architecture (e.g. x86_64)
+        clean_on_exit : bool (default: True)
+            If True, the node is automatically freed once the AgentControl
+            object is deallocated
+
+        Returns:
+        --------
+        A tuple with node hostname and ssid
+        """
         payload = {
             "ver"  : version,
             "arch" : architecture
@@ -72,7 +101,17 @@ class AgentControl(object):
         return (host, ssid)
 
     def allocated_nodes(self, verbose=False):
-        """List nodes currently allocated for the current API key"""
+        """List nodes currently allocated for the current API key
+
+        Params:
+        -------
+        verbose : bool (default: False)
+            If True, returned nodes are also printed to the standard output
+
+        Returns:
+        --------
+        List of nodes, where each node is a dict with host and ssid keys
+        """
         res = self._execute_api_command("/Inventory")
         jroot = json.loads(res)
 
@@ -89,7 +128,18 @@ class AgentControl(object):
         return nodes
 
     def execute_local_command(self, command):
-        """Execute a command on the local machine"""
+        """Execute a command on the local machine
+
+        Params:
+        -------
+        command : list of strings
+            The command to execute; must be in a format expected by subprocess.Popen,
+            i.e. list of tokens (strings)
+
+        Returns:
+        --------
+        Exit code of the command
+        """
         logging.info("Executing a LOCAL command: {}".format(" ".join(command)))
 
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
@@ -99,7 +149,36 @@ class AgentControl(object):
         return proc.returncode
 
     def execute_remote_command(self, node, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
-        """Execute a command on a remote host"""
+        """Execute a command on a remote host
+
+        Technically the function wraps the command in an ssh command and executes
+        it locally
+
+        Params:
+        -------
+        node : str
+            Hostname of the node
+        command : str
+            Command to execute on the remote host
+        expected_rc : int (default: 0)
+            Expected return code
+        artifacts_dir : str (default: None)
+            If not None and the `self.artifacts_dir` is set, all files from the
+            `artifacts_dir` directory on the remote host will be downloaded into
+            the local `self.artifacts_storage` directory after the command is
+            finished
+        ignore_rc : bool (default: False)
+            If True, the `execute_remote_command` throws an exception if the
+            remote command fails
+
+        Returns:
+        --------
+        Return code of the remote command
+
+        Throws:
+        -------
+        An exception if the `ignore_rc` is False and the return code != `expected_rc`
+        """
         command_wrapper = [
             "/usr/bin/ssh", "-t",
             "-o", "UserKnownHostsFile=/dev/null",
@@ -126,7 +205,21 @@ class AgentControl(object):
         return rc
 
     def fetch_artifacts(self, node, remote_dir, local_dir):
-        """Fetch artifacts from remote host to a local directory"""
+        """Fetch artifacts from remote host to a local directory
+
+        Params:
+        -------
+        node : str
+            Hostname of the node
+        remote_dir : str
+            Path of a remote (source) directory
+        local_dir : str
+            Path of a local (target) directory
+
+        Returns:
+        --------
+        Return code of the underlying `scp` command
+        """
         command = [
             "/usr/bin/scp", "-r",
             "-o UserKnownHostsFile=/dev/null",
@@ -148,13 +241,29 @@ class AgentControl(object):
             self.free_session(node["ssid"])
 
     def free_session(self, node_ssid):
-        """Return all nodes in a session back to the pool"""
+        """Return all nodes in a session back to the pool
+
+        Params:
+        -------
+        node_ssid : str
+            Session ID of the node allocation
+        """
         logging.info("Freeing session {}".format(node_ssid))
         res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
         logging.info(res)
 
     def reboot_node(self, node):
-        """Reboot a node"""
+        """Reboot a node
+
+        Params:
+        -------
+        node : str
+            Hostname of the node
+
+        Throws:
+        -------
+        An exception if the waiting timeout is reached
+        """
         logging.info("Rebooting node {}".format(node))
         self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
         time.sleep(30)
