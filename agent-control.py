@@ -1,231 +1,257 @@
-#!/usr/bin/python
+#!/usr/bin/env python2
 
-# GPLv2 etc.
+# TODO: GPLv2 license
 
-import os, json, urllib, subprocess, sys, argparse, fcntl, time, tempfile
+from __future__ import print_function, with_statement
+import argparse
+import json
+import logging
+import subprocess
+import sys
+import time
+import tempfile
+import requests
 
-github_base = "https://github.com/systemd/"
-git_name = "systemd-centos-ci"
+API_BASE = "http://admin.ci.centos.org:8080"
+DUFFY_KEY_FILE = "/home/systemd/duffy.key"
+GITHUB_BASE = "https://github.com/systemd/"
+GITHUB_CI_REPO = "systemd-centos-ci"
 
-debug = False
-reboot_count = 0
+class AgentControl(object):
+    def __init__(self, artifacts_storage=None):
+        # Should probably use a setter/getter in the future
+        self.artifacts_storage = artifacts_storage
+        self._node = {}
+        self._reboot_count = 0
 
-def dprint(msg):
-    global debug
+        # Load duffy key
+        with open(DUFFY_KEY_FILE, "r") as fh:
+            self._duffy_key = fh.read().strip()
 
-    if debug:
-        print "Debug:: " + msg
+    def __del__(self):
+        # Deallocate the allocated node on script exit, if not requested otherwise
+        if self._node is not None and "ssid" in self._node:
+            self.free_session(self._node["ssid"])
 
-def duffy_cmd(cmd, params):
-    url_base = "http://admin.ci.centos.org:8080"
-    url = "%s%s?%s" % (url_base, cmd, urllib.urlencode(params))
-    dprint("Duffy API url = " + url)
-    return urllib.urlopen(url).read()
+    def _execute_api_command(self, endpoint, payload={}):
+        """Execute a Duffy command"""
+        url = "{}{}".format(API_BASE, endpoint)
+        payload["key"] = self._duffy_key
+        logging.info("Duffy request URL: {}".format(url))
 
-def host_done(key, ssid):
-    params = { "key": key, "ssid": ssid }
-    duffy_cmd("/Node/done", params)
-    print "Duffy: Host with ssid %s marked as done" % ssid
+        r = requests.get(url, payload)
 
-def exec_cmd(cmd):
-    dprint("Executing command: '%s'" % ("' '".join(cmd)))
+        return r.text
 
-    p = subprocess.Popen(cmd, stdout = None, stderr = None, shell = False, bufsize = 1)
-    p.communicate()
-    p.wait()
+    def allocate_node(self, version, architecture, clean_on_exit=True):
+        """Allocate a node with specified CentOS version and architecture"""
+        payload = {
+            "ver"  : version,
+            "arch" : architecture
+        }
 
-    return p.returncode
+        logging.info("Attempting to allocate a node ({} {})".format(version, architecture))
+        res = self._execute_api_command("/Node/get", payload)
+        jroot = json.loads(res)
 
-def remote_exec(host, remote_cmd, expected_ret = 0, ignore_ret = False):
-    cmd = [ '/usr/bin/ssh',
-        '-t',
-        '-o', 'UserKnownHostsFile=/dev/null',
-        '-o', 'StrictHostKeyChecking=no',
-        '-o', 'ConnectTimeout=180',
-        '-o', 'TCPKeepAlive=yes',
-        '-o', 'ServerAliveInterval=2',
-        '-l', 'root',
-        host, remote_cmd ]
+        host = None
+        ssid = None
+        try:
+            host = jroot["hosts"][0]
+            ssid = jroot["ssid"]
+        except (ValueError, IndexError):
+            logging.error("Failed to allocated a node")
+            return (None, None)
 
-    print(">>> Executing remote command: '%s' on %s" % (remote_cmd, host))
+        if clean_on_exit:
+            self._node["host"] = host
+            self._node["ssid"] = ssid
 
-    start = time.time()
-    ret = exec_cmd(cmd)
-    end = time.time()
+        logging.info("Successfully allocated node '{}' ({})".format(host, ssid))
 
-    print("<<< Remote command finished after %.1f seconds, return code = %d" % (end - start, ret))
+        return (host, ssid)
 
-    if not ignore_ret and ret != expected_ret:
-        raise Exception("Remote command returned code %d, expected %d. Bailing out." % (ret, expected_ret))
+    def allocated_nodes(self, verbose=False):
+        """List nodes currently allocated for the current API key"""
+        res = self._execute_api_command("/Inventory")
+        jroot = json.loads(res)
 
-    return ret
+        if verbose:
+            logging.info("Allocated nodes:")
 
-def ping_host(host):
+        nodes = []
+        for node in jroot:
+            if verbose:
+                logging.info("{} ({})".format(node[0], node[1]))
 
-    cmd = [ '/usr/bin/ping', '-q', '-c', '1', '-W', '10', host ]
-    print("Pinging host %s ..." % host)
+            nodes.append({"host" : node[0], "ssid" : node[1]})
 
-    for i in range(20):
-        ret = exec_cmd(cmd)
-        if ret == 0:
-            break;
+        return nodes
 
-    if ret != 0:
-        raise Exception("Timeout waiting for ping")
+    def execute_local_command(self, command):
+        """Execute a command on the local machine"""
+        logging.info("Executing a LOCAL command: {}".format(" ".join(command)))
 
-    print("Host %s appears reachable again" % host)
+        proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
+        proc.communicate()
+        proc.wait()
 
-def reboot_host(host):
-    global reboot_count
+        return proc.returncode
 
-    print("Rebooting host %s ..." % host)
+    def execute_remote_command(self, node, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
+        """Execute a command on a remote host"""
+        command_wrapper = [
+            "/usr/bin/ssh", "-t",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "ConnectTimeout=180",
+            "-o", "TCPKeepAlive=yes",
+            "-o", "ServerAliveInterval=2",
+            "-l", "root",
+            node, command
+        ]
 
-    # the reboot command races against the graceful exit, so ignore the return code in this case
-    remote_exec(host, "systemctl reboot", 255, True)
+        logging.info("Executing a REMOTE command on node'{}': {}".format(node, command))
+        rc = self.execute_local_command(command_wrapper)
 
-    time.sleep(60)
-    ping_host(host)
-    time.sleep(100)
+        # Fetch artifacts if both remote and local dirs are set
+        if artifacts_dir is not None and self.artifacts_storage is not None:
+            arc = self.fetch_artifacts(node, artifacts_dir, self.artifacts_storage)
+            if arc != 0:
+                logging.warn("Fetching artifacts failed")
 
-    reboot_count += 1
+        if not ignore_rc and rc != expected_rc:
+            raise Exception("Remote command exited with an unexpected return code "
+                            "(got: {}, expected: {}), bailing out".format(rc, expected_rc))
+        return rc
 
-def fetch_artifacts(host, remote_dir, local_dir):
-    exec_cmd(["/usr/bin/scp", "-r",
+    def fetch_artifacts(self, node, remote_dir, local_dir):
+        """Fetch artifacts from remote host to a local directory"""
+        command = [
+            "/usr/bin/scp", "-r",
             "-o UserKnownHostsFile=/dev/null",
             "-o StrictHostKeyChecking=no",
-            "root@%s:%s" % (host, remote_dir), local_dir])
+            "root@{}:{}".format(node, remote_dir), local_dir
+        ]
 
-def main():
-    global debug
-    global reboot_count
+        logging.info("Fetching artifacts from node {}: (remote: {}, local: {})".format(
+                node, remote_dir, local_dir))
 
+        return self.execute_local_command(command)
+
+    def free_all_nodes(self):
+        """Return all nodes back to the pool"""
+        nodes = self.allocated_nodes()
+
+        for node in nodes:
+            logging.info("Freeing node {} ({})".format(node["host"], node["ssid"]))
+            self.free_session(node["ssid"])
+
+    def free_session(self, node_ssid):
+        """Return all nodes in a session back to the pool"""
+        logging.info("Freeing session {}".format(node_ssid))
+        res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
+        logging.info(res)
+
+    def reboot_node(self, node):
+        """Reboot a node"""
+        logging.info("Rebooting node {}".format(node))
+        self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
+        time.sleep(30)
+
+        ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
+        for i in range(10):
+            logging.info("Checking if the node {} is alive (try #{})".format(node, i))
+            rc = self.execute_local_command(ping_command)
+            if rc == 0:
+                break;
+            time.sleep(15)
+
+        if rc != 0:
+            raise Exception("Timeout reached when waiting for node to become online")
+
+        logging.info("Node {} appears reachable again".format(node))
+        # Give the node time to finish booting process
+        time.sleep(30)
+
+
+if __name__ == "__main__":
+    # Setup logging
+    logging.basicConfig(level=logging.INFO,
+            format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
+
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--ver',             help = 'CentOS version', default = '7')
-    parser.add_argument('--arch',            help = 'Architecture', default = 'x86_64')
-    parser.add_argument('--host',            help = 'Use an already provisioned build host')
-    parser.add_argument('--pr',              help = 'Pull request ID to check out (systemd repository)')
-    parser.add_argument('--ci-pr',           help = 'Pull request ID to check out (systemd-centos-ci repository)')
-    parser.add_argument('--branch',          help = 'Commit/tag/branch to checkout')
-    parser.add_argument('--keep',            help = 'Do not kill provisioned build host', action = 'store_const', const = True)
-    parser.add_argument('--keep-on-failure', help = 'Do not kill provisioned build host unless all tests succeeded', action = 'store_const', const = True)
-    parser.add_argument('--kill-host',       help = 'Mark a provisioned host as done and bail out')
-    parser.add_argument('--kill-all-hosts',  help = 'Mark all provisioned hosts as done and bail out', action = 'store_const', const = True)
-    parser.add_argument('--debug',           help = 'Enable debug output', action = 'store_const', const = True)
+    parser.add_argument("--arch", default="x86_64",
+            help="Architecture")
+    parser.add_argument("--branch",
+            help="Commit/tag/branch to checkout")
+    parser.add_argument("--ci-pr",
+            help="Pull request ID to check out (systemd-centos-ci repository)")
+    parser.add_argument("--free-all-nodes", action="store_const", const=True,
+            help="Free all currently provisioned nodes")
+    parser.add_argument("--free-session",
+            help="Return nodes from a session back to the pool")
+    parser.add_argument("--keep", action="store_const", const=True,
+            help="Do not kill provisioned build host")
+    parser.add_argument("--list-nodes", action="store_const", const=True,
+            help="List currectly allocated nodes")
+    parser.add_argument("--pr",
+            help="Pull request ID to check out (systemd repository)")
+    parser.add_argument("--version", default = "7",
+            help="CentOS version")
     args = parser.parse_args()
 
-    key = open("/home/systemd/duffy.key", "r").read().rstrip()
+    ac = AgentControl()
 
-    debug = args.debug
+    if args.free_session:
+        ac.free_session(args.free_session)
+        sys.exit(0)
 
-    if args.kill_host:
-        host_done(key, args.kill_host)
-        return 0
+    if args.free_all_nodes:
+        ac.free_all_nodes()
+        sys.exit(0)
 
-    if args.kill_all_hosts:
-        params = { "key": key }
-        json_data = duffy_cmd("/Inventory", params)
-        data = json.loads(json_data)
+    if args.list_nodes:
+        ac.allocated_nodes(verbose=True)
+        sys.exit(0)
 
-        for host in data:
-            host_done(key, host[1])
-
-        return 0
-
-    if args.host:
-        host = args.host
-        ssid = None
-    else:
-        params = { "key": key, "ver": args.ver, "arch": args.arch }
-        i = 0
-        while True:
-            try:
-                dprint("Duffy: Trying to get a node ver: %s, arch: %s" % (args.ver, args.arch))
-                json_data = duffy_cmd("/Node/get", params)
-                data = json.loads(json_data)
-
-                host = data['hosts'][0]
-                ssid = data['ssid']
-                print "Duffy: Host provisioning successful, hostname = %s, ssid = %s" % (host, ssid)
-            except ValueError:
-                i = i + 1
-                if i > 60:
-                    dprint("Duffy: Could not get Node!")
-                    sys.exit(255)
-
-                time.sleep(i)
-                continue
-            else:
-                break
-
-    ret = 0
-
-    start = time.time()
-    keep = args.keep
+    node, ssid = ac.allocate_node(args.version, args.arch, not args.keep)
 
     try:
+        # Figure out a systemd branch to compile
         if args.pr:
-            branch="pr:%s" % args.pr
+            branch = "pr:{}".format(args.pr)
         elif args.branch:
             branch = args.branch
         else:
-            branch = ''
+            branch = ""
 
-        # Create a temporary directory for artifacts
-        artifact_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
+        # Setup artifacts storage
+        artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
+        ac.artifacts_storage = artifacts_dir
 
-        cmd = "yum install -y git && git clone %s%s.git" % (github_base, git_name)
-        remote_exec(host, cmd)
+        # Actual testing process
+        logging.info("PHASE 1: Setting up basic dependencies to configure CI repository")
+        command = "yum -y install git && git clone {}{}".format(GITHUB_BASE, GITHUB_CI_REPO)
+        ac.execute_remote_command(node, command)
 
         if args.ci_pr:
-            cmd = "cd %s && git fetch -fu origin 'refs/pull/%s/merge:pr' && git checkout pr" % (git_name, args.ci_pr)
-            remote_exec(host, cmd)
+            logging.info("PHASE 1.5: Using a custom CI repository branch (PR#{})".format(args.ci_pr))
+            command = "cd {} && git fetch -fu origin 'refs/pull/{}/merge:pr' && " \
+                      "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
+            ac.execute_remote_command(node, command)
 
-        cmd = "%s/agent/bootstrap.sh %s" % (git_name, branch)
-        ret = remote_exec(host, cmd, ignore_ret=True)
-        fetch_artifacts(host, "~/bootstrap-logs*", artifact_dir)
-        if ret != 0:
-            raise Exception("Command returned non-zero exit code (%d)" % ret)
-        reboot_host(host)
+        logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
+        command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
+        ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
-        cmd = "%s/agent/testsuite.sh" % git_name
-        ret = remote_exec(host, cmd, ignore_ret=True)
-        fetch_artifacts(host, "~/testsuite-logs*", artifact_dir)
-        if ret != 0:
-            raise Exception("Command returned non-zero exit code (%d)" % ret)
-        reboot_host(host)
+        ac.reboot_node(node)
 
-        #cmd = "%s/agent/beakerlib-testsuite.sh" % git_name
-        #remote_exec(host, cmd)
-        #reboot_host(host)
-
-        #for i in range(4):
-        #   cmd = "exit `journalctl --list-boots | wc -l`"
-        #   remote_exec(host, cmd, reboot_count)
-        #
-        #   reboot_host(host)
-        #
-        #   cmd = "systemctl --failed --all | grep -q '^0 loaded'"
-        #   remote_exec(host, cmd)
-
-        print("All tests succeeded.")
+        logging.info("PHASE 3: Upstream testsuite")
+        command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
+        ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
 
     except Exception as e:
-        print("Execution failed! See logfile for details: %s" % str(e))
-        ret = 255
-        if args.keep_on_failure:
-            keep = True
+        logging.exception("Execution failed")
 
-    finally:
-        if ssid:
-            if keep:
-                print "Keeping host %s, ssid = %s" % (host, ssid)
-            else:
-                host_done(key, ssid);
-
-        end = time.time()
-        print("Total time %.1f seconds" % (end - start))
-
-    sys.exit(ret)
-
-if __name__ == "__main__":
-    main()
