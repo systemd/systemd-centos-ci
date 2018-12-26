@@ -1,7 +1,5 @@
 #!/usr/bin/env python2
 
-# TODO: GPLv2 license
-
 from __future__ import print_function, with_statement
 import argparse
 import json
