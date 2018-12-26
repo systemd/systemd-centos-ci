@@ -325,6 +325,10 @@ if __name__ == "__main__":
 
     node, ssid = ac.allocate_node(args.version, args.arch, not args.keep)
 
+    if node is None or ssid is None:
+        logging.critical("Can't continue without a valid node")
+        sys.exit(1)
+
     try:
         # Figure out a systemd branch to compile
         if args.pr:
