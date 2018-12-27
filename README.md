@@ -29,21 +29,24 @@ The only script end users should be accessing is `agent-control.py` on the `slav
 
 ```
 $ ./agent-control.py --help
-usage: agent-control.py [-h] [--ver VER] [--arch ARCH] [--host HOST] [--pr PR]
-                        [--keep] [--kill-host KILL_HOST] [--kill-all-hosts]
-                        [--debug]
+usage: agent-control.py [-h] [--arch ARCH] [--branch BRANCH] [--ci-pr CI_PR]
+                        [--free-all-nodes] [--free-session FREE_SESSION]
+                        [--keep] [--list-nodes] [--pr PR] [--version VERSION]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --ver VER             CentOS version
   --arch ARCH           Architecture
-  --host HOST           Use an already provisioned build host
-  --pr PR               Pull request ID
+  --branch BRANCH       Commit/tag/branch to checkout
+  --ci-pr CI_PR         Pull request ID to check out (systemd-centos-ci
+                        repository)
+  --free-all-nodes      Free all currently provisioned nodes
+  --free-session FREE_SESSION
+                        Return nodes from a session back to the pool
   --keep                Do not kill provisioned build host
-  --kill-host KILL_HOST
-                        Mark a provisioned host as done and bail out
-  --kill-all-hosts      Mark all provisioned hosts as done and bail out
-  --debug               Enable debug output
+  --list-nodes          List currectly allocated nodes
+  --pr PR               Pull request ID to check out (systemd repository)
+  --version VERSION     CentOS version
+
 ```
 
 When called without parameters, it will build the current systemd master branch.
@@ -51,21 +54,7 @@ The `--keep` option is helpful during development.
 
 # Jenkins glue
 
-This script and the Jenkins execution environment are glued together with the following trivial shell script:
-
-```sh
-#!/bin/sh
-
-ARGS=
-
-if [ "$CHANGE_ID" ]; then
-	ARGS="$ARGS --pr $CHANGE_ID "
-fi
-
-cd /home/systemd/systemd-centos-ci
-
-./agent-control.py $ARGS
-```
+The `agent-control.py` script and Jenkins are *glued* together using a simple shell script. See the [Jenkins Configuration](https://github.com/systemd/systemd-centos-ci/wiki/Jenkins-Configuration) wiki page for more information.
 
 # Manually running the tests
 ```sh
@@ -79,7 +68,5 @@ systemctl reboot
 systemd-centos-ci/agent/testsuite.sh
 systemctl reboot
 
-# system-tests
-cd systemd-centos-ci/agent; ./system-tests.sh
 systemctl poweroff
 ```
