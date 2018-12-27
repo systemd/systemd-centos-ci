@@ -15,6 +15,7 @@ DUFFY_KEY_FILE = "/home/systemd/duffy.key"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
 
+
 class AgentControl(object):
     def __init__(self, artifacts_storage=None):
         # Should probably use a setter/getter in the future
@@ -271,7 +272,7 @@ class AgentControl(object):
             logging.info("Checking if the node {} is alive (try #{})".format(node, i))
             rc = self.execute_local_command(ping_command)
             if rc == 0:
-                break;
+                break
             time.sleep(15)
 
         if rc != 0:
@@ -305,7 +306,7 @@ if __name__ == "__main__":
             help="List currectly allocated nodes")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
-    parser.add_argument("--version", default = "7",
+    parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
 
