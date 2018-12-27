@@ -9,6 +9,7 @@ import sys
 import time
 import tempfile
 import requests
+import signal
 
 API_BASE = "http://admin.ci.centos.org:8080"
 DUFFY_KEY_FILE = "/home/systemd/duffy.key"
@@ -56,7 +57,7 @@ class AgentControl(object):
 
         return r.text
 
-    def allocate_node(self, version, architecture, clean_on_exit=True):
+    def allocate_node(self, version, architecture):
         """Allocate a node with specified CentOS version and architecture
 
         Params:
@@ -65,9 +66,6 @@ class AgentControl(object):
             CentOS version (e.g. 7)
         architecture: string
             Desired node architecture (e.g. x86_64)
-        clean_on_exit : bool (default: True)
-            If True, the node is automatically freed once the AgentControl
-            object is deallocated
 
         Returns:
         --------
@@ -90,10 +88,6 @@ class AgentControl(object):
         except (ValueError, IndexError):
             logging.error("Failed to allocated a node")
             return (None, None)
-
-        if clean_on_exit:
-            self._node["host"] = host
-            self._node["ssid"] = ssid
 
         logging.info("Successfully allocated node '{}' ({})".format(host, ssid))
 
@@ -283,7 +277,17 @@ class AgentControl(object):
         time.sleep(30)
 
 
+class SIGTERMException(Exception):
+    pass
+
+def handle_sigterm(signum, frame):
+    """SIGTERM handler"""
+    raise SIGTERMException()
+
 if __name__ == "__main__":
+    # Workaround for Jenkins' GHPRB plugin, which sends SIGTERM
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
     # Setup logging
     logging.basicConfig(level=logging.INFO,
             format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
@@ -324,12 +328,13 @@ if __name__ == "__main__":
         ac.allocated_nodes(verbose=True)
         sys.exit(0)
 
-    node, ssid = ac.allocate_node(args.version, args.arch, not args.keep)
+    node, ssid = ac.allocate_node(args.version, args.arch)
 
     if node is None or ssid is None:
         logging.critical("Can't continue without a valid node")
         sys.exit(1)
 
+    rc = 0
     try:
         # Figure out a systemd branch to compile
         if args.pr:
@@ -364,6 +369,17 @@ if __name__ == "__main__":
         command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
         ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
 
+    except SIGTERMException:
+        # Do a proper cleanup on SIGTERM (i.e. continue with the `finally` section)
+        logging.info("Caught SIGTERM")
+
     except Exception as e:
         logging.exception("Execution failed")
-        sys.exit(1)
+        rc = 1
+
+    finally:
+        # Return the loaned node back to the pool if not requested otherwise
+        if not args.keep:
+            ac.free_session(ssid)
+
+    sys.exit(rc)
