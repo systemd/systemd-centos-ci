@@ -4,6 +4,7 @@ from __future__ import print_function, with_statement
 import argparse
 import json
 import logging
+import os.path
 import subprocess
 import sys
 import time
@@ -378,6 +379,12 @@ if __name__ == "__main__":
         rc = 1
 
     finally:
+        if os.path.isfile("utils/generate-index.sh"):
+            # Try to generate a simple HTML index with results
+            logging.info("Attempting to create an HTML index page")
+            command = ["utils/generate-index.sh", artifacts_dir, "index.html"]
+            ac.execute_local_command(command)
+
         # Return the loaned node back to the pool if not requested otherwise
         if not args.keep:
             ac.free_session(ssid)
