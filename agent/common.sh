@@ -79,6 +79,26 @@ exectask() {
         waitforpid $PID
     fi
     local EC=$?
+
+    # Let's rename the target log file according to the test result (PASS/FAIL)
+    local LOGFILE_BASE="${LOGFILE%.*}" # Log file path without the extension
+    local LOGFILE_EXT="${LOGFILE##*.}"  # Log file extension without the leading dot
+    local NEW_LOGFILE
+
+    # Determine the log's new name
+    if [ $EC -eq 0 ]; then
+        NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
+    else
+        NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
+    fi
+
+    # Attempt to rename the log file. If we don't succeed, continue with the old one
+    if mv "$LOGFILE" "$NEW_LOGFILE"; then
+        LOGFILE="$NEW_LOGFILE"
+    else
+        echo >&2 "exectask: log rename failed"
+    fi
+
     printresult $EC "$LOGFILE"
 
     if [ $EC -ne 0 ]; then
