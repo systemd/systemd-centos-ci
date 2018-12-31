@@ -84,13 +84,15 @@ git describe
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
 #     installed above
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
-CFLAGS='-g -O0 -ftrapv' meson build \
-      -Dslow-tests=true \
-      -Dinstall-tests=true \
-      -Ddbuspolicydir=/etc/dbus-1/system.d \
-      -Dnobody-user=nfsnobody \
-      -Dnobody-group=nfsnobody
-ninja-build -C build
+(
+    CFLAGS='-g -O0 -ftrapv' meson build \
+          -Dslow-tests=true \
+          -Dinstall-tests=true \
+          -Ddbuspolicydir=/etc/dbus-1/system.d \
+          -Dnobody-user=nfsnobody \
+          -Dnobody-group=nfsnobody
+    ninja-build -C build
+) 2>&1 | tee "$LOGDIR/build.log"
 
 # Let's check if the new systemd at least boots before installing it
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
@@ -114,14 +116,16 @@ rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 popd
 
 # Build and install dracut from upstream && rebuild initrd
-test -e dracut && rm -rf dracut
-git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-pushd dracut
-git checkout 044
-./configure --disable-documentation
-make -j 16
-make install
-popd
+(
+    test -e dracut && rm -rf dracut
+    git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
+    pushd dracut
+    git checkout 044
+    ./configure --disable-documentation
+    make -j 16
+    make install
+    popd
+) 2>&1 | tee "$LOGDIR/dracut-build.log"
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
