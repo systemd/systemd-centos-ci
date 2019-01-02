@@ -83,10 +83,12 @@ git describe
 # Compile systemd
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
 #     installed above
+#   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
     CFLAGS='-g -O0 -ftrapv' meson build \
           -Dslow-tests=true \
+          -Dtests=unsafe \
           -Dinstall-tests=true \
           -Ddbuspolicydir=/etc/dbus-1/system.d \
           -Dnobody-user=nfsnobody \
