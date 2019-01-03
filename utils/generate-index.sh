@@ -26,7 +26,7 @@ PR="${ghprbPullId:-N/A}"
 PR_URL="${ghprbPullLink:-#}"
 
 # Generate a nice HTML directory listing using the tree utility
-tree -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H "$ARTIFACTS_DIR" "$ARTIFACTS_DIR" -o "$INDEX_FILE"
+tree -C -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H "$ARTIFACTS_DIR" "$ARTIFACTS_DIR" -o "$INDEX_FILE"
 
 # Use a relatively ugly sed to append a red cross after each "_FAIL" log file
 sed -i -r 's/(_FAIL.log)(<\/a>)/\1 \&#x274C;\2/g' "$INDEX_FILE"
