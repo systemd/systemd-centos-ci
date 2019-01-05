@@ -122,7 +122,7 @@ popd
     test -e dracut && rm -rf dracut
     git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
     pushd dracut
-    git checkout 044
+    git checkout 046
     ./configure --disable-documentation
     make -j 16
     make install
