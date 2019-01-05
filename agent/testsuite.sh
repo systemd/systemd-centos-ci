@@ -44,8 +44,6 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
     "test/TEST-20-MAINPIDGAMES" # Temporary, until the /dev/shm issue is resolved
 )
-INITRD_PATH="/boot/initramfs-$(uname -r).img"
-KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
 
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
@@ -57,7 +55,18 @@ for t in test/TEST-??-*; do
     fi
 
     rm -fr /var/tmp/systemd-test*
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND='user_namespace.enable=1'"
+
+    ## Configure test environment
+    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+    export INITRD="/boot/initramfs-$(uname -r).img"
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # Explicitly enable user namespaces
+    export KERNEL_APPEND="user_namespace.enable=1"
+    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+    export QEMU_TIMEOUT=600
+    export NSPAWN_TIMEOUT=600
+
+    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
     # Each integration test dumps the system journal when something breaks
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
