@@ -57,6 +57,11 @@ for t in test/TEST-??-*; do
     fi
 
     rm -fr /var/tmp/systemd-test*
+
+    # Set timeouts for QEMU and systemd-nspawn tests (see systemd/test/test-functions)
+    export QEMU_TIMEOUT=600
+    export NSPAWN_TIMEOUT=600
+
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND='user_namespace.enable=1'"
     # Each integration test dumps the system journal when something breaks
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
