@@ -126,7 +126,7 @@ ninja-build -C build install
     # trying to test
     dracut -f --filesystems ext4
     [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-    make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
+    make -C test/TEST-01-BASIC clean setup run clean-again QEMU_TIMEOUT=600 TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 # Readahead is dead in systemd upstream
