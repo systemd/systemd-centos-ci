@@ -49,6 +49,18 @@ python3.6 -m pip install meson
 rm -f /usr/bin/python3
 ln -s "$(which python3.6)" /usr/bin/python3
 
+# Build and install dracut from upstream
+(
+    test -e dracut && rm -rf dracut
+    git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
+    pushd dracut
+    git checkout 046
+    ./configure --disable-documentation
+    make
+    make install
+    popd
+) 2>&1 | tee "$LOGDIR/dracut-build.log"
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd/systemd.git
@@ -96,17 +108,20 @@ git describe
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
-# Let's check if the new systemd at least boots before installing it
+# Install the compiled systemd
+ninja-build -C build install
+
+# Let's check if the new systemd at least boots before rebooting the system
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
 (
     INITRD_PATH="/boot/initramfs-$(uname -r).img"
     KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
+    # Ensure the initrd contains the same systemd version as the one we're
+    # trying to test
+    dracut -f --filesystems ext4
     [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
     make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
-
-# Install the compiled systemd
-ninja-build -C build install
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 #arbitrary pull request branches we're testing against.
@@ -117,17 +132,6 @@ echo SELINUX=disabled >/etc/selinux/config
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 popd
 
-# Build and install dracut from upstream && rebuild initrd
-(
-    test -e dracut && rm -rf dracut
-    git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-    pushd dracut
-    git checkout 046
-    ./configure --disable-documentation
-    make -j 16
-    make install
-    popd
-) 2>&1 | tee "$LOGDIR/dracut-build.log"
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
