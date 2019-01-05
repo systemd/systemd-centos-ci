@@ -92,6 +92,12 @@ esac
 echo -n "Checked out version "
 git describe
 
+# It's impossible to keep the local SELinux policy database up-to-date with
+# arbitrary pull request branches we're testing against.
+# Disable SELinux on the test hosts and avoid false positives.
+setenforce 0
+echo SELINUX=disabled >/etc/selinux/config
+
 # Compile systemd
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
 #     installed above
@@ -122,11 +128,6 @@ ninja-build -C build install
     [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
     make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
-
-# It's impossible to keep the local SELinux policy database up-to-date with
-#arbitrary pull request branches we're testing against.
-# Disable SELinux on the test hosts and avoid false positives.
-echo SELINUX=disabled >/etc/selinux/config
 
 # Readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
