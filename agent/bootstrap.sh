@@ -120,13 +120,24 @@ ninja-build -C build install
 # Let's check if the new systemd at least boots before rebooting the system
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
 (
-    INITRD_PATH="/boot/initramfs-$(uname -r).img"
-    KERNEL_PATH="/boot/vmlinuz-$(uname -r)"
     # Ensure the initrd contains the same systemd version as the one we're
     # trying to test
     dracut -f --filesystems ext4
+
     [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-    make -C test/TEST-01-BASIC clean setup run clean-again QEMU_TIMEOUT=600 TEST_NO_NSPAWN=1 INITRD=$INITRD_PATH KERNEL_BIN=$KERNEL_PATH KERNEL_APPEND=debug
+
+    ## Configure test environment
+    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+    export INITRD="/boot/initramfs-$(uname -r).img"
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # Enable kernel debug output for easier debugging when something goes south
+    export KERNEL_APPEND=debug
+    # Set timeout for QEMU tests to kill them in case they get stuck
+    export QEMU_TIMEOUT=600
+    # Disable nspawn version of the test
+    export TEST_NO_NSPAWN=1
+
+    make -C test/TEST-01-BASIC clean setup run clean-again
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 # Readahead is dead in systemd upstream
