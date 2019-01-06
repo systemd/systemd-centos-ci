@@ -149,6 +149,14 @@ popd
 # CentOS uses xfs as the default filesystem
 dracut -f --regenerate-all --filesystems ext4
 
+# Check if the new dracut image contains the systemd module to avoid issues
+# like systemd/systemd#11330
+if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
+    echo >&2 "Missing systemd module in the initramfs image, can't continue..."
+    lsinitrd /boot/initramfs-$(uname -r).img
+    exit 1
+fi
+
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
