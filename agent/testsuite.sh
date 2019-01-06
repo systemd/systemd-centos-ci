@@ -42,7 +42,6 @@ SKIP_LIST=(
     "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
     "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
-    "test/TEST-20-MAINPIDGAMES" # Temporary, until the /dev/shm issue is resolved
 )
 
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
