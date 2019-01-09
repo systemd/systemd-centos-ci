@@ -390,14 +390,26 @@ if __name__ == "__main__":
         rc = 1
 
     finally:
+        # Return the loaned node back to the pool if not requested otherwise
+        if not args.keep:
+            # Ugly workaround for current Jenkin's behavior, where the signal
+            # is sent several times under certain conditions. This is already
+            # filed upstream, but the fix is still incomplete. Let's just
+            # ignore SIGTERM/SIGHUP until the cleanup is complete.
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            signal.signal(signal.SIGHUP, signal.SIG_IGN)
+
+            ac.free_session(ssid)
+
+            # Restore default signal handlers
+            signal.signal(signal.SIGTERM, signal.SIG_DFL)
+            signal.signal(signal.SIGHUP, signal.SIG_DFL)
+
         if os.path.isfile("utils/generate-index.sh"):
             # Try to generate a simple HTML index with results
             logging.info("Attempting to create an HTML index page")
             command = ["utils/generate-index.sh", artifacts_dir, "index.html"]
             ac.execute_local_command(command)
 
-        # Return the loaned node back to the pool if not requested otherwise
-        if not args.keep:
-            ac.free_session(ssid)
 
     sys.exit(rc)
