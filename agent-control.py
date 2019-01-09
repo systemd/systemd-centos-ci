@@ -309,8 +309,8 @@ if __name__ == "__main__":
             help="List currectly allocated nodes")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
-    parser.add_argument("--rhel7", action="store_const", const=True,
-            help="Use RHEL7 scripts for testing")
+    parser.add_argument("--rhel", action="store_const", const=True,
+            help="Use RHEL downstream systemd repo")
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
@@ -365,8 +365,8 @@ if __name__ == "__main__":
             ac.execute_remote_command(node, command)
 
         logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
-        if args.rhel7:
-            command = "{}/agent/bootstrap-rhel7.sh {}".format(GITHUB_CI_REPO, branch)
+        if args.rhel:
+            command = "{}/agent/rhel-wrapper.sh BOOTSTRAP {}".format(GITHUB_CI_REPO, branch)
         else:
             command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
         ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
@@ -374,8 +374,8 @@ if __name__ == "__main__":
         ac.reboot_node(node)
 
         logging.info("PHASE 3: Upstream testsuite")
-        if args.rhel7:
-            command = "{}/agent/testsuite-rhel7.sh".format(GITHUB_CI_REPO)
+        if args.rhel:
+            command = "{}/agent/rhel-wrapper.sh TESTSUITE".format(GITHUB_CI_REPO)
         else:
             command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
         ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
