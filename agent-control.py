@@ -278,17 +278,15 @@ class AgentControl(object):
         time.sleep(30)
 
 
-class SIGTERMException(Exception):
+class SignalException(Exception):
     pass
 
-def handle_sigterm(signum, frame):
-    """SIGTERM handler"""
-    raise SIGTERMException()
+def handle_signal(signum, frame):
+    """Signal handler"""
+    print("handle_signal: got signal {}".format(signum))
+    raise SignalException()
 
 if __name__ == "__main__":
-    # Workaround for Jenkins' GHPRB plugin, which sends SIGTERM
-    signal.signal(signal.SIGTERM, handle_sigterm)
-
     # Setup logging
     logging.basicConfig(level=logging.INFO,
             format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
@@ -329,14 +327,18 @@ if __name__ == "__main__":
         ac.allocated_nodes(verbose=True)
         sys.exit(0)
 
-    node, ssid = ac.allocate_node(args.version, args.arch)
-
-    if node is None or ssid is None:
-        logging.critical("Can't continue without a valid node")
-        sys.exit(1)
-
     rc = 0
     try:
+        # Workaround for Jenkins, which sends SIGTERM/SIGHUP
+        signal.signal(signal.SIGTERM, handle_signal)
+        signal.signal(signal.SIGHUP, handle_signal)
+
+        node, ssid = ac.allocate_node(args.version, args.arch)
+
+        if node is None or ssid is None:
+            logging.critical("Can't continue without a valid node")
+            sys.exit(1)
+
         # Figure out a systemd branch to compile
         if args.pr:
             branch = "pr:{}".format(args.pr)
@@ -370,9 +372,10 @@ if __name__ == "__main__":
         command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
         ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
 
-    except SIGTERMException:
-        # Do a proper cleanup on SIGTERM (i.e. continue with the `finally` section)
-        logging.info("Caught SIGTERM")
+    except SignalException:
+        # Do a proper cleanup on certain signals
+        # (i.e. continue with the `finally` section)
+        logging.info("Ignoring received signal...")
 
     except Exception as e:
         logging.exception("Execution failed")
