@@ -2,6 +2,8 @@
 
 . "$(dirname "$0")/common.sh" "bootstrap-logs" || exit 1
 
+REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
+
 # EXIT signal handler
 function at_exit {
     # Let's collect some build-related logs
@@ -63,7 +65,7 @@ ln -s "$(which python3.6)" /usr/bin/python3
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
-git clone https://github.com/systemd/systemd.git
+git clone "$REPO_URL" systemd
 pushd systemd
 
 echo "$0 called with argument '$1'"
