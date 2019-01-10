@@ -18,7 +18,8 @@ set -e
 set -o pipefail
 
 # Install necessary dependencies
-yum -q -y install rpm-build yum-utils
+# - systemd-* packages are necessary for correct users/groups to be created
+yum -q -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
 yum-builddep -y systemd
 
 # Fetch the downstream systemd repo
@@ -74,21 +75,31 @@ echo SELINUX=disabled >/etc/selinux/config
         --enable-lz4
     )
     ./configure "${CONFIGURE_OPTS[@]}"
-    make
+    make -j 8
     make install
 ) 2>&1 | tee "$LOGDIR/build.log"
 
-## FIXME: the integration testsuite is currently broken on RHEL7
 # Let's check if the new systemd at least boots before rebooting the system
-#(
-#    ## Configure test environment
-#    # Set timeout for systemd-nspawn tests to kill them in case they get stuck
-#    export NSPAWN_TIMEOUT=600
-#    # Disable QEMU version of the test
-#    export TEST_NO_QEMU=1
-#
-#    make -C test/TEST-01-BASIC clean setup run clean-again
-#) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
+(
+    # Ensure the initrd contains the same systemd version as the one we're
+    # trying to test
+    dracut -f --filesystems ext4
+
+    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+
+    ## Configure test environment
+    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+    export INITRD="/boot/initramfs-$(uname -r).img"
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # Enable kernel debug output for easier debugging when something goes south
+    export KERNEL_APPEND=debug
+    # Set timeout for QEMU tests to kill them in case they get stuck
+    export QEMU_TIMEOUT=600
+    # Disable nspawn version of the test
+    export TEST_NO_NSPAWN=1
+
+    make -C test/TEST-01-BASIC clean setup run
+) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"

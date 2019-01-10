@@ -16,7 +16,7 @@ set -e
 
 # Install test dependencies
 exectask "Install test dependencies" "yum-depinstall.log" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm"
+    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm python-enum34"
 
 set +e
 
@@ -26,9 +26,6 @@ cd systemd-rhel
 # Run the internal unit tests (make check)
 exectask "make check" "make-check.log" "make check"
 
-
-## FIXME: the integration testsuite is currently broken on RHEL7
-if false; then
 ## Integration test suite ##
 
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
@@ -52,7 +49,7 @@ for t in test/TEST-??-*; do
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
 
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
+    exectask "$t" "${t##*/}.log" "make -C $t clean setup run"
     # Each integration test dumps the system journal when something breaks
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
@@ -66,8 +63,6 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "$t" "${t##*/}.log" "./$t"
 done
-
-fi
 
 # Summary
 echo
