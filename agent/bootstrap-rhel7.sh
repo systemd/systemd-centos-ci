@@ -74,7 +74,7 @@ echo SELINUX=disabled >/etc/selinux/config
         --enable-lz4
     )
     ./configure "${CONFIGURE_OPTS[@]}"
-    make
+    make -j 8
     make install
 ) 2>&1 | tee "$LOGDIR/build.log"
 
