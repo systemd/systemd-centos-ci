@@ -81,11 +81,22 @@ echo SELINUX=disabled >/etc/selinux/config
 
 # Let's check if the new systemd at least boots before rebooting the system
 (
+    # Ensure the initrd contains the same systemd version as the one we're
+    # trying to test
+    dracut -f --filesystems ext4
+
+    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+
     ## Configure test environment
-    # Set timeout for systemd-nspawn tests to kill them in case they get stuck
-    export NSPAWN_TIMEOUT=600
-    # Disable QEMU version of the test
-    export TEST_NO_QEMU=1
+    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+    export INITRD="/boot/initramfs-$(uname -r).img"
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # Enable kernel debug output for easier debugging when something goes south
+    export KERNEL_APPEND=debug
+    # Set timeout for QEMU tests to kill them in case they get stuck
+    export QEMU_TIMEOUT=600
+    # Disable nspawn version of the test
+    export TEST_NO_NSPAWN=1
 
     make -C test/TEST-01-BASIC clean setup run
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
