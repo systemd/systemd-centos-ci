@@ -45,26 +45,20 @@ case $BRANCH in
 esac
 
 # Quick dirty decision check
-IS_RHEL_7=true
-[ -f meson.build ] && IS_RHEL_7=false
+SCRIPT_SUFFIX="rhel7"
+[ -f meson.build ] && SCRIPT_SUFFIX="rhel8"
+
+echo "RHEL script suffix: $SCRIPT_SUFFIX"
 
 popd
 rm -fr "$TEMP_GIT"
 
 case $PHASE in
     BOOTSTRAP)
-        if $IS_RHEL_7; then
-            exec "$SCRIPT_ROOT/bootstrap-rhel7.sh" "$BRANCH"
-        else
-            REPO_URL="$REPO_URL" exec "$SCRIPT_ROOT/bootstrap.sh" "$BRANCH"
-        fi
+        exec "$SCRIPT_ROOT/bootstrap-$SCRIPT_SUFFIX.sh" "$BRANCH"
         ;;
     TESTSUITE)
-        if $IS_RHEL_7; then
-            exec "$SCRIPT_ROOT/testsuite-rhel7.sh" "$BRANCH"
-        else
-            REPO_URL="$REPO_URL" exec "$SCRIPT_ROOT/testsuite.sh" "$BRANCH"
-        fi
+        exec "$SCRIPT_ROOT/testsuite-$SCRIPT_SUFFIX.sh" "$BRANCH"
         ;;
     *)
         echo >&2 "Unknown phase '$PHASE'"

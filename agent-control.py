@@ -375,7 +375,7 @@ if __name__ == "__main__":
 
         logging.info("PHASE 3: Upstream testsuite")
         if args.rhel:
-            command = "{}/agent/rhel-wrapper.sh TESTSUITE".format(GITHUB_CI_REPO)
+            command = "{}/agent/rhel-wrapper.sh TESTSUITE {}".format(GITHUB_CI_REPO, branch)
         else:
             command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
         ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
