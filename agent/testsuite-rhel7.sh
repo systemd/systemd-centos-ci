@@ -16,7 +16,7 @@ set -e
 
 # Install test dependencies
 exectask "Install test dependencies" "yum-depinstall.log" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm"
+    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm python-enum34"
 
 set +e
 

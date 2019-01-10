@@ -18,7 +18,8 @@ set -e
 set -o pipefail
 
 # Install necessary dependencies
-yum -q -y install rpm-build yum-utils
+# - systemd-* packages are necessary for correct users/groups to be created
+yum -q -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
 yum-builddep -y systemd
 
 # Fetch the downstream systemd repo
@@ -86,7 +87,7 @@ echo SELINUX=disabled >/etc/selinux/config
     # Disable QEMU version of the test
     export TEST_NO_QEMU=1
 
-    make -C test/TEST-01-BASIC clean setup run clean-again
+    make -C test/TEST-01-BASIC clean setup run
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 echo "-----------------------------"
