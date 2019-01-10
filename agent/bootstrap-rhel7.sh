@@ -78,17 +78,16 @@ echo SELINUX=disabled >/etc/selinux/config
     make install
 ) 2>&1 | tee "$LOGDIR/build.log"
 
-## FIXME: the integration testsuite is currently broken on RHEL7
 # Let's check if the new systemd at least boots before rebooting the system
-#(
-#    ## Configure test environment
-#    # Set timeout for systemd-nspawn tests to kill them in case they get stuck
-#    export NSPAWN_TIMEOUT=600
-#    # Disable QEMU version of the test
-#    export TEST_NO_QEMU=1
-#
-#    make -C test/TEST-01-BASIC clean setup run clean-again
-#) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
+(
+    ## Configure test environment
+    # Set timeout for systemd-nspawn tests to kill them in case they get stuck
+    export NSPAWN_TIMEOUT=600
+    # Disable QEMU version of the test
+    export TEST_NO_QEMU=1
+
+    make -C test/TEST-01-BASIC clean setup run clean-again
+) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"

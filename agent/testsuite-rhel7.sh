@@ -26,9 +26,6 @@ cd systemd-rhel
 # Run the internal unit tests (make check)
 exectask "make check" "make-check.log" "make check"
 
-
-## FIXME: the integration testsuite is currently broken on RHEL7
-if false; then
 ## Integration test suite ##
 
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
@@ -66,8 +63,6 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "$t" "${t##*/}.log" "./$t"
 done
-
-fi
 
 # Summary
 echo
