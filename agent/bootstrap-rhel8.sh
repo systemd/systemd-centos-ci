@@ -167,6 +167,10 @@ echo SELINUX=disabled >/etc/selinux/config
 # Install the compiled systemd
 ninja-build -C build install
 
+# Create necessary systemd users/groups
+getent group systemd-resolve &>/dev/null || groupadd -r -g 193 systemd-resolve 2>&1
+getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-resolve -d / -s /sbin/nologin -c "systemd Resolver" systemd-resolve &>/dev/null
+
 # Let's check if the new systemd at least boots before rebooting the system
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
 (
