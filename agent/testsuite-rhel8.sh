@@ -37,8 +37,6 @@ cd systemd
 sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
-## FIXME: integration tests keep kernel-panicking for some reason
-if false; then
 ## Integration test suite ##
 SKIP_LIST=(
     "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
@@ -71,8 +69,6 @@ for t in test/TEST-??-*; do
     # Each integration test dumps the system journal when something breaks
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
-
-fi ## FIXME end
 
 ## Other integration tests ##
 TEST_LIST=(
