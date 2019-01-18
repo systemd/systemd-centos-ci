@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 LIB_ROOT="$(dirname "$0")/../common"
-. "$LIB_ROOT/utils.sh" "bootstrap-logs" || exit 1
+. "$LIB_ROOT/utils.sh" || exit 1
 . "$LIB_ROOT/logging.sh" "bootstrap-logs" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/lnykryn/systemd-rhel.git}"
