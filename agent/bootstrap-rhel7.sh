@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-. "$(dirname "$0")/common.sh" "bootstrap-logs" || exit 1
+LIB_ROOT="$(dirname "$0")/../common"
+. "$LIB_ROOT/utils.sh" "bootstrap-logs" || exit 1
+. "$LIB_ROOT/logging.sh" "bootstrap-logs" || exit 1
 
 # EXIT signal handler
 function at_exit {

@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-. "$(dirname "$0")/common.sh" "testsuite-logs" || exit 1
+. "$(dirname "$0")/../common/logging.sh" "testsuite-logs" || exit 1
 
 # EXIT signal handler
 function at_exit {
