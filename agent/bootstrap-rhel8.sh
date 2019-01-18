@@ -68,31 +68,7 @@ test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 pushd systemd
 
-echo "$0 called with argument '$1'"
-
-# Checkout to the requsted branch:
-#   1) if pr:XXX where XXX is a pull request ID is passed to the script,
-#      the corresponding branch for this PR is be checked out
-#   2) if any other string except pr:* is passed, it's used as a branch
-#      name to check out
-#   3) if the script is called without arguments, the default (possibly master)
-#      branch is used
-case $1 in
-    pr:*)
-        git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"
-        git checkout pr
-        ;;
-
-    "")
-        ;;
-
-    *)
-        git checkout "$1"
-        ;;
-esac
-
-echo -n "Checked out version "
-git describe
+git_checkout_pr "$1"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
