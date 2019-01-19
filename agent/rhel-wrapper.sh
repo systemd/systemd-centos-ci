@@ -7,6 +7,9 @@
 # otherwise we assume RHEL 7 with their script counterparts (bootstrap-rhel7.sh,
 # testsuite-rhel7.sh).
 
+SCRIPT_ROOT="$(dirname $0)"
+. "$SCRIPT_ROOT/../common/utils.sh" || exit 1
+
 set -e
 
 if [ $# -lt 1 ]; then
@@ -15,7 +18,6 @@ if [ $# -lt 1 ]; then
 fi
 
 REPO_URL="https://github.com/lnykryn/systemd-rhel.git"
-SCRIPT_ROOT="$(dirname $0)"
 TEMP_GIT="$(mktemp -d)"
 PHASE="${1^^}"
 BRANCH="$2"
@@ -23,26 +25,7 @@ BRANCH="$2"
 git clone "$REPO_URL" "$TEMP_GIT"
 pushd "$TEMP_GIT"
 
-# Checkout to the requsted branch:
-#   1) if pr:XXX where XXX is a pull request ID is passed to the script,
-#      the corresponding branch for this PR is be checked out
-#   2) if any other string except pr:* is passed, it's used as a branch
-#      name to check out
-#   3) if the script is called without arguments, the default (possibly master)
-#      branch is used
-case $BRANCH in
-    pr:*)
-        git fetch -fu origin "refs/pull/${BRANCH#pr:}/merge:pr"
-        git checkout pr
-        ;;
-
-    "")
-        ;;
-
-    *)
-        git checkout "$BRANCH"
-        ;;
-esac
+git_checkout_pr "$BRANCH"
 
 # Quick dirty decision check
 SCRIPT_SUFFIX="rhel7"
