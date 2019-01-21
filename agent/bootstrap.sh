@@ -84,13 +84,13 @@ echo SELINUX=disabled >/etc/selinux/config
 #   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
-    CFLAGS='-g -O0 -ftrapv' meson build \
-          -Dslow-tests=true \
-          -Dtests=unsafe \
-          -Dinstall-tests=true \
-          -Ddbuspolicydir=/etc/dbus-1/system.d \
-          -Dnobody-user=nfsnobody \
-          -Dnobody-group=nfsnobody
+    meson build -Dc_args='-g -O0 -ftrapv' \
+                -Dslow-tests=true \
+                -Dtests=unsafe \
+                -Dinstall-tests=true \
+                -Ddbuspolicydir=/etc/dbus-1/system.d \
+                -Dnobody-user=nfsnobody \
+                -Dnobody-group=nfsnobody
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
