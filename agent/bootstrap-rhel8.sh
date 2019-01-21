@@ -137,8 +137,9 @@ echo SELINUX=disabled >/etc/selinux/config
             -Dslow-tests=true
             -Dtests=unsafe
             -Dinstall-tests=true
+            -Dc_args='-g -O0 -ftrapv'
     )
-    CFLAGS='-g -O0 -ftrapv' meson build "${CONFIGURE_OPTS[@]}"
+    meson build "${CONFIGURE_OPTS[@]}"
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
