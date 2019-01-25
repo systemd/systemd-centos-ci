@@ -36,7 +36,7 @@ set +e
 EC=0
 
 for distro in ${DISTROS[@]}; do
-    "$SCRIPT_ROOT/vagrant-build.sh" "$distro"
+    "$SCRIPT_ROOT/vagrant-build.sh" "$distro" 2>&1 | tee "$LOGDIR/console-$distro.log"
     if [[ $? -ne 0 ]]; then
         EC=$((EC + 1))
     fi
