@@ -39,7 +39,6 @@ exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
 ## Integration test suite ##
 SKIP_LIST=(
-    "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
     "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
