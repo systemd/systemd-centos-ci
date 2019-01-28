@@ -54,7 +54,7 @@ pushd "$TEST_DIR"
 cp "$VAGRANT_ROOT/vagrant-test.sh" "$TEST_DIR/vagrant-test.sh"
 
 # Provision the machine
-vagrant up
+vagrant up --provider=libvirt
 # Reboot the VM to "apply" the new systemd
 vagrant reload
 # Run tests
