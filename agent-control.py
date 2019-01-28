@@ -311,6 +311,8 @@ if __name__ == "__main__":
             help="Pull request ID to check out (systemd repository)")
     parser.add_argument("--rhel", action="store_const", const=True,
             help="Use RHEL downstream systemd repo")
+    parser.add_argument("--vagrant", action="store_const", const=True,
+            help="Run testing in Vagrant VMs")
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
@@ -364,21 +366,28 @@ if __name__ == "__main__":
                       "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
             ac.execute_remote_command(node, command)
 
-        logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
-        if args.rhel:
-            command = "{}/agent/rhel-wrapper.sh BOOTSTRAP {}".format(GITHUB_CI_REPO, branch)
+        if args.vagrant:
+            # Setup Vagrant and run the tests inside VM
+            logging.info("PHASE 2: Run tests in Vagrant VMs")
+            command = "{}/vagrant/vagrant-ci-wrapper.sh {}".format(GITHUB_CI_REPO, branch)
+            ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
-            command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
-        ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
+            # Run tests directly on the provisioned machine
+            logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
+            if args.rhel:
+                command = "{}/agent/rhel-wrapper.sh BOOTSTRAP {}".format(GITHUB_CI_REPO, branch)
+            else:
+                command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
+            ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
-        ac.reboot_node(node)
+            ac.reboot_node(node)
 
-        logging.info("PHASE 3: Upstream testsuite")
-        if args.rhel:
-            command = "{}/agent/rhel-wrapper.sh TESTSUITE {}".format(GITHUB_CI_REPO, branch)
-        else:
-            command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
-        ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
+            logging.info("PHASE 3: Upstream testsuite")
+            if args.rhel:
+                command = "{}/agent/rhel-wrapper.sh TESTSUITE {}".format(GITHUB_CI_REPO, branch)
+            else:
+                command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
+            ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
 
     except SignalException:
         # Do a proper cleanup on certain signals
