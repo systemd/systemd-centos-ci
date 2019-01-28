@@ -21,15 +21,22 @@ waitforpid() {
         return 1
     fi
 
+    local EC
+    SECONDS=0
+
     echo "Waiting for PID $1 to finish"
     while kill -0 $1 2>/dev/null; do
         echo -n "."
         sleep 10
     done
 
-    echo
+    wait $1
+    EC=$?
 
-    return $(wait $1)
+    echo
+    echo "PID $1 finished with EC $EC in ${SECONDS}s"
+
+    return $EC
 }
 
 # Convert passed exit code to a "human readable" message
