@@ -1,9 +1,11 @@
 #!/usr/bin/bash
 # This script is part of the systemd Vagrant test suite for CentOS CI.
+#
 # The script takes a distro name as the only argument and then tries to fetch,
 # build, and configure a Vagrant VM according to the respective Vagrantfile,
 # if such Vagrantfile exists. On success, vagrant-test.sh script is executed
-# inside the VM.
+# inside the VM and the test artifacts are stored in a respective vagrant-$DISTRO
+# folder in the $SYSTEMD_ROOT directory for further investigation.
 
 if ! vagrant version; then
     echo >&2 "Missing vagrant package, consider running 'vagrant-setup.sh'"

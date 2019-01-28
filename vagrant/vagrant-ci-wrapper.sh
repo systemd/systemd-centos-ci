@@ -1,4 +1,9 @@
 #!/usr/bin/bash
+# Auxilliary script for the CentOS CI infrastructure.
+#
+# This script basically checks out the requested branch of the systemd/systemd
+# repository, install & configures Vagrant, and runs the configured testsuite
+# in the Vagrant container on given distributions.
 
 LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
@@ -35,6 +40,7 @@ set +e
 
 EC=0
 
+# Run the vagrant-build script for each supported distro from the DISTROS array
 for distro in ${DISTROS[@]}; do
     "$SCRIPT_ROOT/vagrant-build.sh" "$distro" 2>&1 | tee "$LOGDIR/console-$distro.log"
     if [[ $? -ne 0 ]]; then
@@ -42,6 +48,8 @@ for distro in ${DISTROS[@]}; do
     fi
 done
 
+# Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
+# can gather them for further investigation
 cp -r $SYSTEMD_ROOT/vagrant-* "$LOGDIR"
 
 exit $EC
