@@ -37,42 +37,42 @@ cd systemd
 sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
-## Integration test suite ##
-SKIP_LIST=(
-    "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
-    "test/TEST-16-EXTEND-TIMEOUT" # flaky test
-)
-
-[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
-
-for t in test/TEST-??-*; do
-    if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
-        echo -e "\n[SKIP] Skipping test $t"
-        continue
-    fi
-
-    rm -fr /var/tmp/systemd-test*
-
-    ## Configure test environment
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    export INITRD="/boot/initramfs-$(uname -r).img"
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
-    # Each integration test dumps the system journal when something breaks
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
-done
+### Integration test suite ##
+#SKIP_LIST=(
+#    "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
+#    "test/TEST-16-EXTEND-TIMEOUT" # flaky test
+#)
+#
+#[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+#qemu-kvm --version
+#
+#for t in test/TEST-??-*; do
+#    if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+#        echo -e "\n[SKIP] Skipping test $t"
+#        continue
+#    fi
+#
+#    rm -fr /var/tmp/systemd-test*
+#
+#    ## Configure test environment
+#    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+#    export INITRD="/boot/initramfs-$(uname -r).img"
+#    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+#    # Explicitly enable user namespaces
+#    export KERNEL_APPEND="user_namespace.enable=1"
+#    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+#    export QEMU_TIMEOUT=600
+#    export NSPAWN_TIMEOUT=600
+#
+#    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
+#    # Each integration test dumps the system journal when something breaks
+#    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
+#done
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
-#    "test/test-network/systemd-networkd-tests.py"
+#    "test/test-exec-deserialization.py"
+    "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
