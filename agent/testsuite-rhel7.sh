@@ -25,6 +25,10 @@ cd systemd-rhel
 
 # Run the internal unit tests (make check)
 exectask "make check" "make-check.log" "make check"
+if [[ -f "test-suite.log" ]]; then
+    cat test-suite.log
+    exectask "make check (full log)" "make-check-full.log" "cat test-suite.log"
+fi
 
 ## Integration test suite ##
 
