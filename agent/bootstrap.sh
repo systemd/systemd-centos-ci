@@ -78,6 +78,9 @@ git_checkout_pr "$1"
 setenforce 0
 echo SELINUX=disabled >/etc/selinux/config
 
+# Disable firewalld (needed for systemd-networkd tests)
+systemctl disable firewalld
+
 # Compile systemd
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
 #     installed above
