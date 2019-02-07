@@ -61,11 +61,10 @@ done
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-#    "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "$t" "${t##*/}.log" "./$t"
+    exectask "$t" "${t##*/}.log" "timeout 15m ./$t"
 done
 
 # Summary
