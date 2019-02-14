@@ -76,7 +76,7 @@ echo SELINUX=disabled >/etc/selinux/config
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
 
-    make -C test/TEST-01-BASIC clean setup run
+    make -C test/TEST-01-BASIC clean setup run clean
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 echo "-----------------------------"
