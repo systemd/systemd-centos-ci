@@ -8,7 +8,7 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
-# common.sh is copied from the systemd-centos-ci/agent directory by vagrant-builder.sh
+# task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 
 cd /build
