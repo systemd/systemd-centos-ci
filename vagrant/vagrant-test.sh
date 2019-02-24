@@ -14,16 +14,11 @@ SCRIPT_DIR="$(dirname $0)"
 cd /build
 
 # Run the internal unit tests (make check)
-# Temporarily disable test-exec-privatenetwork
-sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
 SKIP_LIST=(
-    "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
-    "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
-    "test/TEST-25-IMPORT" # flaky test (https://github.com/systemd/systemd/issues/12039)
 )
 
 for t in test/TEST-??-*; do
