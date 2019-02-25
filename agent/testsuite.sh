@@ -33,8 +33,6 @@ set +e
 cd systemd
 
 # Run the internal unit tests (make check)
-# Temporarily disable test-exec-privatenetwork
-sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
 
 ## Integration test suite ##
