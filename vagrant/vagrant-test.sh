@@ -16,7 +16,7 @@ cd /build
 # Run the internal unit tests (make check)
 # Temporarily disable test-exec-privatenetwork
 sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
-exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
+exectask "meson test (make check)" "ninja-test.log" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
 SKIP_LIST=(

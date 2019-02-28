@@ -33,7 +33,7 @@ set +e
 cd systemd
 
 # Run the internal unit tests (make check)
-exectask "ninja test (make check)" "ninja-test.log" "ninja -C build test"
+exectask "meson test (make check)" "ninja-test.log" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
 SKIP_LIST=(
