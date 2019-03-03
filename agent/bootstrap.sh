@@ -60,7 +60,7 @@ ln -s "$(which python3.6)" /usr/bin/python3
     pushd dracut
     git checkout 046
     ./configure --disable-documentation
-    make
+    make -j $(nproc)
     make install
     popd
 ) 2>&1 | tee "$LOGDIR/dracut-build.log"
