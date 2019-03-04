@@ -36,7 +36,7 @@ for t in test/TEST-??-*; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     # As we're not using KVM, bump the QEMU timeout quite a bit
-    export QEMU_TIMEOUT=1500
+    export QEMU_TIMEOUT=2000
     export NSPAWN_TIMEOUT=600
 
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
