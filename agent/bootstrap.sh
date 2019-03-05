@@ -119,6 +119,7 @@ ninja-build -C build install
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
+    export QEMU_SMP=$(nproc)
 
     make -C test/TEST-01-BASIC clean setup run clean-again
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"

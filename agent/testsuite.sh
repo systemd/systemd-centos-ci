@@ -60,6 +60,7 @@ for t in test/TEST-??-*; do
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
+    export QEMU_SMP=$(nproc)
 
     exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
     # Each integration test dumps the system journal when something breaks
