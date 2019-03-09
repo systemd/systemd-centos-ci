@@ -45,19 +45,41 @@ waitforpid() {
 # Arguments
 #   $1 - exit code to process
 #   $2 - path to log file "belonging" to the exit code
+#   $3 - task name
 printresult() {
     if [ $# -lt 2 ]; then
         echo >&2 "printresult: missing arguments"
         return 1
     fi
 
+    # Let's rename the target log file according to the test result (PASS/FAIL)
+    local LOGFILE_BASE="${LOGFILE%.*}" # Log file path without the extension
+    local LOGFILE_EXT="${LOGFILE##*.}"  # Log file extension without the leading dot
+    local NEW_LOGFILE
+
+    # Determine the log's new name
+    if [ $1 -eq 0 ]; then
+        NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
+    else
+        NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
+    fi
+
+    # Attempt to rename the log file. If we don't succeed, continue with the old one
+    if mv "$LOGFILE" "$NEW_LOGFILE"; then
+        LOGFILE="$NEW_LOGFILE"
+    else
+        echo >&2 "printresult: log rename failed"
+    fi
+
+
     if [[ $1 -eq 0 ]]; then
         PASSED=$((PASSED + 1))
-        echo "[RESULT] PASS (log file: $2)"
+        echo "[RESULT] $t - PASS (log file: $2)"
     else
         cat "$2"
         FAILED=$((FAILED + 1))
-        echo "[RESULT] FAIL (log file: $2)"
+        FAILED_LIST+=("$1")
+        echo "[RESULT] $t - FAIL (log file: $2)"
     fi
 }
 
@@ -87,17 +109,10 @@ exectask() {
     fi
     local EC=$?
 
-    # Let's rename the target log file according to the test result (PASS/FAIL)
-    local LOGFILE_BASE="${LOGFILE%.*}" # Log file path without the extension
-    local LOGFILE_EXT="${LOGFILE##*.}"  # Log file extension without the leading dot
-    local NEW_LOGFILE
+    printresult $EC "$LOGFILE" "$1"
 
-    # Determine the log's new name
-    if [ $EC -eq 0 ]; then
-        NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
-    else
-        NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
-    fi
+    return $EC
+}
 
     # Attempt to rename the log file. If we don't succeed, continue with the old one
     if mv "$LOGFILE" "$NEW_LOGFILE"; then
