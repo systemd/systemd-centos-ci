@@ -16,7 +16,7 @@ cd /build
 # Run the internal unit tests (make check)
 # Temporarily disable test-exec-privatenetwork
 sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
-exectask "meson test (make check)" "ninja-test.log" "meson test -C build --timeout-multiplier=3"
+exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
 SKIP_LIST=(
@@ -31,17 +31,33 @@ for t in test/TEST-??-*; do
         continue
     fi
 
-    rm -fr /var/tmp/systemd-test*
-
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     # As we're not using KVM, bump the QEMU timeout quite a bit
     export QEMU_TIMEOUT=2000
     export NSPAWN_TIMEOUT=600
+    # Set the test dir to something predictable so we can refer to it later
+    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    # Set QEMU_SMP appropriately (regarding the parallelism)
+    # OPTIMAL_QEMU_SMP is part of the common/logging.sh file
+    export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    # Use a "unique" name for each nspawn container to prevent scope clash
+    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean-again"
-    # Each integration test dumps the system journal when something breaks
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
+    rm -fr "$TESTDIR"
+    mkdir -p "$TESTDIR"
+
+    exectask_p "${t##*/}" "make -C $t clean setup run clean"
+done
+
+# Wait for remaining running tasks
+exectask_p_finish
+
+# Save journals created by integration tests
+for t in test/TEST-??-*; do
+    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
+        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    fi
 done
 
 ## Other integration tests ##
@@ -51,7 +67,7 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "$t" "${t##*/}.log" "./$t"
+    exectask "${t##*/}" "./$t"
 done
 
 # Summary
@@ -69,6 +85,6 @@ for task in "${FAILED_LIST[@]}"; do
 done
 
 [ -d /build/build/meson-logs ] && cp -r /build/build/meson-logs "$LOGDIR"
-exectask "Dump system journal" "journalctl-testsuite.log" "journalctl -b --no-pager"
+exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 exit $FAILED

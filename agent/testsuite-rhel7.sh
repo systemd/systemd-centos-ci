@@ -5,7 +5,7 @@
 # EXIT signal handler
 function at_exit {
     set +e
-    exectask "Dump system journal" "journalctl-testsuite.log" "journalctl -b --no-pager"
+    exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
 
 trap at_exit EXIT
@@ -15,7 +15,7 @@ trap at_exit EXIT
 set -e
 
 # Install test dependencies
-exectask "Install test dependencies" "yum-depinstall.log" \
+exectask "yum-depinstall" \
     "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm python-enum34"
 
 set +e
@@ -24,10 +24,10 @@ set +e
 cd systemd-rhel
 
 # Run the internal unit tests (make check)
-exectask "make check" "make-check.log" "make check"
+exectask "make-check" "make check"
 if [[ -f "test-suite.log" ]]; then
     cat test-suite.log
-    exectask "make check (full log)" "make-check-full.log" "cat test-suite.log"
+    exectask "make-check-full" "cat test-suite.log"
 fi
 
 ## Integration test suite ##
@@ -53,7 +53,7 @@ for t in test/TEST-??-*; do
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
 
-    exectask "$t" "${t##*/}.log" "make -C $t clean setup run clean"
+    exectask "${t##*/}" "make -C $t clean setup run clean"
     # Each integration test dumps the system journal when something breaks
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
@@ -64,7 +64,7 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "$t" "${t##*/}.log" "timeout 15m ./$t"
+    exectask "${t##*/}" "timeout 15m ./$t"
 done
 
 # Summary
