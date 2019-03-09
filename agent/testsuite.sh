@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-. "$(dirname "$0")/../common/logging.sh" "testsuite-logs" || exit 1
+. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs" || exit 1
 
 # EXIT signal handler
 function at_exit {
@@ -61,7 +61,7 @@ for t in test/TEST-??-*; do
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/logging.sh file
+    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"

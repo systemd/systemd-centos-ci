@@ -7,7 +7,7 @@
 
 LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
-. "$LIB_ROOT/logging.sh" "vagrant-logs" || exit 1
+. "$LIB_ROOT/task-control.sh" "vagrant-logs" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 SCRIPT_ROOT="$(dirname "$0")"
