@@ -50,7 +50,7 @@ RELATIVE_TEST_DIR="${TEST_DIR##*/}"
 cp "$VAGRANT_FILE" "$TEST_DIR/Vagrantfile"
 # Possible FIXME: copy the common.sh "library" from the systemd-centos-ci/agent
 # directory
-cp "$VAGRANT_ROOT/../common/logging.sh" "$TEST_DIR/logging.sh"
+cp "$VAGRANT_ROOT/../common/task-control.sh" "$TEST_DIR/task-control.sh"
 pushd "$TEST_DIR"
 # Copy the test script to the test dir
 cp "$VAGRANT_ROOT/vagrant-test.sh" "$TEST_DIR/vagrant-test.sh"

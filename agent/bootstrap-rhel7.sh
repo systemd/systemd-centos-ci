@@ -2,14 +2,14 @@
 
 LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
-. "$LIB_ROOT/logging.sh" "bootstrap-logs" || exit 1
+. "$LIB_ROOT/task-control.sh" "bootstrap-logs" || exit 1
 
 # EXIT signal handler
 function at_exit {
     # Let's collect some build-related logs
     set +e
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
-    exectask "Dump system journal" "journalctl-bootstrap.log" "journalctl -b --no-pager"
+    exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
 trap at_exit EXIT

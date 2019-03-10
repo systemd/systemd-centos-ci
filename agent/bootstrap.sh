@@ -2,7 +2,7 @@
 
 LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
-. "$LIB_ROOT/logging.sh" "bootstrap-logs" || exit 1
+. "$LIB_ROOT/task-control.sh" "bootstrap-logs" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 
@@ -12,7 +12,7 @@ function at_exit {
     set +e
     [ -d systemd/build/meson-logs ] && cp -r systemd/build/meson-logs "$LOGDIR"
     [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
-    exectask "Dump system journal" "journalctl-bootstrap.log" "journalctl -b --no-pager"
+    exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
 trap at_exit EXIT
