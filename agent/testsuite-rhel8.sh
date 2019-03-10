@@ -49,8 +49,6 @@ for t in test/TEST-??-*; do
         continue
     fi
 
-    rm -fr /var/tmp/systemd-test*
-
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     export INITRD="/boot/initramfs-$(uname -r).img"
@@ -60,10 +58,28 @@ for t in test/TEST-??-*; do
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
+    # Set the test dir to something predictable so we can refer to it later
+    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    # Set QEMU_SMP appropriately (regarding the parallelism)
+    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+    export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    # Use a "unique" name for each nspawn container to prevent scope clash
+    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    exectask "${t##*/}" "make -C $t clean setup run clean"
-    # Each integration test dumps the system journal when something breaks
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
+    rm -fr "$TESTDIR"
+    mkdir -p "$TESTDIR"
+
+    exectask_p "${t##*/}" "make -C $t clean setup run clean"
+done
+
+# Wait for remaining running tasks
+exectask_p_finish
+
+# Save journals created by integration tests
+for t in test/TEST-??-*; do
+    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
+        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    fi
 done
 
 ## Other integration tests ##
