@@ -49,6 +49,8 @@ for t in test/TEST-??-*; do
         continue
     fi
 
+    testname="${t##*/}"
+
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     export INITRD="/boot/initramfs-$(uname -r).img"
@@ -59,17 +61,25 @@ for t in test/TEST-??-*; do
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    export TESTDIR="/var/tmp/systemd-test-$testname"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+    export NSPAWN_ARGUMENTS="--machine=$testname"
 
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+    if [[ ! -d $TESTDIR ]]; then
+        echo >&2 "$TESTDIR is not a directory"
+        exit 1
+    fi
+
+    # Clean-up stale state files which could overwrite $TESTDIR
+    [[ -d build/test/$testname ]] && rm -fr "build/test/$testname"
+
+    exectask_p "$testname" "make -C $t clean setup run clean-again"
 done
 
 # Wait for remaining running tasks
