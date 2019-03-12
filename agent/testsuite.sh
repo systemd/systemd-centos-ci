@@ -43,7 +43,7 @@ SKIP_LIST=(
 [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
 
-for t in test/TEST-??-*; do
+for t in test/TEST-01-BASIC; do
     if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
         echo -e "\n[SKIP] Skipping test $t"
         continue
@@ -91,6 +91,8 @@ for t in test/TEST-??-*; do
         rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
     fi
 done
+
+exit 0
 
 ## Other integration tests ##
 TEST_LIST=(
