@@ -118,9 +118,12 @@ exectask() {
         return 1
     fi
 
-    echo -e "\n[TASK] $1"
     local LOGFILE="$LOGDIR/$1.log"
     touch "$LOGFILE"
+
+    echo -e "\n[TASK] $1"
+    echo "[TASK START] $(date)" >> "$LOGFILE"
+
     if [ "$CI_DEBUG" ]; then
         $2
     else
@@ -129,6 +132,7 @@ exectask() {
         waitforpid $PID
     fi
     local EC=$?
+    echo "[TASK END] $(date)" >> "$LOGFILE"
 
     printresult $EC "$LOGFILE" "$1"
 
@@ -155,6 +159,7 @@ exectask_p() {
     touch "$LOGFILE"
 
     echo -e "\n[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
+    echo "[TASK START] $(date)" >> "$LOGFILE"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
@@ -163,6 +168,7 @@ exectask_p() {
                 wait ${TASK_QUEUE[$key]}
                 ec=$?
                 logfile="$LOGDIR/$key.log"
+                echo "[TASK END] $(date)" >> "$logfile"
                 printresult $ec "$logfile" "$key"
                 unset TASK_QUEUE["$key"]
                 # Break from inner for loop and outer while loop to skip
