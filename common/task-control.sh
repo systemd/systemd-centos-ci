@@ -127,7 +127,7 @@ exectask() {
     if [ "$CI_DEBUG" ]; then
         $2
     else
-        $2 &> "$LOGFILE" &
+        $2 &>> "$LOGFILE" &
         local PID=$!
         waitforpid $PID
     fi
@@ -181,7 +181,7 @@ exectask_p() {
         sleep 0.01
     done
 
-    $TASK_COMMAND &> "$LOGFILE" &
+    $TASK_COMMAND &>> "$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
     return 0
