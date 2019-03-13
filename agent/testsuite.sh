@@ -89,7 +89,7 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout 15m ./$t"
+    exectask "${t##*/}" "timeout 30m ./$t"
 done
 
 # Summary
