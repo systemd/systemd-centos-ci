@@ -39,6 +39,7 @@ export SYSTEMD_ROOT="${SYSTEMD_ROOT:-$HOME/systemd}"
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
 export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+export VAGRANT_DISK_BUS
 
 # Absolute systemd git root path on the host machine
 TEST_DIR="$(mktemp -d "$SYSTEMD_ROOT/vagrant-$DISTRO-config.XXX")"
