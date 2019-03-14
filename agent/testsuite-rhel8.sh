@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs" || exit 1
+. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-rhel8" || exit 1
 
 # EXIT signal handler
 function at_exit {
