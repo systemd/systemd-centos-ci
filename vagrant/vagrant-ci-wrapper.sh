@@ -11,7 +11,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 SCRIPT_ROOT="$(dirname "$0")"
-DISTROS=(arch)
+DISTROS=(suse-tumbleweed)
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
