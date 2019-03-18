@@ -1,0 +1,105 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+  config.vm.define :opensuse_tumbleweed_systemd
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  config.vm.box = "opensuse/openSUSE-Tumbleweed-x86_64"
+
+  # Disable automatic box update checking. If you disable this, then
+  # boxes will only be checked for updates when the user runs
+  # `vagrant box outdated`. This is not recommended.
+  # config.vm.box_check_update = false
+
+  # Create a forwarded port mapping which allows access to a specific port
+  # within the machine from a port on the host machine. In the example below,
+  # accessing "localhost:8080" will access port 80 on the guest machine.
+  # NOTE: This will enable public access to the opened port
+  # config.vm.network "forwarded_port", guest: 80, host: 8080
+
+  # Create a forwarded port mapping which allows access to a specific port
+  # within the machine from a port on the host machine and only allow access
+  # via 127.0.0.1 to disable public access
+  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  # config.vm.network "private_network", ip: "192.168.33.10"
+
+  # Create a public network, which generally matched to bridged network.
+  # Bridged networks make the machine appear as another physical device on
+  # your network.
+  # config.vm.network "public_network"
+
+  # Share an additional folder to the guest VM. The first argument is
+  # the path on the host to the actual folder. The second argument is
+  # the path on the guest to mount the folder. And the optional third
+  # argument is a set of non-required options.
+  config.vm.synced_folder ENV["SYSTEMD_ROOT"], "/build"
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Note: CentOS CI infra specific overrides - you may want to change them
+  #       to run the VM locally
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = if ENV["VAGRANT_DRIVER"] then ENV["VAGRANT_DRIVER"] else "kvm" end
+    libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
+    libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
+
+    if ENV["VAGRANT_DISK_BUS"] then
+      libvirt.disk_bus = ENV["VAGRANT_DISK_BUS"]
+    end
+  end
+
+  # View the documentation for the provider you are using for more
+  # information on available options.
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    set -e
+
+    whoami
+
+    # Upgrade the system
+    echo "Going to do a dist-upgrade, this will take a while..."
+    zypper --non-interactive -q dup --force-resolution
+    # Add a repository with source packages
+    zypper --non-interactive addrepo https://download.opensuse.org/tumbleweed/repo/src-oss src-oss
+    zypper --non-interactive ref
+    # Install build dependencies
+    zypper --non-interactive si -d systemd
+    # Install test dependencies
+    zypper --non-interactive in acl system-user-mail strace netcat-openbsd e2fsprogs \
+        dnsmasq automake make dhcp-client quota rsync qemu-x86 cryptsetup net-tools-deprecated \
+        busybox socat haveged
+
+    # Use systemd repo path specified by SYSTEMD_ROOT
+    pushd /build
+
+    rm -fr build
+    # Build phase
+    CFLAGS='-g -O0 -ftrapv' meson build \
+          -Drootprefix=/usr \
+          -Dsplit-usr=true \
+          -Dsplit-bin=true \
+          -Dslow-tests=true \
+          -Dtests=unsafe \
+          -Dinstall-tests=true \
+          -Dnobody-user=nfsnobody \
+          -Dnobody-group=nfsnobody
+    ninja -C build
+    ninja -C build install
+    popd
+  SHELL
+end
