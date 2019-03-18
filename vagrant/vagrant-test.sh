@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # This script is part of the systemd Vagrant test suite for CentOS CI and
 # it's expected to be executed in a Vagrant VM configured by vagrant-build.sh
 # script.
