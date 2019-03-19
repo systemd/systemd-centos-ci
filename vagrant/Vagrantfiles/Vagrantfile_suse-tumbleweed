@@ -82,7 +82,7 @@ Vagrant.configure("2") do |config|
     # Install test dependencies
     zypper --non-interactive in acl system-user-mail strace netcat-openbsd e2fsprogs \
         dnsmasq automake make dhcp-client quota rsync qemu-x86 cryptsetup net-tools-deprecated \
-        busybox socat haveged
+        busybox socat haveged valgrind terminfo-base libseccomp2 libseccomp-devel
 
     # Use systemd repo path specified by SYSTEMD_ROOT
     pushd /build
@@ -93,9 +93,10 @@ Vagrant.configure("2") do |config|
           -Drootprefix=/usr \
           -Dsplit-usr=true \
           -Dsplit-bin=true \
-          -Dslow-tests=true \
-          -Dtests=unsafe \
-          -Dinstall-tests=true \
+          -Dslow-tests=false \
+          -Dtests=false \
+          -Dseccomp=auto \
+          -Dinstall-tests=false \
           -Dnobody-user=nfsnobody \
           -Dnobody-group=nfsnobody
     ninja -C build

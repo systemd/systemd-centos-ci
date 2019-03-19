@@ -14,9 +14,9 @@ SCRIPT_DIR="$(dirname $0)"
 cd /build
 
 # Run the internal unit tests (make check)
-# Temporarily disable test-exec-privatenetwork
-sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
-exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
+## Temporarily disable test-exec-privatenetwork
+#sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
+#exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
 SKIP_LIST=(
@@ -25,7 +25,7 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
 
-for t in test/TEST-??-*; do
+for t in test/TEST-03-JOBS; do
     if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
         echo -e "\n[SKIP] Skipping test $t"
         continue
@@ -43,22 +43,33 @@ for t in test/TEST-??-*; do
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+    export STRIP_BINARIES="no"
 
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+    sed -i'' '/bash/aexport M_CHECK_ACTION=3' "$t/test-jobs.sh"
+    sed -i'' '/bash/aexport SYSTEMD_LOG_LEVEL=debug' "$t/test-jobs.sh"
+    sed -i'' '/bash/aexport MALLOC_CHECK_=3' "$t/test-jobs.sh"
+    sed -i'' '/bash/aset +e' "$t/test-jobs.sh"
+    sed -i'' 's#ExecStart=/test-jobs.sh#ExecStart=valgrind --leak-check=full /test-jobs.sh#' "$t/test.sh"
+    sed -i'' '/setup_basic_environment/ainstall_valgrind' "$t/test.sh"
+    sed -i'' '/setup_basic_environment/ainst_dir /usr/share/terminfo' "$t/test.sh"
+    sed -i'' '/setup_basic_environment/ainst /etc/termcap' "$t/test.sh"
+
+    cat "$t/test-jobs.sh"
+
+    exectask "${t##*/}" "make -C $t clean setup run clean-again"
 done
 
-# Wait for remaining running tasks
-exectask_p_finish
-
-# Save journals created by integration tests
+# Debug only: save E V E R Y T H I N G, even the root image
 for t in test/TEST-??-*; do
     if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
         rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
     fi
 done
+
+exit $FAILED
 
 ## Other integration tests ##
 TEST_LIST=(
