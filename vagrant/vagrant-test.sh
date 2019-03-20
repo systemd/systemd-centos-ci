@@ -23,6 +23,7 @@ SKIP_LIST=(
     "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
     "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
+    "test/TEST-25-IMPORT" # flaky test (https://github.com/systemd/systemd/issues/12039)
 )
 
 for t in test/TEST-??-*; do
