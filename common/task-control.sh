@@ -14,12 +14,12 @@ declare -A TASK_QUEUE=()
 # utility. If that fails, fall back to using default values for necessary
 # variables.
 if NPROC=$(nproc); then
-    OPTIMAL_QEMU_SMP=2
-    MAX_QUEUE_SIZE=$((NPROC / OPTIMAL_QEMU_SMP))
-    if [[ $MAX_QUEUE_SIZE -lt 1 ]]; then
+    MAX_QUEUE_SIZE=3
+    OPTIMAL_QEMU_SMP=$((NPROC / MAX_QUEUE_SIZE))
+    if [[ $OPTIMAL_QEMU_SMP -lt 1 ]]; then
         # We have enough CPUs for only one concurrent task
-        OPTIMAL_QEMU_SMP=1
         MAX_QUEUE_SIZE=1
+        OPTIMAL_QEMU_SMP=1
     fi
 else
     # Using nproc failed, let's fall back to defaults, which can be overriden
