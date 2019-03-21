@@ -43,6 +43,7 @@ for t in test/TEST-??-*; do
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+    export KERNEL_APPEND="systemd.log_target=console systemd.log_level=debug"
 
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
