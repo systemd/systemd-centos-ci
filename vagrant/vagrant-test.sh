@@ -8,22 +8,20 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
-# common.sh is copied from the systemd-centos-ci/agent directory by vagrant-builder.sh
+# task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 
 cd /build
 
 # Run the internal unit tests (make check)
-# Temporarily disable test-exec-privatenetwork
-sed -i 's/test_exec_privatenetwork,//' src/test/test-execute.c
 exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
 
 ## Integration test suite ##
+# Parallelized tasks
 SKIP_LIST=(
-    "test/TEST-02-CRYPTSETUP" # flaky test (https://github.com/systemd/systemd/issues/10093)
-    "test/TEST-10-ISSUE-2467" # https://github.com/systemd/systemd/pull/7494#discussion_r155635695
+    "test/TEST-10-ISSUE-2467" # Serialized below
+    "test/TEST-25-IMPORT"     # Serialized below
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
-    "test/TEST-25-IMPORT" # flaky test (https://github.com/systemd/systemd/issues/12039)
 )
 
 for t in test/TEST-??-*; do
@@ -53,6 +51,33 @@ done
 
 # Wait for remaining running tasks
 exectask_p_finish
+
+# Serialized tasks (i.e. tasks which have issues when run on a system under
+# heavy load)
+SERIALIZED_TASKS=(
+    "test/TEST-10-ISSUE-2467"
+    "test/TEST-25-IMPORT"
+)
+
+for t in ${SERIALIZED_TASKS[@]}; do
+    ## Configure test environment
+    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+    # As we're not using KVM, bump the QEMU timeout quite a bit
+    export QEMU_TIMEOUT=2000
+    export NSPAWN_TIMEOUT=600
+    # Set the test dir to something predictable so we can refer to it later
+    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    # Set QEMU_SMP appropriately (regarding the parallelism)
+    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+    export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    # Use a "unique" name for each nspawn container to prevent scope clash
+    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+
+    rm -fr "$TESTDIR"
+    mkdir -p "$TESTDIR"
+
+    exectask "${t##*/}" "make -C $t clean setup run clean-again"
+done
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
