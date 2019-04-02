@@ -26,7 +26,7 @@ wget -O repo-config.repo "$ORIGINAL_REPO"
 
 # Check if the original repository configuration contains a URL to a GPG key
 # If so, parse it and download it
-GPG_KEY_URL="$(awk -F= '/^gpgkey/ { print $2 }' repo-config.repo)"
+GPG_KEY_URL="$(awk -F= '/^gpgkey=/ { print $2 }' repo-config.repo)"
 if [[ -n $GPG_KEY_URL ]]; then
     GPG_KEY_URL_NAME="${GPG_KEY_URL##*/}"
     wget -O "$GPG_KEY_URL_NAME" "$GPG_KEY_URL"
