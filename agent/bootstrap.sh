@@ -35,12 +35,12 @@ curl "$COPR_REPO" -o "$COPR_REPO_PATH"
 # Add a copr repo mirror
 # Note: if a URL starts on a new line, it MUST begin with leading spaces,
 #       otherwise it will be ignored
-sed -i '/baseurl=/a\    https://rpm.sumsal.cz/mrc0mmand-systemd-centos-ci/' "$COPR_REPO_PATH"
+sed -i '/baseurl=/a\    http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci/' "$COPR_REPO_PATH"
 sed -i '/gpgkey=/d' "$COPR_REPO_PATH"
 sed -i 's/skip_if_unavailable=True/skip_if_unavailable=False/' "$COPR_REPO_PATH"
 # As the gpgkey directive doesn't support mirrors, let's install the GPG key manually
 if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/systemd-centos-ci/pubkey.gpg; then
-    rpm --import https://rpm.sumsal.cz/mrc0mmand-systemd-centos-ci/pubkey.gpg
+    rpm --import http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci/pubkey.gpg
 fi
 yum -q -y install epel-release yum-utils
 yum-config-manager -q --enable epel
