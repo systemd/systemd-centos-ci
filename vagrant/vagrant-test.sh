@@ -55,7 +55,7 @@ exectask_p_finish
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
 SERIALIZED_TASKS=(
-    "test/TEST-10-ISSUE-2467" # Temporarily disabled...
+    # "test/TEST-10-ISSUE-2467" # Temporarily disabled...
     "test/TEST-25-IMPORT"
 )
 
