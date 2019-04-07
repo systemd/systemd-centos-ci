@@ -24,6 +24,9 @@ git_checkout_pr() {
         esac
     ) || return 1
 
+    # Initialize git submodules, if any
+    git submodule update --init --recursive
+
     echo -n "[git_checkout_pr] Checked out version: "
     git describe
 }
