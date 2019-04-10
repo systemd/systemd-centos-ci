@@ -13,7 +13,14 @@ git_checkout_pr() {
     (set -e
         case $1 in
             pr:*)
-                git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"
+                # Draft and already merged pull requests don't have the 'merge'
+                # ref anymore, so fall back to the *standard* 'head' ref in
+                # such cases and rebase it against the master branch
+                if ! git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"; then
+                    git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
+                    git rebase master pr
+                fi
+
                 git checkout pr
                 ;;
             "")
