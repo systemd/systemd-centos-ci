@@ -357,7 +357,8 @@ if __name__ == "__main__":
 
         # Actual testing process
         logging.info("PHASE 1: Setting up basic dependencies to configure CI repository")
-        command = "yum -y install bash git && git clone {}{}".format(GITHUB_BASE, GITHUB_CI_REPO)
+        command = "yum -y install bash git && rm -fr {} && git clone {}{}".format(GITHUB_CI_REPO,
+                  GITHUB_BASE, GITHUB_CI_REPO)
         ac.execute_remote_command(node, command)
 
         if args.ci_pr:
