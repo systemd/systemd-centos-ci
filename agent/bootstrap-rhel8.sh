@@ -75,8 +75,9 @@ git_checkout_pr "$1"
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
-setenforce 0
-echo SELINUX=disabled >/etc/selinux/config
+if setenforce 0; then
+    echo SELINUX=disabled >/etc/selinux/config
+fi
 
 # Compile systemd
 #   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
