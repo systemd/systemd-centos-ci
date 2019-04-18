@@ -14,7 +14,7 @@ SCRIPT_DIR="$(dirname $0)"
 cd /build
 
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --timeout-multiplier=3"
+exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
 ## Integration test suite ##
 # Parallelized tasks
