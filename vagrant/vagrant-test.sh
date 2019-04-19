@@ -107,7 +107,7 @@ echo
 echo "FAILED TASKS:"
 echo "-------------"
 for task in "${FAILED_LIST[@]}"; do
-    echo  "$task"
+    echo "$task"
 done
 
 [[ -d /build/build/meson-logs ]] && cp -r /build/build/meson-logs "$LOGDIR"

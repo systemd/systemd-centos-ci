@@ -78,7 +78,7 @@ echo
 echo "FAILED TASKS:"
 echo "-------------"
 for task in "${FAILED_LIST[@]}"; do
-    echo  "$task"
+    echo "$task"
 done
 
 exit $FAILED
