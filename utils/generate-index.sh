@@ -6,7 +6,7 @@
 #       structure created by the systemd CentOS CI Jenkins job, as well as
 #       its environment (i.e. env variables)
 
-set -e
+set -e -u
 set -o pipefail
 
 if [[ $# -ne 2 ]]; then

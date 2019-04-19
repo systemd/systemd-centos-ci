@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -u
+
 if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
@@ -124,13 +126,9 @@ exectask() {
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
-    if [[ "$CI_DEBUG" ]]; then
-        $2
-    else
-        $2 &>> "$LOGFILE" &
-        local PID=$!
-        waitforpid $PID
-    fi
+    $2 &>> "$LOGFILE" &
+    local PID=$!
+    waitforpid $PID
     local EC=$?
     echo "[TASK END] $(date)" >> "$LOGFILE"
 

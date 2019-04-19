@@ -5,7 +5,7 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-set -e
+set -e -u
 
 KVM_SRC_BIN="/usr/libexec/qemu-kvm"
 KVM_DEST_BIN="/usr/bin/qemu-kvm"

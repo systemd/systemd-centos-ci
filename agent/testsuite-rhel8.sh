@@ -12,7 +12,7 @@ trap at_exit EXIT
 
 ### SETUP PHASE ###
 # Exit on error in the setup phase
-set -e
+set -e -u
 
 if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja

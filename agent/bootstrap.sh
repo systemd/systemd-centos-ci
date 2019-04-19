@@ -19,7 +19,7 @@ trap at_exit EXIT
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
-set -e
+set -e -u
 set -o pipefail
 
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
@@ -70,7 +70,7 @@ test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 pushd systemd
 
-git_checkout_pr "$1"
+git_checkout_pr "${1:-""}"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.

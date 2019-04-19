@@ -11,7 +11,7 @@
 git_checkout_pr() {
     echo "[$FUNCNAME] Arguments: $*"
     (
-        set -e
+        set -e -u
         case $1 in
             pr:*)
                 # Draft and already merged pull requests don't have the 'merge'

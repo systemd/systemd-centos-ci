@@ -12,7 +12,7 @@ trap at_exit EXIT
 
 ### SETUP PHASE ###
 # Exit on error in the setup phase
-set -e
+set -e -u
 
 # Install test dependencies
 exectask "yum-depinstall" \

@@ -10,7 +10,7 @@
 SCRIPT_ROOT="$(dirname $0)"
 . "$SCRIPT_ROOT/../common/utils.sh" || exit 1
 
-set -e
+set -e -u
 
 if [[ $# -lt 1 ]]; then
     echo >&2 "Usage: $0 phase [branch]"

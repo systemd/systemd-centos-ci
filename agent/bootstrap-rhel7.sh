@@ -16,7 +16,7 @@ trap at_exit EXIT
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
-set -e
+set -e -u
 set -o pipefail
 
 # Install necessary dependencies
@@ -29,7 +29,7 @@ test -e systemd-rhel && rm -rf systemd-rhel
 git clone https://github.com/lnykryn/systemd-rhel.git
 pushd systemd-rhel
 
-git_checkout_pr "$1"
+git_checkout_pr "${1:-""}"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
