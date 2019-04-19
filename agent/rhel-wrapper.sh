@@ -12,7 +12,7 @@ SCRIPT_ROOT="$(dirname $0)"
 
 set -e
 
-if [ $# -lt 1 ]; then
+if [[ $# -lt 1 ]]; then
     echo >&2 "Usage: $0 phase [branch]"
     exit 1
 fi
@@ -29,7 +29,7 @@ git_checkout_pr "$BRANCH"
 
 # Quick dirty decision check
 SCRIPT_SUFFIX="rhel7"
-[ -f meson.build ] && SCRIPT_SUFFIX="rhel8"
+[[ -f meson.build ]] && SCRIPT_SUFFIX="rhel8"
 
 echo "RHEL script suffix: $SCRIPT_SUFFIX"
 

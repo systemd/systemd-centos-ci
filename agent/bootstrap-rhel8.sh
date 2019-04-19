@@ -10,8 +10,8 @@ REPO_URL="${REPO_URL:-https://github.com/lnykryn/systemd-rhel.git}"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [ -d systemd/build/meson-logs ] && cp -r systemd/build/meson-logs "$LOGDIR"
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    [[ -d systemd/build/meson-logs ]] && cp -r systemd/build/meson-logs "$LOGDIR"
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
@@ -158,7 +158,7 @@ getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-res
     # trying to test
     dracut -f --filesystems ext4
 
-    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)

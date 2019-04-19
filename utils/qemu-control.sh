@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-if [ $# -ne 1 ]; then
+if [[ $# -ne 1 ]]; then
     echo >&2 "Usage: $0 enable|disable"
     exit 1
 fi

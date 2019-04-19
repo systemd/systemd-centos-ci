@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-if [ -n "$1" ]; then
+if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
     LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
@@ -34,7 +34,7 @@ fi
 # Arguments
 #   - PID (must be a child of current shell)
 waitforpid() {
-    if [ $# -lt 1 ]; then
+    if [[ $# -lt 1 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
@@ -67,7 +67,7 @@ waitforpid() {
 #   $2 - path to log file "belonging" to the exit code
 #   $3 - task name
 printresult() {
-    if [ $# -lt 3 ]; then
+    if [[ $# -lt 3 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
@@ -81,7 +81,7 @@ printresult() {
     local NEW_LOGFILE
 
     # Determine the log's new name
-    if [ $TASK_EC -eq 0 ]; then
+    if [[ $TASK_EC -eq 0 ]]; then
         NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
     else
         NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
@@ -113,7 +113,7 @@ printresult() {
 #   $1 - task name
 #   $2 - task command
 exectask() {
-    if [ $# -lt 2 ]; then
+    if [[ $# -lt 2 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
@@ -124,7 +124,7 @@ exectask() {
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
-    if [ "$CI_DEBUG" ]; then
+    if [[ "$CI_DEBUG" ]]; then
         $2
     else
         $2 &>> "$LOGFILE" &
@@ -148,7 +148,7 @@ exectask() {
 #   $1 - task name
 #   $2 - task command
 exectask_p() {
-    if [ $# -lt 2 ]; then
+    if [[ $# -lt 2 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi

@@ -14,7 +14,7 @@ trap at_exit EXIT
 # Exit on error in the setup phase
 set -e
 
-if [ ! -f /usr/bin/ninja ]; then
+if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
 fi
 
@@ -40,7 +40,7 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
 
-[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
 
 for t in test/TEST-??-*; do

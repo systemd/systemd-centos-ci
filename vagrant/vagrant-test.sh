@@ -110,7 +110,7 @@ for task in "${FAILED_LIST[@]}"; do
     echo  "$task"
 done
 
-[ -d /build/build/meson-logs ] && cp -r /build/build/meson-logs "$LOGDIR"
+[[ -d /build/build/meson-logs ]] && cp -r /build/build/meson-logs "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 exit $FAILED

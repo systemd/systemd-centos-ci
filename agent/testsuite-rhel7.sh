@@ -32,7 +32,7 @@ fi
 
 ## Integration test suite ##
 
-[ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
 
 for t in test/TEST-??-*; do
@@ -55,7 +55,7 @@ for t in test/TEST-??-*; do
 
     exectask "${t##*/}" "make -C $t clean setup run clean"
     # Each integration test dumps the system journal when something breaks
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}"
 done
 
 ## Other integration tests ##

@@ -8,7 +8,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
@@ -64,7 +64,7 @@ fi
     # trying to test
     dracut -f --filesystems ext4
 
-    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
