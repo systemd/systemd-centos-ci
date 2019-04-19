@@ -35,7 +35,7 @@ fi
 #   - PID (must be a child of current shell)
 waitforpid() {
     if [ $# -lt 1 ]; then
-        echo >&2 "waitforpid: missing arguments"
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -68,7 +68,7 @@ waitforpid() {
 #   $3 - task name
 printresult() {
     if [ $# -lt 3 ]; then
-        echo >&2 "printresult: missing arguments"
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -91,7 +91,7 @@ printresult() {
     if mv "$TASK_LOGFILE" "$NEW_LOGFILE"; then
         TASK_LOGFILE="$NEW_LOGFILE"
     else
-        echo >&2 "printresult: log rename failed"
+        echo >&2 "[$FUNCNAME]: log rename failed"
     fi
 
     if [[ $TASK_EC -eq 0 ]]; then
@@ -114,7 +114,7 @@ printresult() {
 #   $2 - task command
 exectask() {
     if [ $# -lt 2 ]; then
-        echo >&2 "exectask: missing arguments"
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -149,7 +149,7 @@ exectask() {
 #   $2 - task command
 exectask_p() {
     if [ $# -lt 2 ]; then
-        echo >&2 "exectask: missing arguments"
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
