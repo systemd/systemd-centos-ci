@@ -44,7 +44,7 @@ SKIP_LIST=(
 qemu-kvm --version
 
 for t in test/TEST-??-*; do
-    if [[ " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+    if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
         echo -e "\n[SKIP] Skipping test $t"
         continue
     fi
@@ -99,11 +99,14 @@ echo "-------------"
 echo "PASSED: $PASSED"
 echo "FAILED: $FAILED"
 echo "TOTAL:  $((PASSED + FAILED))"
-echo
-echo "FAILED TASKS:"
-echo "-------------"
-for task in "${FAILED_LIST[@]}"; do
-    echo "$task"
-done
+
+if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
+    echo
+    echo "FAILED TASKS:"
+    echo "-------------"
+    for task in "${FAILED_LIST[@]}"; do
+        echo "$task"
+    done
+fi
 
 exit $FAILED
