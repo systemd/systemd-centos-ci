@@ -14,7 +14,7 @@ function at_exit() {
     fi
 }
 
-set -e
+set -e -u
 set -o pipefail
 
 trap at_exit EXIT

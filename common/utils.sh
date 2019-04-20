@@ -9,8 +9,9 @@
 #   3) if the script is called without arguments, the default (possibly master)
 #      branch is used
 git_checkout_pr() {
-    echo "[git_checkout_pr] Arguments: $*"
-    (set -e
+    echo "[$FUNCNAME] Arguments: $*"
+    (
+        set -e -u
         case $1 in
             pr:*)
                 # Draft and already merged pull requests don't have the 'merge'
@@ -34,6 +35,6 @@ git_checkout_pr() {
     # Initialize git submodules, if any
     git submodule update --init --recursive
 
-    echo -n "[git_checkout_pr] Checked out version: "
+    echo -n "[$FUNCNAME] Checked out version: "
     git describe
 }

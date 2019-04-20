@@ -8,7 +8,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
@@ -16,7 +16,7 @@ trap at_exit EXIT
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
-set -e
+set -e -u
 set -o pipefail
 
 # Install necessary dependencies
@@ -29,7 +29,7 @@ test -e systemd-rhel && rm -rf systemd-rhel
 git clone https://github.com/lnykryn/systemd-rhel.git
 pushd systemd-rhel
 
-git_checkout_pr "$1"
+git_checkout_pr "${1:-""}"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
@@ -64,7 +64,7 @@ fi
     # trying to test
     dracut -f --filesystems ext4
 
-    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)

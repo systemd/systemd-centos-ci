@@ -6,10 +6,10 @@
 #       structure created by the systemd CentOS CI Jenkins job, as well as
 #       its environment (i.e. env variables)
 
-set -e
+set -e -u
 set -o pipefail
 
-if [ $# -ne 2 ]; then
+if [[ $# -ne 2 ]]; then
     echo >&2 "Usage: $0 artifacts_dir index_file"
     exit 1
 fi
@@ -18,7 +18,7 @@ ARTIFACTS_DIR="$1"
 INDEX_FILE="$2"
 CSS_FILE="$INDEX_FILE.css"
 
-if [ ! -d "$ARTIFACTS_DIR" ]; then
+if [[ ! -d "$ARTIFACTS_DIR" ]]; then
     echo >&2 "'$ARTIFACTS_DIR' is not a directory"
     exit 1
 fi

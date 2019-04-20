@@ -22,7 +22,7 @@ VAGRANT_FILES="$VAGRANT_ROOT/Vagrantfiles"
 echo "$VAGRANT_ROOT"
 DISTRO="${1,,}"
 
-set -e
+set -e -u
 set -o pipefail
 
 # Decide which Vagrant file to use

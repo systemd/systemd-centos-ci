@@ -6,7 +6,7 @@
 
 VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.3/vagrant_2.2.3_x86_64.rpm"
 
-set -e
+set -e -u
 set -o pipefail
 
 if ! vagrant version 2>/dev/null; then

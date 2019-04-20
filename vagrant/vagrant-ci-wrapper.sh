@@ -15,7 +15,7 @@ DISTROS=(arch)
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
-set -e
+set -e -u
 set -o pipefail
 
 # Fetch the upstream systemd repo
@@ -24,7 +24,7 @@ git clone "$REPO_URL" systemd
 export SYSTEMD_ROOT="$PWD/systemd"
 
 pushd systemd
-git_checkout_pr "$1"
+git_checkout_pr "${1:-""}"
 popd
 
 # Disable SELinux on the test hosts and avoid false positives.

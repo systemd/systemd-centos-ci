@@ -10,8 +10,8 @@ REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [ -d systemd/build/meson-logs ] && cp -r systemd/build/meson-logs "$LOGDIR"
-    [ -d /var/tmp/systemd-test*/journal ] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    [[ -d systemd/build/meson-logs ]] && cp -r systemd/build/meson-logs "$LOGDIR"
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
@@ -19,7 +19,7 @@ trap at_exit EXIT
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
-set -e
+set -e -u
 set -o pipefail
 
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
@@ -70,7 +70,7 @@ test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 pushd systemd
 
-git_checkout_pr "$1"
+git_checkout_pr "${1:-""}"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
@@ -108,7 +108,7 @@ ninja-build -C build install
     # trying to test
     dracut -f --filesystems ext4
 
-    [ ! -f /usr/bin/qemu-kvm ] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)

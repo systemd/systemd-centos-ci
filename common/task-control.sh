@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 
-if [ -n "$1" ]; then
+set -u
+
+if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
     LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
@@ -34,8 +36,8 @@ fi
 # Arguments
 #   - PID (must be a child of current shell)
 waitforpid() {
-    if [ $# -lt 1 ]; then
-        echo >&2 "waitforpid: missing arguments"
+    if [[ $# -lt 1 ]]; then
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -67,8 +69,8 @@ waitforpid() {
 #   $2 - path to log file "belonging" to the exit code
 #   $3 - task name
 printresult() {
-    if [ $# -lt 3 ]; then
-        echo >&2 "printresult: missing arguments"
+    if [[ $# -lt 3 ]]; then
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -81,7 +83,7 @@ printresult() {
     local NEW_LOGFILE
 
     # Determine the log's new name
-    if [ $TASK_EC -eq 0 ]; then
+    if [[ $TASK_EC -eq 0 ]]; then
         NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
     else
         NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
@@ -91,7 +93,7 @@ printresult() {
     if mv "$TASK_LOGFILE" "$NEW_LOGFILE"; then
         TASK_LOGFILE="$NEW_LOGFILE"
     else
-        echo >&2 "printresult: log rename failed"
+        echo >&2 "[$FUNCNAME]: log rename failed"
     fi
 
     if [[ $TASK_EC -eq 0 ]]; then
@@ -113,8 +115,8 @@ printresult() {
 #   $1 - task name
 #   $2 - task command
 exectask() {
-    if [ $# -lt 2 ]; then
-        echo >&2 "exectask: missing arguments"
+    if [[ $# -lt 2 ]]; then
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
@@ -124,13 +126,9 @@ exectask() {
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
-    if [ "$CI_DEBUG" ]; then
-        $2
-    else
-        $2 &>> "$LOGFILE" &
-        local PID=$!
-        waitforpid $PID
-    fi
+    $2 &>> "$LOGFILE" &
+    local PID=$!
+    waitforpid $PID
     local EC=$?
     echo "[TASK END] $(date)" >> "$LOGFILE"
 
@@ -148,8 +146,8 @@ exectask() {
 #   $1 - task name
 #   $2 - task command
 exectask_p() {
-    if [ $# -lt 2 ]; then
-        echo >&2 "exectask: missing arguments"
+    if [[ $# -lt 2 ]]; then
+        echo >&2 "[$FUNCNAME]: missing arguments"
         return 1
     fi
 
