@@ -309,7 +309,7 @@ if __name__ == "__main__":
             help="List currectly allocated nodes")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
-    parser.add_argument("--rhel", action="store_const", const=True,
+    parser.add_argument("--rhel", metavar="version", type=int,
             help="Use RHEL downstream systemd repo")
     parser.add_argument("--vagrant", action="store_const", const=True,
             help="Run testing in Vagrant VMs")
@@ -375,8 +375,8 @@ if __name__ == "__main__":
         else:
             # Run tests directly on the provisioned machine
             logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
-            if args.rhel:
-                command = "{}/agent/rhel-wrapper.sh BOOTSTRAP {}".format(GITHUB_CI_REPO, branch)
+            if args.rhel is not None:
+                command = "{}/agent/bootstrap-rhel{}.sh {}".format(GITHUB_CI_REPO, args.rhel,branch)
             else:
                 command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
@@ -384,8 +384,8 @@ if __name__ == "__main__":
             ac.reboot_node(node)
 
             logging.info("PHASE 3: Upstream testsuite")
-            if args.rhel:
-                command = "{}/agent/rhel-wrapper.sh TESTSUITE {}".format(GITHUB_CI_REPO, branch)
+            if args.rhel is not None:
+                command = "{}/agent/testsuite-rhel{}.sh {}".format(GITHUB_CI_REPO, args.rhel, branch)
             else:
                 command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
             ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
