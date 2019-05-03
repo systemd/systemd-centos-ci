@@ -5,13 +5,27 @@
 # repository, install & configures Vagrant, and runs the configured testsuite
 # in the Vagrant container on given distributions.
 
+function at_exit() {
+    set +e
+    # Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
+    # can gather them for further investigation
+    cp -r $SYSTEMD_ROOT/vagrant-* "$LOGDIR"
+}
+
 LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
 . "$LIB_ROOT/task-control.sh" "vagrant-logs" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 SCRIPT_ROOT="$(dirname "$0")"
-DISTROS=(arch)
+DISTROS=(
+    # Arch Linux with sanitizers (Address Sanitizer, Undefined Behavior Sanitizer
+    # Runs only unit tests (i.e. meson test)
+    arch-sanitizers
+    # "Standalone" Arch Linux
+    # Runs unit tests, fuzzers, and integration tests
+    arch
+)
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
@@ -22,6 +36,8 @@ set -o pipefail
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 export SYSTEMD_ROOT="$PWD/systemd"
+
+trap at_exit EXIT
 
 pushd systemd
 git_checkout_pr "${1:-""}"
@@ -37,7 +53,6 @@ systemctl stop firewalld
 systemctl restart libvirtd
 
 set +e
-
 EC=0
 
 # Run the vagrant-build script for each supported distro from the DISTROS array
@@ -47,9 +62,5 @@ for distro in ${DISTROS[@]}; do
         EC=$((EC + 1))
     fi
 done
-
-# Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
-# can gather them for further investigation
-cp -r $SYSTEMD_ROOT/vagrant-* "$LOGDIR"
 
 exit $EC
