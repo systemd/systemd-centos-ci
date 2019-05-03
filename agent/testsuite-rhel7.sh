@@ -31,6 +31,7 @@ if [[ -f "test-suite.log" ]]; then
 fi
 
 ## Integration test suite ##
+SKIP_LIST=()
 
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
