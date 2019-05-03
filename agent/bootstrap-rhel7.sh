@@ -25,9 +25,9 @@ yum -q -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils n
 yum-builddep -y systemd
 
 # Fetch the downstream systemd repo
-test -e systemd-rhel && rm -rf systemd-rhel
-git clone https://github.com/lnykryn/systemd-rhel.git
-pushd systemd-rhel
+test -e systemd && rm -rf systemd
+git clone https://github.com/systemd-rhel/rhel-7.git systemd
+pushd systemd
 
 git_checkout_pr "${1:-""}"
 

@@ -4,7 +4,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel8" || exit 1
 
-REPO_URL="${REPO_URL:-https://github.com/lnykryn/systemd-rhel.git}"
+REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
 
 # EXIT signal handler
 function at_exit {

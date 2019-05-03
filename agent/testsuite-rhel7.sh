@@ -21,7 +21,7 @@ exectask "yum-depinstall" \
 set +e
 
 ### TEST PHASE ###
-cd systemd-rhel
+cd systemd
 
 # Run the internal unit tests (make check)
 exectask "make-check" "make check"
