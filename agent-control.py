@@ -340,6 +340,8 @@ if __name__ == "__main__":
             help="Use RHEL downstream systemd repo")
     parser.add_argument("--vagrant", action="store_const", const=True,
             help="Run testing in Vagrant VMs")
+    parser.add_argument("--vagrant-sync", action="store_const", const=True,
+            help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
@@ -394,7 +396,13 @@ if __name__ == "__main__":
                       "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
             ac.execute_remote_command(node, command)
 
-        if args.vagrant:
+        if args.vagrant_sync:
+            logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
+            # We need the duffy key to be able to upload to the CentOS CI artifact server
+            ac.upload_file(node, DUFFY_KEY_FILE, "/duffy.key")
+            command = "{}/vagrant/vagrant-make-cache.sh".format(GITHUB_CI_REPO)
+            ac.execute_remote_command(node, command)
+        elif args.vagrant:
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
             command = "{}/vagrant/vagrant-ci-wrapper.sh {}".format(GITHUB_CI_REPO, branch)
