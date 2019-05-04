@@ -277,6 +277,33 @@ class AgentControl(object):
         # Give the node time to finish booting process
         time.sleep(30)
 
+    def upload_file(self, node, local_source, remote_target):
+        """Upload a file (or directory) to a remote host
+
+        Params:
+        -------
+        node : str
+            Hostname of the node
+        local_source : str
+            Path of a local (local) directory
+        remote_target : str
+            Path of a remote (target) directory
+
+        Returns:
+        --------
+        Return code of the underlying `scp` command
+        """
+        command = [
+            "/usr/bin/scp", "-r",
+            "-o UserKnownHostsFile=/dev/null",
+            "-o StrictHostKeyChecking=no",
+            local_source, "root@{}:{}".format(node, remote_target)
+        ]
+
+        logging.info("Uploading file {} to node {} as {}".format(local_source,
+                node, remote_target))
+
+        return self.execute_local_command(command)
 
 class SignalException(Exception):
     pass
