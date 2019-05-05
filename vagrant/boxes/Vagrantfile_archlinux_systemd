@@ -1,0 +1,64 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  # The most common configuration options are documented and commented below.
+  # For a complete reference, please see the online documentation at
+  # https://docs.vagrantup.com.
+  config.vm.define :archlinux_systemd
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  # Possible FIXME: archlinux/archlinux image is for some reason failing
+  # in the CentOS CI infrastructure due to unwritable keyring
+  # config.vm.box = "archlinux/archlinux"
+  config.vm.box = "generic/arch"
+  # Don't replace the original Vagrant's insecure key
+  config.ssh.insert_key = false
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Note: CentOS CI infra specific overrides - you may want to change them
+  #       to run the VM locally
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = if ENV["VAGRANT_DRIVER"] then ENV["VAGRANT_DRIVER"] else "kvm" end
+    libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
+    libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
+
+    if ENV["VAGRANT_DISK_BUS"] then
+      libvirt.disk_bus = ENV["VAGRANT_DISK_BUS"]
+    end
+  end
+
+  # View the documentation for the provider you are using for more
+  # information on available options.
+
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    set -e
+
+    whoami
+
+    # Initialize pacman's keyring
+    pacman-key --init
+    # Upgrade the system
+    pacman --noconfirm -Syu
+    # Install build dependencies
+    pacman --needed --noconfirm -S acl cryptsetup docbook-xsl gperf lz4 xz pam libelf intltool \
+        iptables kmod libcap libidn2 libgcrypt libmicrohttpd libxslt util-linux \
+        linux-api-headers python-lxml quota-tools shadow gnu-efi-libs git meson \
+        libseccomp pcre2 audit kexec-tools libxkbcommon bash-completion git ninja \
+        gcc m4 pkgconf
+    # Install test dependencies
+    # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
+    #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
+    pacman --needed --noconfirm -S net-tools strace openbsd-netcat busybox e2fsprogs quota-tools \
+        dnsmasq automake make dhclient rsync qemu socat
+  SHELL
+end

@@ -13,7 +13,7 @@ if ! vagrant version 2>/dev/null; then
     # Install Vagrant
     yum -y install "$VAGRANT_PKG_URL"
     # Install vagrant-libvirt dependencies
-    yum -y install qemu libvirt libvirt-devel ruby-devel gcc qemu-kvm
+    yum -y install qemu libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd

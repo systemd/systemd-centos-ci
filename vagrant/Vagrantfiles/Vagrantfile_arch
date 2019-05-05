@@ -9,14 +9,13 @@ Vagrant.configure("2") do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
-  config.vm.define :archlinux_systemd
+  config.vm.define :archlinux_systemd_ci
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  # Possible FIXME: archlinux/archlinux image is for some reason failing
-  # in the CentOS CI infrastructure due to unwritable keyring
-  # config.vm.box = "archlinux/archlinux"
-  config.vm.box = "generic/arch"
+  # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
+  config.vm.box = "archlinux_systemd"
+  config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -74,21 +73,8 @@ Vagrant.configure("2") do |config|
 
     whoami
 
-    # Initialize pacman's keyring
-    pacman-key --init
-    # Upgrade the system
-    pacman --noconfirm -Syu
-    # Install build dependencies
-    pacman --needed --noconfirm -S acl cryptsetup docbook-xsl gperf lz4 xz pam libelf intltool \
-        iptables kmod libcap libidn2 libgcrypt libmicrohttpd libxslt util-linux \
-        linux-api-headers python-lxml quota-tools shadow gnu-efi-libs git meson \
-        libseccomp pcre2 audit kexec-tools libxkbcommon bash-completion git ninja \
-        gcc m4 pkgconf
-    # Install test dependencies
-    # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
-    #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
-    pacman --needed --noconfirm -S net-tools strace openbsd-netcat busybox e2fsprogs quota-tools \
-        dnsmasq automake make dhclient rsync qemu socat
+    # The custom CentOS CI box should be updated and provide necessary
+    # build & test dependencies
 
     # Use systemd repo path specified by SYSTEMD_ROOT
     pushd /build
