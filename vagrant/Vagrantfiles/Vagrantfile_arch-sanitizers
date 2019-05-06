@@ -87,8 +87,6 @@ Vagrant.configure("2") do |config|
           -Dtests=unsafe \
           -Dinstall-tests=true \
           -Ddbuspolicydir=/etc/dbus-1/system.d \
-          -Dnobody-user=nfsnobody \
-          -Dnobody-group=nfsnobody \
           -Db_sanitize=address,undefined
     ninja -C build
     popd
