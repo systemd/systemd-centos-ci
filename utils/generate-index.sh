@@ -57,7 +57,7 @@ grep --text -Pzo '(?s)(?<=<style type="text/css">)(.*)(?=</style>)' "$INDEX_FILE
 # Part 2: link it back to the original index file
 sed -i "/<head>/a<link rel=\"stylesheet\" href=\"$CSS_FILE\" type=\"text/css\">" "$INDEX_FILE"
 
-LANDING_URL="${BUILD_URL}${PWD##$WORKSPACE}/artifact/index.html"
+LANDING_URL="${BUILD_URL}artifact/${PWD##$WORKSPACE}/index.html"
 echo "************************************************************"
 echo " Landing page: $LANDING_URL"
 echo "************************************************************"
