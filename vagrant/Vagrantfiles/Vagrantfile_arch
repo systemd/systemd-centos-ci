@@ -85,7 +85,7 @@ Vagrant.configure("2") do |config|
           -Dslow-tests=true \
           -Dtests=unsafe \
           -Dinstall-tests=true \
-          -Ddbuspolicydir=/etc/dbus-1/system.d
+          -Ddbuspolicydir=/usr/share/dbus-1/system.d
     ninja -C build
     ninja -C build install
     popd

@@ -86,7 +86,7 @@ Vagrant.configure("2") do |config|
     CFLAGS='-g -O0 -ftrapv' meson build \
           -Dtests=unsafe \
           -Dinstall-tests=true \
-          -Ddbuspolicydir=/etc/dbus-1/system.d \
+          -Ddbuspolicydir=/usr/share/dbus-1/system.d \
           -Db_sanitize=address,undefined
     ninja -C build
     popd
