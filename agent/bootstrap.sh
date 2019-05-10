@@ -89,6 +89,7 @@ systemctl disable firewalld
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
     meson build -Dc_args='-g -O0 -ftrapv' \
+                --werror \
                 -Dslow-tests=true \
                 -Dtests=unsafe \
                 -Dinstall-tests=true \
