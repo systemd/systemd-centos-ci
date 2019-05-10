@@ -83,7 +83,9 @@ Vagrant.configure("2") do |config|
     # Build phase
     # Compile systemd with the Address Sanitizer (ASan) and Undefined Behavior
     # Sanitizer (UBSan)
-    CFLAGS='-g -O0 -ftrapv' meson build \
+    meson build \
+          --werror \
+          -Dc_args='-g -O0 -ftrapv' \
           -Dtests=unsafe \
           -Dinstall-tests=true \
           -Ddbuspolicydir=/usr/share/dbus-1/system.d \

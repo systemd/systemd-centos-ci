@@ -18,7 +18,30 @@ export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+
+## Run TEST-01-BASIC under test sanitizers
+# Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+# As we're not using KVM, bump the QEMU timeout quite a bit
+export QEMU_TIMEOUT=600
+export NSPAWN_TIMEOUT=600
+# Set QEMU_SMP to speed things up
+export QEMU_SMP=$(nproc)
+# Arch Linux requires booting with initrd, as all commonly used filesystems
+# are compiled in as modules
+export SKIP_INITRD=no
+
+# 1) Run it under systemd-nspawn
+rm -fr /var/tmp/systemd-test*
+exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
+# Each integration test dumps the system journal when something breaks
+[[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-nspawn/"
+
+# 2) Run it under QEMU
+rm -fr /var/tmp/systemd-test*
+exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
+# Each integration test dumps the system journal when something breaks
+[[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/"
 
 # Summary
 echo
