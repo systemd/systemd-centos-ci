@@ -5,6 +5,9 @@
 # repository, install & configures Vagrant, and runs the configured testsuite
 # in the Vagrant container on given distributions.
 
+# TODO: argument parsing, so we can properly distinguish between branch/commit
+#       and distro tag
+
 function at_exit() {
     set +e
     # Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
@@ -18,14 +21,16 @@ LIB_ROOT="$(dirname "$0")/../common"
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 SCRIPT_ROOT="$(dirname "$0")"
-DISTROS=(
-    # Arch Linux with sanitizers (Address Sanitizer, Undefined Behavior Sanitizer
-    # Runs only unit tests (i.e. meson test)
-    arch-sanitizers
-    # "Standalone" Arch Linux
-    # Runs unit tests, fuzzers, and integration tests
-    arch
-)
+# Supported distros:
+#
+# Arch Linux with sanitizers (Address Sanitizer, Undefined Behavior Sanitizer
+# Runs only unit tests (i.e. meson test)
+# distro-tag: arch-sanitizers
+#
+# "Standalone" Arch Linux
+# Runs unit tests, fuzzers, and integration tests
+# distro-tag: arch
+DISTRO="${1:?missing argument: distro tag}"
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
@@ -40,7 +45,7 @@ export SYSTEMD_ROOT="$PWD/systemd"
 trap at_exit EXIT
 
 pushd systemd
-git_checkout_pr "${1:-""}"
+git_checkout_pr "${2:-""}"
 popd
 
 # Disable SELinux on the test hosts and avoid false positives.
@@ -52,15 +57,4 @@ setenforce 0
 systemctl stop firewalld
 systemctl restart libvirtd
 
-set +e
-EC=0
-
-# Run the vagrant-build script for each supported distro from the DISTROS array
-for distro in ${DISTROS[@]}; do
-    "$SCRIPT_ROOT/vagrant-build.sh" "$distro" 2>&1 | tee "$LOGDIR/console-$distro.log"
-    if [[ $? -ne 0 ]]; then
-        EC=$((EC + 1))
-    fi
-done
-
-exit $EC
+"$SCRIPT_ROOT/vagrant-build.sh" "$DISTRO" 2>&1 | tee "$LOGDIR/console-$DISTRO.log"
