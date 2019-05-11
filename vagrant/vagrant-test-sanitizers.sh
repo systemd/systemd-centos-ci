@@ -34,14 +34,17 @@ export SKIP_INITRD=no
 # 1) Run it under systemd-nspawn
 rm -fr /var/tmp/systemd-test*
 exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
+NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
 [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-nspawn/"
 
-# 2) Run it under QEMU
-rm -fr /var/tmp/systemd-test*
-exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
-# Each integration test dumps the system journal when something breaks
-[[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/"
+if [[ $NSPAWN_EC -eq 0 ]]; then
+    # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
+    rm -fr /var/tmp/systemd-test*
+    exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
+    # Each integration test dumps the system journal when something breaks
+    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/"
+fi
 
 # Summary
 echo
