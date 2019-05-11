@@ -338,8 +338,8 @@ if __name__ == "__main__":
             help="Pull request ID to check out (systemd repository)")
     parser.add_argument("--rhel", metavar="version", type=int,
             help="Use RHEL downstream systemd repo")
-    parser.add_argument("--vagrant", action="store_const", const=True,
-            help="Run testing in Vagrant VMs")
+    parser.add_argument("--vagrant", metavar="distro-tag", type=str,
+            help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", action="store_const", const=True,
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
     parser.add_argument("--version", default="7",
@@ -405,7 +405,7 @@ if __name__ == "__main__":
         elif args.vagrant:
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
-            command = "{}/vagrant/vagrant-ci-wrapper.sh {}".format(GITHUB_CI_REPO, branch)
+            command = "{}/vagrant/vagrant-ci-wrapper.sh {} {}".format(GITHUB_CI_REPO, args.vagrant, branch)
             ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine
