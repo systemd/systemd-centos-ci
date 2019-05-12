@@ -8,7 +8,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [[ -d /var/tmp/systemd-test*/journal ]] && rsync -aq /var/tmp/systemd-test*/journal "$LOGDIR"
+    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
 
