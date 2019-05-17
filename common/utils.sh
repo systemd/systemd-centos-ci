@@ -37,4 +37,5 @@ git_checkout_pr() {
 
     echo -n "[$FUNCNAME] Checked out version: "
     git describe
+    git log -1
 }
