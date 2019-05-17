@@ -140,6 +140,8 @@ fi
             -Dinstall-tests=true
             -Dc_args='-g -O0 -ftrapv'
             --werror
+            -Dman=true
+            -Dhtml=true
     )
     meson build "${CONFIGURE_OPTS[@]}"
     ninja-build -C build
