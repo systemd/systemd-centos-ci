@@ -58,6 +58,28 @@ grep --text -Pzo '(?s)(?<=<style type="text/css">)(.*)(?=</style>)' "$INDEX_FILE
 sed -i "/<head>/a<link rel=\"stylesheet\" href=\"$CSS_FILE\" type=\"text/css\">" "$INDEX_FILE"
 
 LANDING_URL="${BUILD_URL}artifact/${PWD##$WORKSPACE}/index.html"
-echo "************************************************************"
-echo " Landing page: $LANDING_URL"
-echo "************************************************************"
+
+# As we can't expect to have 'cowsay' installed, let's make our own oversimplified
+# version of it for absolutely no apparent reason. The picture below is, of course,
+# borrowed from the cowsay package.
+echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '_'; done
+echo -ne "\n< $LANDING_URL >\n"
+echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '-'; done
+echo '
+                       \                    ^    /^
+                        \                  / \  // \
+                         \   |\___/|      /   \//  .\
+                          \  /O  O  \__  /    //  | \ \           *----*
+                            /     /  \/_/    //   |  \  \          \   |
+                            @___@`    \/_   //    |   \   \         \/\ \
+                           0/0/|       \/_ //     |    \    \         \  \
+                       0/0/0/0/|        \///      |     \     \       |  |
+                    0/0/0/0/0/_|_ /   (  //       |      \     _\     |  /
+                 0/0/0/0/0/0/`/,_ _ _/  ) ; -.    |    _ _\.-~       /   /
+                             ,-}        _      *-.|.-~-.           .~    ~
+            \     \__/        `/\      /                 ~-. _ .-~      /
+             \____(oo)           *.   }            {                   /
+             (    (--)          .----~-.\        \-`                 .~
+             //__\\  \__ Ack!   ///.----..<        \             _ -~
+            //    \\               ///-._ _ _ _ _ _ _{^ - - - - ~
+'
