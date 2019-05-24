@@ -34,10 +34,10 @@ if [[ ! -f $VAGRANT_FILE ]]; then
     exit 1
 fi
 
-# If the distro names is in "<distro>-sanitizers" format, we're testing
+# If the distro name is in "<distro>-sanitizers-*" format, we're testing
 # systemd using various sanitizers (ASan, UBSan, etc.) and due to performance
 # issue we want to skip certain steps (like reboot and integration tests).
-if [[ $DISTRO =~ -sanitizers$ ]]; then
+if [[ $DISTRO =~ -sanitizers- ]]; then
     USING_SANITIZERS=true
 fi
 
