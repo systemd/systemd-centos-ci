@@ -34,7 +34,7 @@ for t in test/TEST-??-*; do
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     # As we're not using KVM, bump the QEMU timeout quite a bit
     export QEMU_TIMEOUT=2000
-    export NSPAWN_TIMEOUT=600
+    export NSPAWN_TIMEOUT=900
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
