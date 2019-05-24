@@ -334,6 +334,8 @@ if __name__ == "__main__":
             help="Do not kill provisioned build host")
     parser.add_argument("--list-nodes", action="store_const", const=True,
             help="List currectly allocated nodes")
+    parser.add_argument("--no-index", action="store_const", const=True,
+            help="Don't generate the artifact HTML page")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
     parser.add_argument("--rhel", metavar="version", type=int,
@@ -450,7 +452,7 @@ if __name__ == "__main__":
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
             signal.signal(signal.SIGHUP, signal.SIG_DFL)
 
-        if os.path.isfile("utils/generate-index.sh"):
+        if os.path.isfile("utils/generate-index.sh") and not args.no_index:
             # Try to generate a simple HTML index with results
             logging.info("Attempting to create an HTML index page")
             command = ["utils/generate-index.sh", artifacts_dir, "index.html"]
