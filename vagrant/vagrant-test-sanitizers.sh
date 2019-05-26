@@ -17,6 +17,10 @@ cd /build
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
+_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
+_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_asan_rt_name" 2>/dev/null | sed 1q)"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${_asan_rt_path%/*}"
+
 # Run the internal unit tests (make check)
 exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
@@ -31,24 +35,20 @@ export QEMU_SMP=$(nproc)
 # are compiled in as modules
 export SKIP_INITRD=no
 
-# Temporarily disable this part until the clang-specific DSO preloading issues
-# are dealth with, see https://github.com/systemd/systemd-centos-ci/pull/114#issuecomment-495399367
-# However, still run this with gcc & libasan
-if ldd build/systemd | grep -q libasan; then
-    # 1) Run it under systemd-nspawn
-    rm -fr /var/tmp/systemd-test*
-    exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
-    NSPAWN_EC=$?
-    # Each integration test dumps the system journal when something breaks
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-nspawn/" || :
+# 1) Run it under systemd-nspawn
+rm -fr /var/tmp/systemd-test*
+exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
+NSPAWN_EC=$?
+# Each integration test dumps the system journal when something breaks
+rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-nspawn/" || :
 
-    if [[ $NSPAWN_EC -eq 0 ]]; then
-        # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
-        rm -fr /var/tmp/systemd-test*
-        exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
-        # Each integration test dumps the system journal when something breaks
-        rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" || :
-    fi
+if [[ $NSPAWN_EC -eq 0 ]]; then
+    # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
+    rm -fr /var/tmp/systemd-test*
+    exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
+    #make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 KERNEL_APPEND=debug
+    # Each integration test dumps the system journal when something breaks
+    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" || :
 fi
 
 # Summary
