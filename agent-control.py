@@ -78,8 +78,19 @@ class AgentControl(object):
         }
 
         logging.info("Attempting to allocate a node ({} {})".format(version, architecture))
-        res = self._execute_api_command("/Node/get", payload)
-        jroot = json.loads(res)
+
+        # When the machine pool runs out of pre-installed machines, Duffy returns
+        # an error (Insufficient Nodes in READY State) which is not a valid
+        # JSON object. Let's attempt to handle that and give Duffy some breathing
+        # time to allocate more machines.
+        for timeout in [60, 300, 600, 1800, 3600]:
+            try:
+                res = self._execute_api_command("/Node/get", payload)
+                jroot = json.loads(res)
+            except ValueError:
+                logging.error("Received a non-JSON response from the server: {}".format(res))
+                logging.info("Waiting {} seconds before another retry".format(timeout))
+                time.sleep(timeout)
 
         host = None
         ssid = None
