@@ -93,7 +93,7 @@ class AgentControl(object):
             except ValueError:
                 logging.error("Received unexpected response from the server: {}".format(res))
                 logging.info("Waiting {} seconds before another retry".format(timeout))
-            time.sleep(timeout)
+                time.sleep(timeout)
 
         host = None
         ssid = None
