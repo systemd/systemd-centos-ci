@@ -87,10 +87,13 @@ class AgentControl(object):
             try:
                 res = self._execute_api_command("/Node/get", payload)
                 jroot = json.loads(res)
+
+                if not "hosts" in jroot or not "ssid" in jroot:
+                    raise ValueError
             except ValueError:
-                logging.error("Received a non-JSON response from the server: {}".format(res))
+                logging.error("Received unexpected response from the server: {}".format(res))
                 logging.info("Waiting {} seconds before another retry".format(timeout))
-                time.sleep(timeout)
+            time.sleep(timeout)
 
         host = None
         ssid = None
