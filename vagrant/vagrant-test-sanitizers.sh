@@ -17,9 +17,12 @@ cd /build
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
-_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
-_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_asan_rt_name" 2>/dev/null | sed 1q)"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${_asan_rt_path%/*}"
+if _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"; then
+    # We are compiled with clang & -shared-libasan, let's tweak the runtime library
+    # paths, so binaries can correctly find the clang's runtime ASan DSO
+    _clang_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_clang_asan_rt_name" 2>/dev/null | sed 1q)"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${_clang_asan_rt_path%/*}"
+fi
 
 # Run the internal unit tests (make check)
 exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
