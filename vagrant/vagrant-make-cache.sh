@@ -48,6 +48,7 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
     # even in case of an error
     set +e
     (
+        timeout 5m vagrant reload
         vagrant halt
         # Create a box from the VM, so it can be reused later
         # Output file example:
