@@ -5,7 +5,7 @@
 # EXIT signal handler
 function at_exit {
     set +e
-    exectask "journald-testsuite" "journalctl -b --no-pager"
+    exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
 
 trap at_exit EXIT
