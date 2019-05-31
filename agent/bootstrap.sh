@@ -146,6 +146,7 @@ fi
 
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
+grubby --args="udev.log_priority=debug" --update-kernel="$(grubby --default-kernel)"
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
