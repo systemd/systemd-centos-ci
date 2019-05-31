@@ -11,6 +11,9 @@ SCRIPT_DIR="$(dirname $0)"
 # task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 
+ls -la /usr/lib/systemd/network
+cat /usr/lib/systemd/network/99-default.link
+
 cd /build
 
 # Run the internal unit tests (make check)
