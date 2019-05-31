@@ -32,6 +32,10 @@ set +e
 ### TEST PHASE ###
 cd systemd
 
+
+# If a pre-testsuite script exists in the root of the systemd repo, source it
+test -e .centosci-pre-testsuite && source .centosci-pre-testsuite
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
@@ -51,13 +55,13 @@ for t in test/TEST-??-*; do
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    export INITRD="/boot/initramfs-$(uname -r).img"
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    export INITRD="${INITRD:-/boot/initramfs-$(uname -r).img}"
+    export KERNEL_BIN="${INITRD:-/boot/vmlinuz-$(uname -r)}"
     # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
+    export KERNEL_APPEND="${KERNEL_APPEND:-user_namespace.enable=1}"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
+    export QEMU_TIMEOUT=${QEMU_TIMEOUT:-600}
+    export NSPAWN_TIMEOUT=${NSPAWN_TIMEOUT:-600}
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -91,6 +95,9 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 30m ./$t"
 done
+
+# If a post-testsuite script exists in the root of the systemd repo, source it
+test -e .centosci-post-testsuite && source .centosci-post-testsuite
 
 # Summary
 echo

@@ -72,6 +72,10 @@ pushd systemd
 
 git_checkout_pr "${1:-""}"
 
+# If a pre-bootstrap script exists in the root of the systemd repo, source it
+test -e .centosci-pre-bootstrap && source .centosci-pre-bootstrap
+
+MESON_ARGS="${MESON_ARGS:-""}"
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
@@ -97,7 +101,7 @@ systemctl disable firewalld
                 -Dnobody-user=nfsnobody \
                 -Dnobody-group=nfsnobody \
                 -Dman=true \
-                -Dhtml=true
+                -Dhtml=true $MESON_ARGS
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
@@ -148,6 +152,9 @@ fi
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+# If a post-bootstrap script exists in the root of the systemd repo, source it
+test -e .centosci-post-bootstrap && source .centosci-post-bootstrap
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
