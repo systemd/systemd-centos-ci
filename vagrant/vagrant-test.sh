@@ -14,7 +14,7 @@ SCRIPT_DIR="$(dirname $0)"
 cd /build
 
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+#exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
 ## Integration test suite ##
 # Parallelized tasks
@@ -24,33 +24,43 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
 
-for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
-        echo -e "\n[SKIP] Skipping test $t"
-        continue
-    fi
+for i in {0..1000}; do
+    for t in test/TEST-??-*; do
+        if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+            echo -e "\n[SKIP] Skipping test $t"
+            continue
+        fi
 
-    ## Configure test environment
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    # As we're not using KVM, bump the QEMU timeout quite a bit
-    export QEMU_TIMEOUT=2000
-    export NSPAWN_TIMEOUT=900
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$OPTIMAL_QEMU_SMP
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+        ## Configure test environment
+        # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+        # As we're not using KVM, bump the QEMU timeout quite a bit
+        export QEMU_TIMEOUT=2000
+        export NSPAWN_TIMEOUT=900
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$OPTIMAL_QEMU_SMP
+        # Use a "unique" name for each nspawn container to prevent scope clash
+        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+        export TEST_NO_NSPAWN=true
+        export KERNEL_APPEND="systemd.log_level=debug systemd.log_target=console"
 
-    rm -fr "$TESTDIR"
-    mkdir -p "$TESTDIR"
+        rm -fr "$TESTDIR"
+        mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+        exectask_p "${t##*/}_$i" "make -C $t clean setup run clean-again"
+
+        if [[ $FAILED -ne 0 ]]; then
+            break 2
+        fi
+    done
 done
 
 # Wait for remaining running tasks
 exectask_p_finish
+
+exit $FAILED
 
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
