@@ -65,6 +65,18 @@ ln -s "$(which python3.6)" /usr/bin/python3
     popd
 ) 2>&1 | tee "$LOGDIR/dracut-build.log"
 
+# Setup dracut crypt SSH to allow possible debugging in case of a boot failure
+# Usage: ssh -p 222 root@<ip/hostname>
+# https://github.com/dracut-crypt-ssh/dracut-crypt-ssh
+(
+    curl "https://copr.fedorainfracloud.org/coprs/rbu/dracut-crypt-ssh/repo/epel-7/rbu-dracut-crypt-ssh-epel-7.repo" -o /etc/yum.repos.d/rbu-dracut-crypt-ssh-epel-7.repo
+    yum -q -y install dracut-crypt-ssh
+    # TODO: needs a more generic solution
+    # Load variables with current network configuration
+    source /etc/sysconfig/network-scripts/ifcfg-eth0
+    grubby --args="rd.neednet=1 ip=$IPADDR::$GATEWAY:$NETMASK:$HOSTNAME:$DEVICE:off" --update-kernel=ALL
+) 2>&1 | tee "$LOGDIR/dracut-crypt-ssh-build.log"
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -134,7 +146,9 @@ popd
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
-dracut -f --regenerate-all --filesystems ext4
+dracut -v -f --regenerate-all --filesystems ext4
+
+ip a
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
@@ -148,6 +162,12 @@ fi
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
 grep "user_namespace.enable=1" /boot/grub2/grub.cfg
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+# FIXME: DEBUG-ONLY
+systemctl set-default rescue.target
+#grubby --args="rd.break" --update-kernel="$(grubby --default-kernel)"
+
+cat /boot/grub2/grub.cfg
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"

@@ -279,15 +279,43 @@ class AgentControl(object):
         self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
         time.sleep(30)
 
-        ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
+        ssh_alive_command = [
+            "/usr/bin/ssh", "-t",
+            "-o", "UserKnownHostsFile=/dev/null",
+            "-o", "StrictHostKeyChecking=no",
+            "-o", "ConnectTimeout=180",
+            "-o", "TCPKeepAlive=yes",
+            "-o", "ServerAliveInterval=2",
+            "-l", "root",
+            node,
+            "/bin/true",
+        ]
         for i in range(10):
             logging.info("Checking if the node {} is alive (try #{})".format(node, i))
-            rc = self.execute_local_command(ping_command)
+            rc = self.execute_local_command(ssh_alive_command)
             if rc == 0:
                 break
             time.sleep(15)
 
         if rc != 0:
+            # FIXME: DEBUG-ONLY
+            command_wrapper = [
+                "/usr/bin/ssh", "-t",
+                "-o", "UserKnownHostsFile=/dev/null",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "ConnectTimeout=180",
+                "-o", "TCPKeepAlive=yes",
+                "-o", "ServerAliveInterval=2",
+                "-l", "root",
+                "-p", "222",
+                node,
+                "dmesg",
+            ]
+
+            logging.info("DEBUG-ONLY: Executing a REMOTE command on node'{}': {}".format(node, command))
+            self.execute_local_command(command_wrapper)
+
+            # FIXME: copy over logs from the machine; use console_peek, etc.
             raise Exception("Timeout reached when waiting for node to become online")
 
         logging.info("Node {} appears reachable again".format(node))
@@ -463,7 +491,7 @@ if __name__ == "__main__":
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
             signal.signal(signal.SIGHUP, signal.SIG_IGN)
 
-            ac.free_session(ssid)
+            #ac.free_session(ssid)
 
             # Restore default signal handlers
             signal.signal(signal.SIGTERM, signal.SIG_DFL)
