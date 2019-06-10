@@ -56,7 +56,7 @@ for t in test/TEST-??-*; do
 
     exectask "${t##*/}" "make -C $t clean setup run clean"
     # Each integration test dumps the system journal when something breaks
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}" || :
+    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}" &>/dev/null || :
 done
 
 ## Other integration tests ##
