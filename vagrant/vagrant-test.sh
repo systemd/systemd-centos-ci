@@ -59,7 +59,7 @@ SERIALIZED_TASKS=(
     "test/TEST-25-IMPORT"
 )
 
-for t in ${SERIALIZED_TASKS[@]}; do
+for t in "${SERIALIZED_TASKS[@]}"; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     # As we're not using KVM, bump the QEMU timeout quite a bit
