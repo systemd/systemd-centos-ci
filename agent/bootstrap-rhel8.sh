@@ -10,7 +10,6 @@ REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    [[ -d systemd/build/meson-logs ]] && cp -r systemd/build/meson-logs "$LOGDIR"
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
 }
@@ -85,6 +84,8 @@ fi
 #   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
+    # Make sure we copy over the meson logs even if the compilation fails
+    trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     CONFIGURE_OPTS=(
             # RHEL8 options
             -Dsysvinit-path=/etc/rc.d/init.d
