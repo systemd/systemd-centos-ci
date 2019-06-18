@@ -25,7 +25,7 @@ if _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1;
 fi
 
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=10"
 
 ## Run TEST-01-BASIC under test sanitizers
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
