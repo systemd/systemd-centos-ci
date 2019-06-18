@@ -87,6 +87,7 @@ Vagrant.configure("2") do |config|
           --werror \
           -Dc_args='-g -O0 -ftrapv' \
           -Dtests=unsafe \
+          -Dslow-tests=true \
           -Dinstall-tests=true \
           -Ddbuspolicydir=/usr/share/dbus-1/system.d \
           -Dman=false \
