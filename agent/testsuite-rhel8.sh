@@ -30,7 +30,7 @@ exectask "yum-depinstall" \
 set +e
 
 ### TEST PHASE ###
-cd systemd
+pushd systemd || (echo >&2 "Can't pushd to systemd"; exit 1)
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"

@@ -33,7 +33,7 @@ systemctl restart libvirtd
 
 for vagrantfile in "${VAGRANTFILES[@]}"; do
     TEMP_DIR="$(mktemp -d vagrant-cache-XXXXX)"
-    pushd "$TEMP_DIR"
+    pushd "$TEMP_DIR" || (echo >&2 "Can't pushd to $TEMP_DIR"; exit 1)
 
     # Start a VM described in the Vagrantfile with all provision steps
     export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
