@@ -12,6 +12,7 @@ function at_exit {
     set +e
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
+    exectask "list-of-installed-packages" "rpm -qa"
 }
 
 trap at_exit EXIT
