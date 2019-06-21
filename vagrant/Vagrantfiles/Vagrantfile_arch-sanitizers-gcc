@@ -72,6 +72,7 @@ Vagrant.configure("2") do |config|
     set -e
 
     whoami
+    uname -a
 
     # The custom CentOS CI box should be updated and provide necessary
     # build & test dependencies
@@ -81,6 +82,10 @@ Vagrant.configure("2") do |config|
 
     # Dump list of installed packages
     pacman -Q > vagrant-arch-sanitizers-gcc-installed-pkgs.txt
+    # Dump additional OS info
+    cat <(echo "# CPUINFO") /proc/cpuinfo >> vagrant-arch-sanitizers-gcc-osinfo.txt
+    cat <(echo "# MEMINFO") /proc/meminfo >> vagrant-arch-sanitizers-gcc-osinfo.txt
+    cat <(echo "# VERSION") /proc/version >> vagrant-arch-sanitizers-gcc-osinfo.txt
 
     rm -fr build
     # Build phase
