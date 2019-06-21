@@ -17,14 +17,14 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
+set -e -u
+set -o pipefail
+
 VAGRANT_ROOT="$(dirname $(readlink -f $0))"
 VAGRANT_FILES="$VAGRANT_ROOT/Vagrantfiles"
 USING_SANITIZERS=false
 echo "$VAGRANT_ROOT"
 DISTRO="${1,,}"
-
-set -e -u
-set -o pipefail
 
 # Decide which Vagrant file to use
 VAGRANT_FILE="$VAGRANT_FILES/Vagrantfile_$DISTRO"
@@ -59,7 +59,7 @@ cp "$VAGRANT_FILE" "$TEST_DIR/Vagrantfile"
 # Possible FIXME: copy the common.sh "library" from the systemd-centos-ci/agent
 # directory
 cp "$VAGRANT_ROOT/../common/task-control.sh" "$TEST_DIR/task-control.sh"
-pushd "$TEST_DIR"
+pushd "$TEST_DIR" || (echo >&2 "Can't pushd to $TEST_DIR"; exit 1)
 # Copy the test scripts to the test dir
 cp $VAGRANT_ROOT/vagrant-test*.sh "$TEST_DIR/"
 

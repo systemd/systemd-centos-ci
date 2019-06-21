@@ -79,6 +79,9 @@ Vagrant.configure("2") do |config|
     # Use systemd repo path specified by SYSTEMD_ROOT
     pushd /build
 
+    # Dump list of installed packages
+    pacman -Q > vagrant-arch-sanitizers-gcc-installed-pkgs.txt
+
     rm -fr build
     # Build phase
     # Compile systemd with the Address Sanitizer (ASan) and Undefined Behavior
