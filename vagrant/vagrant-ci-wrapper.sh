@@ -49,7 +49,7 @@ git_checkout_pr "${2:-""}"
 popd
 
 # Disable SELinux on the test hosts and avoid false positives.
-setenforce 0
+sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 
 "$SCRIPT_ROOT/vagrant-setup.sh"
 
