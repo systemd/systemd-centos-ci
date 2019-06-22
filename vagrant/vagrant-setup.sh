@@ -12,6 +12,9 @@ set -o pipefail
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
     yum -y install "$VAGRANT_PKG_URL"
+fi
+
+if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
     yum -y install qemu libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
     # Start libvirt daemon
@@ -23,3 +26,6 @@ if ! vagrant version 2>/dev/null; then
     # See: https://github.com/vagrant-libvirt/vagrant-libvirt
     vagrant plugin install vagrant-libvirt
 fi
+
+vagrant --version
+vagrant plugin list
