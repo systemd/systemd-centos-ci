@@ -21,7 +21,10 @@ if _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1;
     # We are compiled with clang & -shared-libasan, let's tweak the runtime library
     # paths, so binaries can correctly find the clang's runtime ASan DSO
     _clang_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_clang_asan_rt_name" 2>/dev/null | sed 1q)"
-    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${_clang_asan_rt_path%/*}"
+    # Add the non-standard clang DSO path to the ldconfig cache
+    mkdir -p /etc/ld.so.conf.d/
+    echo "${_clang_asan_rt_path%/*}" > /etc/ld.so.conf.d/99-clang-libasan.conf
+    ldconfig
 fi
 
 # Run the internal unit tests (make check)
