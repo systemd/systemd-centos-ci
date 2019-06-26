@@ -10,6 +10,7 @@ DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
 # task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+. "$SCRIPT_DIR/utils.sh" || exit 1
 
 pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
 
@@ -62,6 +63,9 @@ fi
 exectask "systemd-networkd_sanitizers" \
             "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
             1 # Ignore this task's exit code
+
+exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 
 # Summary
 echo
