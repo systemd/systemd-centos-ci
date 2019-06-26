@@ -39,3 +39,41 @@ git_checkout_pr() {
     git describe
     git log -1
 }
+
+# Check input from stdin for sanitizer errors/warnings
+# Takes no arguments, reads input directly from stdin to allow piping, like:
+#   journalctl -b | check_for_sanitizer_errors
+check_for_sanitizer_errors() {
+    awk '
+    BEGIN {
+        asan_cnt = 0;
+        ubsan_cnt = 0;
+        msan_cnt = 0;
+        total_cnt = 0;
+    }
+
+    match($0, /SUMMARY:\s+(\w+)Sanitizer/, m) {
+        total_cnt++;
+
+        switch (m[1]) {
+        case "Address":
+            asan_cnt++;
+            break;
+        case "UndefinedBehavior":
+            ubsan_cnt++;
+            break;
+        case "Memory":
+            msan_cnt++;
+            break;
+        }
+    }
+
+    END {
+        if (total_cnt != 0) {
+            printf "Found %d sanitizer errors (%d ASan, %d UBSan, %d MSan)\n", \
+                total_cnt, asan_cnt, ubsan_cnt, msan_cnt;
+            exit 1
+        }
+    }
+    '
+}
