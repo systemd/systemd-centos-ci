@@ -137,7 +137,7 @@ exectask() {
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
-    $2 &>> "$LOGFILE" &
+    eval $2 &>> "$LOGFILE" &
     local PID=$!
     waitforpid $PID
     local EC=$?
@@ -190,7 +190,7 @@ exectask_p() {
         sleep 0.01
     done
 
-    $TASK_COMMAND &>> "$LOGFILE" &
+    eval $TASK_COMMAND &>> "$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
     return 0
