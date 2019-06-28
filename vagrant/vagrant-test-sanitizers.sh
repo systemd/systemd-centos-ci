@@ -10,6 +10,7 @@ DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
 # task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+. "$SCRIPT_DIR/utils.sh" || exit 1
 
 pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
 
@@ -17,11 +18,16 @@ pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
-if _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"; then
+_clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
+
+if [[ -n "$_clang_asan_rt_name" ]]; then
     # We are compiled with clang & -shared-libasan, let's tweak the runtime library
     # paths, so binaries can correctly find the clang's runtime ASan DSO
     _clang_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_clang_asan_rt_name" 2>/dev/null | sed 1q)"
-    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}${_clang_asan_rt_path%/*}"
+    # Add the non-standard clang DSO path to the ldconfig cache
+    mkdir -p /etc/ld.so.conf.d/
+    echo "${_clang_asan_rt_path%/*}" > /etc/ld.so.conf.d/99-clang-libasan.conf
+    ldconfig
 fi
 
 # Run the internal unit tests (make check)
@@ -53,6 +59,13 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Each integration test dumps the system journal when something breaks
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" &>/dev/null || :
 fi
+
+exectask "systemd-networkd_sanitizers" \
+            "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
+            1 # Ignore this task's exit code
+
+exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 
 # Summary
 echo

@@ -46,8 +46,10 @@ waitforpid() {
 
     echo "Waiting for PID $1 to finish"
     while kill -0 $1 2>/dev/null; do
-        echo -n "."
-        sleep 10
+        if ((SECONDS % 10 == 0)); then
+            echo -n "."
+        fi
+        sleep 1
     done
 
     wait $1
@@ -68,6 +70,8 @@ waitforpid() {
 #   $1 - exit code to process
 #   $2 - path to log file "belonging" to the exit code
 #   $3 - task name
+#   $4 - ignore EC (i.e. don't update statistics with this task's results)
+#        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 printresult() {
     if [[ $# -lt 3 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
@@ -77,6 +81,7 @@ printresult() {
     local TASK_EC="$1"
     local TASK_LOGFILE="$2"
     local TASK_NAME="$3"
+    local IGNORE_EC="${4:-0}"
     # Let's rename the target log file according to the test result (PASS/FAIL)
     local LOGFILE_BASE="${TASK_LOGFILE%.*}" # Log file path without the extension
     local LOGFILE_EXT="${TASK_LOGFILE##*.}" # Log file extension without the leading dot
@@ -96,14 +101,19 @@ printresult() {
         echo >&2 "[$FUNCNAME]: log rename failed"
     fi
 
-    if [[ $TASK_EC -eq 0 ]]; then
-        PASSED=$((PASSED + 1))
-        echo "[RESULT] $TASK_NAME - PASS (log file: $TASK_LOGFILE)"
+    # Don't update internal counters if we want to ignore task's EC
+    if [[ $IGNORE_EC -eq 0 ]]; then
+        if [[ $TASK_EC -eq 0 ]]; then
+            PASSED=$((PASSED + 1))
+            echo "[RESULT] $TASK_NAME - PASS (log file: $TASK_LOGFILE)"
+        else
+            cat "$TASK_LOGFILE"
+            FAILED=$((FAILED + 1))
+            FAILED_LIST+=("$TASK_NAME")
+            echo "[RESULT] $TASK_NAME - FAIL (log file: $TASK_LOGFILE)"
+        fi
     else
-        cat "$TASK_LOGFILE"
-        FAILED=$((FAILED + 1))
-        FAILED_LIST+=("$TASK_NAME")
-        echo "[RESULT] $TASK_NAME - FAIL (log file: $TASK_LOGFILE)"
+        echo "[IGNORED RESULT] $TASK_NAME - EC: $TASK_EC (log file: $TASK_LOGFILE)"
     fi
 }
 
@@ -114,6 +124,8 @@ printresult() {
 # Arguments
 #   $1 - task name
 #   $2 - task command
+#   $3 - ignore EC (i.e. don't update statistics with this task's results)
+#        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
     if [[ $# -lt 2 ]]; then
         echo >&2 "[$FUNCNAME]: missing arguments"
@@ -121,18 +133,19 @@ exectask() {
     fi
 
     local LOGFILE="$LOGDIR/$1.log"
+    local IGNORE_EC="${3:-0}"
     touch "$LOGFILE"
 
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
-    $2 &>> "$LOGFILE" &
+    eval $2 &>> "$LOGFILE" &
     local PID=$!
     waitforpid $PID
     local EC=$?
     echo "[TASK END] $(date)" >> "$LOGFILE"
 
-    printresult $EC "$LOGFILE" "$1"
+    printresult $EC "$LOGFILE" "$1" "$IGNORE_EC"
 
     return $EC
 }
@@ -179,7 +192,7 @@ exectask_p() {
         sleep 0.01
     done
 
-    $TASK_COMMAND &>> "$LOGFILE" &
+    eval $TASK_COMMAND &>> "$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
     return 0
