@@ -70,8 +70,23 @@ check_for_sanitizer_errors() {
 
     END {
         if (total_cnt != 0) {
-            printf "Found %d sanitizer errors (%d ASan, %d UBSan, %d MSan)\n", \
-                total_cnt, asan_cnt, ubsan_cnt, msan_cnt;
+            printf " ____________________________________________\n" \
+                   "/ Found %3d sanitizer errors (%3d ASan, %3d  \\\n" \
+                   "| UBSan, %3d MSan). Looks like you need to   |\n" \
+                   "\\ look at the log                            /\n" \
+                   " --------------------------------------------\n" \
+                   " \\\n" \
+                   "  \\\n" \
+                   "     __\n" \
+                   "    /  \\\n" \
+                   "    |  |\n" \
+                   "    @  @\n" \
+                   "    |  |\n" \
+                   "    || |/\n" \
+                   "    || ||\n" \
+                   "    |\\_/|\n" \
+                   "    \\___/\n", \
+                    total_cnt, asan_cnt, ubsan_cnt, msan_cnt;
             exit 1
         }
     }
