@@ -46,12 +46,14 @@ git_checkout_pr() {
 check_for_sanitizer_errors() {
     awk '
     BEGIN {
+        # Counters
         asan_cnt = 0;
         ubsan_cnt = 0;
         msan_cnt = 0;
         total_cnt = 0;
     }
 
+    # Counters
     match($0, /SUMMARY:\s+(\w+)Sanitizer/, m) {
         total_cnt++;
 
@@ -66,6 +68,15 @@ check_for_sanitizer_errors() {
             msan_cnt++;
             break;
         }
+
+        # Print a newline after every SUMMARY line (i.e. end of the sanitizer error
+        # block), to improve readability
+        print "\n";
+    }
+
+    # Extractors
+    /([0-9]+: runtime error|==[0-9]+==.+?\w+Sanitizer)/,/SUMMARY:\s+(\w+)Sanitizer/ {
+        print $0;
     }
 
     END {
