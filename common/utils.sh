@@ -53,6 +53,11 @@ check_for_sanitizer_errors() {
         total_cnt = 0;
     }
 
+    # Extractors
+    /([0-9]+: runtime error|==[0-9]+==.+?\w+Sanitizer)/,/SUMMARY:\s+(\w+)Sanitizer/ {
+        print $0;
+    }
+
     # Counters
     match($0, /SUMMARY:\s+(\w+)Sanitizer/, m) {
         total_cnt++;
@@ -72,11 +77,6 @@ check_for_sanitizer_errors() {
         # Print a newline after every SUMMARY line (i.e. end of the sanitizer error
         # block), to improve readability
         print "\n";
-    }
-
-    # Extractors
-    /([0-9]+: runtime error|==[0-9]+==.+?\w+Sanitizer)/,/SUMMARY:\s+(\w+)Sanitizer/ {
-        print $0;
     }
 
     END {
