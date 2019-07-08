@@ -18,6 +18,14 @@ pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
+# Temporary workaround for gcc 9.1.x
+# See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=91101
+if ldd build/systemd | grep -q libasan.so; then
+    # Disable detect_stack_use_after_return check, which causes a huge performance
+    # regression in gcc 9.1.x
+    export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=0:check_initialization_order=1:strict_init_order=1
+fi
+
 _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
 
 if [[ -n "$_clang_asan_rt_name" ]]; then
