@@ -27,5 +27,7 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     vagrant plugin install vagrant-libvirt
 fi
 
+vagrant plugin install vagrant-reload
+
 vagrant --version
 vagrant plugin list
