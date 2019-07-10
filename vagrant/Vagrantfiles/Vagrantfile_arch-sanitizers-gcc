@@ -93,7 +93,7 @@ Vagrant.configure("2") do |config|
     # Sanitizer (UBSan)
     meson build \
           --werror \
-          -Dc_args='-g -O0 -ftrapv' \
+          -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv' \
           -Dtests=unsafe \
           -Dinstall-tests=true \
           -Ddbuspolicydir=/usr/share/dbus-1/system.d \
