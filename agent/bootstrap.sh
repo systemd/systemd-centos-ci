@@ -90,7 +90,7 @@ systemctl disable firewalld
 (
     # Make sure we copy over the meson logs even if the compilation fails
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
-    meson build -Dc_args='-g -O0 -ftrapv' \
+    meson build -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv' \
                 --werror \
                 -Dslow-tests=true \
                 -Dtests=unsafe \
