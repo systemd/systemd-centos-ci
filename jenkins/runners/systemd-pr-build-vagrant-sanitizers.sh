@@ -16,7 +16,7 @@
 set -e
 set -o pipefail
 
-function at_exit() {
+at_exit() {
     # Correctly collect artifacts from all sanitizer jobs and generate a nice
     # directory structure
     mkdir _artifacts_all
