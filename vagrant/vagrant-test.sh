@@ -92,6 +92,9 @@ TEST_LIST=(
     "test/test-network/systemd-networkd-tests.py"
 )
 
+# Prepare environment for the systemd-networkd testsuite
+systemctl disable --now dhcpcd dnsmasq
+
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 45m ./$t"
 done
