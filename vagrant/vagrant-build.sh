@@ -58,7 +58,7 @@ RELATIVE_TEST_DIR="${TEST_DIR##*/}"
 cp "$VAGRANT_FILE" "$TEST_DIR/Vagrantfile"
 cp "$VAGRANT_ROOT/../common/task-control.sh" "$TEST_DIR/task-control.sh"
 cp "$VAGRANT_ROOT/../common/utils.sh" "$TEST_DIR/utils.sh"
-pushd "$TEST_DIR" || (echo >&2 "Can't pushd to $TEST_DIR"; exit 1)
+pushd "$TEST_DIR" || { echo >&2 "Can't pushd to $TEST_DIR"; exit 1; }
 # Copy the test scripts to the test dir
 cp $VAGRANT_ROOT/vagrant-test*.sh "$TEST_DIR/"
 

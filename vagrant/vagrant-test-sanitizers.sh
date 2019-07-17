@@ -12,7 +12,7 @@ SCRIPT_DIR="$(dirname $0)"
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
-pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
+pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 # Sanitizer-specific options
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1

@@ -11,7 +11,7 @@ SCRIPT_DIR="$(dirname $0)"
 # task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 
-pushd /build || (echo >&2 "Can't pushd to /build"; exit 1)
+pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"

@@ -57,7 +57,7 @@ ln -s "$(which python3.6)" /usr/bin/python3
 (
     test -e dracut && rm -rf dracut
     git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-    pushd dracut || (echo >&2 "Can't pushd to dracut"; exit 1)
+    pushd dracut || { echo >&2 "Can't pushd to dracut"; exit 1; }
     git checkout 046
     ./configure --disable-documentation
     make -j $(nproc)
@@ -68,7 +68,7 @@ ln -s "$(which python3.6)" /usr/bin/python3
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
-pushd systemd || (echo >&2 "Can't pushd to systemd"; exit 1)
+pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "${1:-""}"
 

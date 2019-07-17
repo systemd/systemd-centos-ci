@@ -44,7 +44,7 @@ export SYSTEMD_ROOT="$PWD/systemd"
 
 trap at_exit EXIT
 
-pushd systemd || (echo >&2 "Can't pushd to systemd"; exit 1)
+pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 git_checkout_pr "${2:-""}"
 popd
 

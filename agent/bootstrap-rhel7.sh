@@ -28,7 +28,7 @@ yum-builddep -y systemd
 # Fetch the downstream systemd repo
 test -e systemd && rm -rf systemd
 git clone https://github.com/systemd-rhel/rhel-7.git systemd
-pushd systemd || (echo >&2 "Can't pushd to systemd"; exit 1)
+pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "${1:-""}"
 
