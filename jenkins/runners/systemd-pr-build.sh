@@ -36,6 +36,7 @@ if [ "$ghprbPullId" ]; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
+    cd .. && rm -fr systemd-tmp
 fi
 
 git clone https://github.com/systemd/systemd-centos-ci
