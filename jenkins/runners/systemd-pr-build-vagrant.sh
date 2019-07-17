@@ -1,5 +1,18 @@
 #!/bin/sh
 
+# Note: this script MUST be self-contained - i.e. it MUST NOT source any
+# external scripts as it is used as a bootstrap script, thus it's
+# fetched and executed without rest of this repository
+#
+# Example usage in Jenkins
+# #!/bin/sh
+#
+# set -e
+#
+# curl -q -o runner.sh https://../systemd-pr-build-vagrant.sh
+# chmod +x runner.sh
+# ./runner.sh
+
 # Add a local ~/bin dir to path for custom binaries (currently used only
 # for the tree binary for generating the artifact landing page)
 export PATH="/home/systemd/bin:$PATH"

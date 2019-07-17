@@ -1,5 +1,18 @@
 #!/bin/sh
 
+# Note: this script MUST be self-contained - i.e. it MUST NOT source any
+# external scripts as it is used as a bootstrap script, thus it's
+# fetched and executed without rest of this repository
+#
+# Example usage in Jenkins
+# #!/bin/sh
+#
+# set -e
+#
+# curl -q -o runner.sh https://../systemd-pr-build-vagrant-sanitizers.sh
+# chmod +x runner.sh
+# ./runner.sh
+
 set -e
 set -o pipefail
 
