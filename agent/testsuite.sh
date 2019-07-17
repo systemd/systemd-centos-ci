@@ -35,6 +35,14 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
+# If we're not testing the master branch (the first diff) check if the tested
+# branch doesn't contain only man-related changes. If so, skip the integration
+# tests
+if ! git diff --quiet master HEAD && ! git diff $(git merge-base master HEAD) --name-only | grep -vE "^man/"; then
+    echo "Detected man-only PR, skipping integration tests"
+    exit $FAILED
+fi
+
 ## Integration test suite ##
 SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
