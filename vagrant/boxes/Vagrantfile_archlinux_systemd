@@ -48,16 +48,7 @@ Vagrant.configure("2") do |config|
     # Initialize pacman's keyring
     pacman-key --init
     # Upgrade the system
-    #pacman --noconfirm -Syu
-
-    # TEMPORARY WORKAROUND #
-    # Pin all repositories to a snapshot from 2019-06-17 to stick with a system
-    # with gcc-8
-    # See https://github.com/systemd/systemd/pull/12856 for more details
-    # Uncomment the pacman line above when dropping this workaround
-    echo 'Server=https://archive.archlinux.org/repos/2019/06/17/$repo/os/$arch' > /etc/pacman.d/mirrorlist
-    pacman --noconfirm -Syyuu
-
+    pacman --noconfirm -Syu
     # Install build dependencies
     pacman --needed --noconfirm -S acl cryptsetup docbook-xsl gperf lz4 xz pam libelf intltool \
         iptables kmod libcap libidn2 libgcrypt libmicrohttpd libxslt util-linux \
