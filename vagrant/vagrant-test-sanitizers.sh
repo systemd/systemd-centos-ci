@@ -60,6 +60,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" &>/dev/null || :
 fi
 
+# Prepare environment for the systemd-networkd testsuite
+systemctl disable --now dhcpcd dnsmasq
+
 exectask "systemd-networkd_sanitizers" \
             "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
             1 # Ignore this task's exit code
