@@ -19,11 +19,13 @@ set -o pipefail
 at_exit() {
     # Correctly collect artifacts from all sanitizer jobs and generate a nice
     # directory structure
-    mkdir _artifacts_all
-    mv artifacts_* _artifacts_all
-    mv _artifacts_all artifacts_all
+    if find . -name "artifacts_*" | grep -q "."; then
+        mkdir _artifacts_all
+        mv artifacts_* _artifacts_all
+        mv _artifacts_all artifacts_all
 
-    utils/generate-index.sh artifacts_all index.html
+        utils/generate-index.sh artifacts_all index.html
+    fi
 }
 
 trap at_exit EXIT
