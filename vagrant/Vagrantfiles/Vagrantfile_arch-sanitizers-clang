@@ -107,6 +107,11 @@ Vagrant.configure("2") do |config|
           -Db_sanitize=address,undefined \
           -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
     ninja -C build
+
+    # Manually install upstream D-Bus config file for org.freedesktop.network1
+    # so systemd-networkd testsuite can use potentially new/updated methods
+    cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
+
     popd
   SHELL
 end

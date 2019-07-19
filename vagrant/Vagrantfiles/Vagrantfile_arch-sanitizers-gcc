@@ -100,6 +100,11 @@ Vagrant.configure("2") do |config|
           -Dman=false \
           -Db_sanitize=address,undefined
     ninja -C build
+
+    # Manually install upstream D-Bus config file for org.freedesktop.network1
+    # so systemd-networkd testsuite can use potentially new/updated methods
+    cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
+
     popd
   SHELL
 end
