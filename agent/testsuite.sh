@@ -35,6 +35,7 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
+if false; then
 # If we're not testing the master branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration
 # tests
@@ -89,6 +90,8 @@ for t in test/TEST-??-*; do
         rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
     fi
 done
+
+fi
 
 ## Other integration tests ##
 TEST_LIST=(

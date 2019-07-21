@@ -16,6 +16,7 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
+if false; then
 ## Integration test suite ##
 # Parallelized tasks
 SKIP_LIST=(
@@ -92,6 +93,7 @@ TEST_LIST=(
     "test/test-network/systemd-networkd-tests.py"
 )
 
+fi
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
