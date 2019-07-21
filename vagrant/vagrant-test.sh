@@ -89,8 +89,9 @@ done
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+    "./test/test-exec-deserialization.py"
+    # Use twisted/trial to generate pretty logs
+    "trial test/test-network/systemd-networkd-tests.py"
 )
 
 fi
@@ -99,7 +100,7 @@ systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout 45m ./$t"
+    exectask "${t##*/}" "timeout 45m $t"
 done
 
 # Summary

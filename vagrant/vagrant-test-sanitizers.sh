@@ -64,8 +64,9 @@ fi
 systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
 
+# Use twisted/trial to generate pretty logs
 exectask "systemd-networkd_sanitizers" \
-            "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
+            "trial test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
             1 # Ignore this task's exit code
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
