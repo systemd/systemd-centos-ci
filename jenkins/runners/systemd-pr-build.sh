@@ -31,7 +31,7 @@ if [ "$ghprbPullId" ]; then
     git checkout pr
     # Let's make the regex here less strict, so we can, for example, test man page
     # generation and other low-impact changes
-    SCOPE_RX='(^(catalog|factory|hwdb|man|meson.*|network|[^\.].*\.d$|rules|src|test|tools|units))'
+    SCOPE_RX='(^(catalog|factory|hwdb|man|meson.*|network|[^\.].*\.d|rules|src|test|tools|units))'
     if ! git diff $(git merge-base master pr) --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0

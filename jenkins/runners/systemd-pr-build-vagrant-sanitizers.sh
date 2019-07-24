@@ -41,7 +41,7 @@ if [ "$ghprbPullId" ]; then
     git clone https://github.com/systemd/systemd systemd-tmp && cd systemd-tmp
     git fetch -fu origin "refs/pull/$ghprbPullId/head:pr"
     git checkout pr
-    SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d$|rules|src|test|units))'
+    SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d|rules|src|test|units))'
     if ! git diff $(git merge-base master pr) --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
