@@ -13,6 +13,9 @@ function at_exit() {
     # Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
     # can gather them for further investigation
     cp -r $SYSTEMD_ROOT/vagrant-* "$LOGDIR"
+    # Collect QEMU serial console logs (see the configuration in a respective
+    # Vagrantfile)
+    cp /tmp/vagrant-*-console.log "$LOGDIR"
 }
 
 LIB_ROOT="$(dirname "$0")/../common"

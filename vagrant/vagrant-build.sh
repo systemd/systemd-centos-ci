@@ -72,7 +72,7 @@ if $USING_SANITIZERS; then
     vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test-sanitizers.sh $DISTRO"
 else
     # Reboot the VM to "apply" the new systemd
-    timeout 15m vagrant reload
+    timeout 5m vagrant reload
     case $? in
         0)
             ;;
