@@ -73,6 +73,18 @@ if $USING_SANITIZERS; then
 else
     # Reboot the VM to "apply" the new systemd
     timeout 5m vagrant reload
+    case $? in
+        0)
+            ;;
+        124)
+            echo >&2 "Timeout during machine reboot"
+            exit 124
+            ;;
+        *)
+            echo >&2 "Failed to reboot the VM using 'vagrant reload'"
+            exit 1
+            ;;
+    esac
     # Run tests
     vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test.sh $DISTRO"
 fi

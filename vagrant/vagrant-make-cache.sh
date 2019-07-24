@@ -48,7 +48,18 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
     # even in case of an error
     set +e
     (
-        timeout 5m vagrant reload
+        case $? in
+            0)
+                ;;
+            124)
+                echo >&2 "Timeout during machine reboot"
+                exit 124
+                ;;
+            *)
+                echo >&2 "Failed to reboot the VM using 'vagrant reload'"
+                exit 1
+                ;;
+        esac
         vagrant halt
         # Create a box from the VM, so it can be reused later
         # Output file example:
