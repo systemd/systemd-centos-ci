@@ -60,6 +60,9 @@ Vagrant.configure("2") do |config|
     if ENV["VAGRANT_DISK_BUS"] then
       libvirt.disk_bus = ENV["VAGRANT_DISK_BUS"]
     end
+
+    # Pass through /dev/random from the host to the VM
+    libvirt.random :model => 'random'
   end
 
   # View the documentation for the provider you are using for more
