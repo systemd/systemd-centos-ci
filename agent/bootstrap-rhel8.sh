@@ -140,7 +140,7 @@ fi
             -Dslow-tests=true
             -Dtests=unsafe
             -Dinstall-tests=true
-            -Dc_args='-g -O0 -ftrapv'
+            -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv'
             --werror
             -Dman=true
             -Dhtml=true

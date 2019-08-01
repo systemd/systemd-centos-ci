@@ -54,7 +54,7 @@ fi
         --disable-ldconfig
         --enable-lz4
     )
-    ./configure "${CONFIGURE_OPTS[@]}"
+    ./configure "${CONFIGURE_OPTS[@]}" CFLAGS="-g -O1 -fno-omit-frame-pointer"
     make -j $(nproc)
     make install
 ) 2>&1 | tee "$LOGDIR/build.log"
