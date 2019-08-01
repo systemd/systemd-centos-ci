@@ -20,6 +20,9 @@ set -o pipefail
 
 trap at_exit EXIT
 
+# Make sure we have all packages we need
+rpm -q createrepo_c rsync wget yum-utils
+
 WORK_DIR="$(mktemp -d)"
 pushd "$WORK_DIR"
 
