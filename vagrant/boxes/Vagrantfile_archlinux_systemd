@@ -63,5 +63,11 @@ Vagrant.configure("2") do |config|
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S net-tools strace openbsd-netcat busybox e2fsprogs quota-tools \
         dnsmasq automake make dhclient rsync qemu socat wireguard-arch
+
+    # Disable 'quiet' mode on the kernel command line and forward everything
+    # to ttyS0 instead of just tty0, so we can collect it using QEMU's
+    # -serial file:xxx feature
+    sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/ { s/quiet//; s/"$/ console=ttyS0"/ }' /etc/default/grub
+    grub-mkconfig -o /boot/grub/grub.cfg
   SHELL
 end
