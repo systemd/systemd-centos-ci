@@ -8,8 +8,16 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
-# task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
+# Following scripts are copied from the systemd-centos-ci/common directory
+# by vagrant-build.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+. "$SCRIPT_DIR/utils.sh" || exit 1
+
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
@@ -99,6 +107,9 @@ systemctl reload dbus.service
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 45m ./$t"
 done
+
+# Collect coredumps using the coredumpctl utility, if any
+exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 echo

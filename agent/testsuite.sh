@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 . "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-upstream" || exit 1
+. "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
 function at_exit {
@@ -13,6 +14,12 @@ trap at_exit EXIT
 ### SETUP PHASE ###
 # Exit on error in the setup phase
 set -e -u
+
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
 
 if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
@@ -99,6 +106,9 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 45m ./$t"
 done
+
+# Collect coredumps using the coredumpctl utility, if any
+exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 echo

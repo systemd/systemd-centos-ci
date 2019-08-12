@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # This file contains useful functions shared among scripts from this repository
 
+__COREDUMPCTL_TS=""
+
 # Checkout to the requsted branch:
 #   1) if pr:XXX where XXX is a pull request ID is passed to the script,
 #      the corresponding branch for this PR is be checked out
@@ -102,4 +104,73 @@ check_for_sanitizer_errors() {
         }
     }
     '
+}
+
+# Enable coredump collection using systemd-coredump
+#
+# Basically just enable systemd-coredump.socket and check if coredumpctl doesn't
+# crash on when invoked
+coredumpctl_init() {
+    local EC
+
+    if ! systemctl start systemd-coredump.socket; then
+        echo >&2 "[$FUNCNAME] Failed to start systemd-coredump.socket"
+        return 1
+    fi
+    # Let's make sure coredumpctl doesn't crash on invocation
+    # Note: coredumpctl returns 1 when no coredumps are found, so accept this EC
+    # as a success as well
+    coredumpctl > /dev/null
+    EC=$?
+
+    if ! [[ $EC -eq 0 || $EC -eq 1 ]]; then
+        echo >&2 "[$FUNCNAME] coredumpctl is not in operative state"
+        return 1
+    fi
+}
+
+# Set the timestamp for future coredump collection using coredumpctl_collect()
+# Arguments:
+#   $1 - timestamp to set. If empty, the current date & time is used instead
+coredumpctl_set_ts() {
+    __COREDUMPCTL_TS="${1:-$(date +"%Y-%m-%d %H:%M:%S")}"
+}
+
+# Attempt to dump info about relevant coredumps using the coredumpctl utility.
+#
+# To limit the collection scope (e.g. only consider coredumps since a certain
+# date), use the coredumpctl_set_ts() function
+coredumpctl_collect() {
+    local ARGS=(--no-legend --no-pager)
+    local TEMPFILE="$(mktemp)"
+
+    # Register a cleanup handler
+    trap "rm -f '$TEMPFILE'" EXIT
+
+    echo "[$FUNCNAME] Attempting to collect info about possible coredumps"
+
+    # If coredumpctl_set_ts() was called beforehand, use the saved timestamp
+    if [[ -n "$__COREDUMPCTL_TS" ]]; then
+        ARGS+=(--since "$__COREDUMPCTL_TS")
+    fi
+
+    # Collect executable paths of all coredumps and filter out the expected ones
+    # FILTER_RX:
+    #   test-execute - certain subtests die with SIGSEGV intentionally
+    FILTER_RX="/test-execute$"
+    if ! coredumpctl "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
+        echo "[$FUNCNAME] No relevant coredumps found"
+        return 0
+    fi
+
+    # For each unique executable path call 'coredumpctl info' to get the stack
+    # trace and other useful info
+    while read -r path; do
+        coredumpctl "${ARGS[@]}" info "$path"
+        # Attempt to get a full stack trace for the first occurrence of the
+        # given executable path
+        echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+    done <<< "$(sort -u $TEMPFILE)"
+
+    return 1
 }
