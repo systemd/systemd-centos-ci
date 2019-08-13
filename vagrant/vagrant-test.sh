@@ -91,6 +91,7 @@ done
 for t in test/TEST-??-*; do
     journal_path="/var/tmp/systemd-test-${t##*/}/journal"
     if [[ -d "$journal_path" ]]; then
+        # Attempt to collect coredumps from test-specific journals as well
         exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$journal_path'"
         rsync -aq "$journal_path" "$LOGDIR/${t##*/}"
     fi

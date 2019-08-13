@@ -109,7 +109,10 @@ check_for_sanitizer_errors() {
 # Enable coredump collection using systemd-coredump
 #
 # Basically just enable systemd-coredump.socket and check if coredumpctl doesn't
-# crash on when invoked
+# crash when invoked
+#
+# Returns:
+#   0 when both systemd-coredump & coredumpctl work as expected, 1 otherwise
 coredumpctl_init() {
     local EC
 
@@ -117,6 +120,7 @@ coredumpctl_init() {
         echo >&2 "[$FUNCNAME] Failed to start systemd-coredump.socket"
         return 1
     fi
+
     # Let's make sure coredumpctl doesn't crash on invocation
     # Note: coredumpctl returns 1 when no coredumps are found, so accept this EC
     # as a success as well
@@ -130,6 +134,7 @@ coredumpctl_init() {
 }
 
 # Set the timestamp for future coredump collection using coredumpctl_collect()
+#
 # Arguments:
 #
 #   $1: timestamp to set. If empty, the current date & time is used instead
@@ -139,11 +144,14 @@ coredumpctl_set_ts() {
 
 # Attempt to dump info about relevant coredumps using the coredumpctl utility.
 #
-# To limit the collection scope (e.g. only consider coredumps since a certain
+# To limit the collection scope (e.g. consider coredumps only since a certain
 # date), use the coredumpctl_set_ts() function
 #
 # Arguments:
 #   $1: (optional) path to a directory with journal files
+#
+# Returns:
+#   0 when no coredumps were found, 1 otherwise
 coredumpctl_collect() {
     local ARGS=(--no-legend --no-pager)
     local JOURNALDIR="${1:-}"
