@@ -8,8 +8,16 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
-# task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
+# Following scripts are copied from the systemd-centos-ci/common directory
+# by vagrant-build.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+. "$SCRIPT_DIR/utils.sh" || exit 1
+
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
@@ -46,7 +54,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
@@ -76,13 +84,19 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask "${t##*/}" "make -C $t clean setup run clean-again"
+    exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
-    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
-        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    testdir="/var/tmp/systemd-test-${t##*/}"
+    if [[ -d "$testdir/journal" ]]; then
+        # Attempt to collect coredumps from test-specific journals as well
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$testdir/pass" ]]; then
+            rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+        fi
     fi
 done
 
@@ -99,6 +113,9 @@ systemctl reload dbus.service
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 45m ./$t"
 done
+
+# Collect coredumps using the coredumpctl utility, if any
+exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 echo

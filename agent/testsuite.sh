@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 . "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-upstream" || exit 1
+. "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
 function at_exit {
@@ -13,6 +14,12 @@ trap at_exit EXIT
 ### SETUP PHASE ###
 # Exit on error in the setup phase
 set -e -u
+
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
 
 if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
@@ -77,7 +84,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
@@ -85,8 +92,14 @@ exectask_p_finish
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
-    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
-        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    testdir="/var/tmp/systemd-test-${t##*/}"
+    if [[ -d "$testdir/journal" ]]; then
+        # Attempt to collect coredumps from test-specific journals as well
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$testdir/pass" ]]; then
+            rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+        fi
     fi
 done
 
@@ -99,6 +112,9 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout 45m ./$t"
 done
+
+# Collect coredumps using the coredumpctl utility, if any
+exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 echo
