@@ -183,7 +183,9 @@ coredumpctl_collect() {
         coredumpctl "${ARGS[@]}" info "$path"
         # Attempt to get a full stack trace for the first occurrence of the
         # given executable path
-        echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+        if gdb -v > /dev/null; then
+            echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+        fi
     done <<< "$(sort -u $TEMPFILE)"
 
     return 1
