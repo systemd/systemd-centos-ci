@@ -92,8 +92,10 @@ exectask_p_finish
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
-    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
-        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    journal_path="/var/tmp/systemd-test-${t##*/}/journal"
+    if [[ -d "$journal_path" ]]; then
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$journal_path'"
+        rsync -aq "$journal_path" "$LOGDIR/${t##*/}"
     fi
 done
 

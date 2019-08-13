@@ -131,7 +131,8 @@ coredumpctl_init() {
 
 # Set the timestamp for future coredump collection using coredumpctl_collect()
 # Arguments:
-#   $1 - timestamp to set. If empty, the current date & time is used instead
+#
+#   $1: timestamp to set. If empty, the current date & time is used instead
 coredumpctl_set_ts() {
     __COREDUMPCTL_TS="${1:-$(date +"%Y-%m-%d %H:%M:%S")}"
 }
@@ -140,8 +141,12 @@ coredumpctl_set_ts() {
 #
 # To limit the collection scope (e.g. only consider coredumps since a certain
 # date), use the coredumpctl_set_ts() function
+#
+# Arguments:
+#   $1: (optional) path to a directory with journal files
 coredumpctl_collect() {
     local ARGS=(--no-legend --no-pager)
+    local JOURNALDIR="${1:-}"
     local TEMPFILE="$(mktemp)"
 
     # Register a cleanup handler
@@ -151,7 +156,16 @@ coredumpctl_collect() {
 
     # If coredumpctl_set_ts() was called beforehand, use the saved timestamp
     if [[ -n "$__COREDUMPCTL_TS" ]]; then
+        echo "[$FUNCNAME] Looking for coredumps since $__COREDUMPCTL_TS"
         ARGS+=(--since "$__COREDUMPCTL_TS")
+    fi
+
+    # To get meaningful results from non-standard journal locations (especially
+    # when it comes to full stack traces), systemd-coredump should be configured
+    # with 'Storage=journal'
+    if [[ -n "$JOURNALDIR" ]]; then
+        echo "[$FUNCNAME] Using a custom journal directory: $JOURNALDIR"
+        ARGS+=(-D "$JOURNALDIR")
     fi
 
     # Collect executable paths of all coredumps and filter out the expected ones
