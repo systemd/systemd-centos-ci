@@ -84,7 +84,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run"
+    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
@@ -92,11 +92,14 @@ exectask_p_finish
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
-    journal_path="/var/tmp/systemd-test-${t##*/}/journal"
-    if [[ -d "$journal_path" ]]; then
+    testdir="/var/tmp/systemd-test-${t##*/}"
+    if [[ -d "$testdir/journal" ]]; then
         # Attempt to collect coredumps from test-specific journals as well
-        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$journal_path'"
-        rsync -aq "$journal_path" "$LOGDIR/${t##*/}"
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$testdir/pass" ]]; then
+            rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+        fi
     fi
 done
 
