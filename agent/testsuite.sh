@@ -84,7 +84,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean-again"
+    exectask_p "${t##*/}" "make -C $t clean setup run"
 done
 
 # Wait for remaining running tasks
