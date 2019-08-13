@@ -188,11 +188,14 @@ coredumpctl_collect() {
     # For each unique executable path call 'coredumpctl info' to get the stack
     # trace and other useful info
     while read -r path; do
+        echo "[$FUNCNAME] Gathering coredumps for '$path'"
         coredumpctl "${ARGS[@]}" info "$path"
         # Attempt to get a full stack trace for the first occurrence of the
         # given executable path
         if gdb -v > /dev/null; then
+            echo -e "\n[$FUNCNAME] Trying to run gdb with 'bt full' for '$path'"
             echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+            echo -e "\n"
         fi
     done <<< "$(sort -u $TEMPFILE)"
 
