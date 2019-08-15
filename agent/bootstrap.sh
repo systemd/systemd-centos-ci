@@ -44,6 +44,15 @@ if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/syst
 fi
 yum -q -y install epel-release yum-utils gdb
 yum-config-manager -q --enable epel
+
+# FIXME: TEMPORARY WORKAROUND
+# the internal CentOS CI EPEL mirror is completely broken since the last EPEL
+# upgrade. As the situation didn't change after >24 hours, let's blacklist
+# the internal mirror so the CI can work as expected
+if [[ -f /etc/yum/pluginconf.d/fastestmirror.conf ]]; then
+    echo "exclude=mirror.ci.centos.org" >> /etc/yum/pluginconf.d/fastestmirror.conf
+    yum clean expire-cache
+fi
 yum -q -y update
 
 # FIXME: TEMPORARY WORKAROUND
