@@ -110,7 +110,7 @@ printresult() {
             cat "$TASK_LOGFILE"
             FAILED=$((FAILED + 1))
             FAILED_LIST+=("$TASK_NAME")
-            echo "[RESULT] $TASK_NAME - FAIL (log file: $TASK_LOGFILE)"
+            echo "[RESULT] $TASK_NAME - FAIL (EC: $TASK_EC) (log file: $TASK_LOGFILE)"
         fi
     else
         echo "[IGNORED RESULT] $TASK_NAME - EC: $TASK_EC (log file: $TASK_LOGFILE)"
