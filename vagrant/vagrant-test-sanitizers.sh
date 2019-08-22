@@ -55,7 +55,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
     rm -fr /var/tmp/systemd-test*
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
-    #make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1 KERNEL_APPEND=debug
     # Each integration test dumps the system journal when something breaks
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" &>/dev/null || :
 fi
