@@ -44,19 +44,34 @@ export QEMU_SMP=$(nproc)
 # are compiled in as modules
 export SKIP_INITRD=no
 
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
+
 # 1) Run it under systemd-nspawn
-rm -fr /var/tmp/systemd-test*
+export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
+rm -fr "$TESTDIR"
 exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
 NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
-rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-nspawn/" &>/dev/null || :
+rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null || :
 
 if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
-    rm -fr /var/tmp/systemd-test*
-    exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_NSPAWN=1"
-    # Each integration test dumps the system journal when something breaks
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/TEST-01-BASIC_sanitizers-qemu/" &>/dev/null || :
+    export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-qemu"
+    rm -fr "$TESTDIR"
+    exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
+
+    if [[ -d $TESTDIR/journal ]]; then
+        # Attempt to collect coredumps from test-specific journals as well
+        exectask "TEST-01-BASIC_coredumpctl_collect" "coredumpctl_collect '$TESTDIR/journal'"
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$TESTDIR/pass" ]]; then
+            rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null
+        fi
+    fi
 fi
 
 # Prepare environment for the systemd-networkd testsuite
@@ -69,6 +84,8 @@ exectask "systemd-networkd_sanitizers" \
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
+# Collect coredumps using the coredumpctl utility, if any
+exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 echo
