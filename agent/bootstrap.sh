@@ -54,18 +54,7 @@ if [[ -f /etc/yum/pluginconf.d/fastestmirror.conf ]]; then
     yum clean expire-cache
 fi
 yum -q -y update
-
-# FIXME: TEMPORARY WORKAROUND
-# tl;dr: RHEL 7.7 started shipping python3 package, which conflicts with python36
-# package from EPEL. After RHEL 7.7 GA the python36 (EPEL) package was removed,
-# however, there's still no CentOS 7.7 compose. In other words, there is no
-# way how to install python3 on CentOS 7 right now.
-#
-# Let's temporarily workaround it using the EPEL archive
-if ! yum -q -y install python3; then
-    yum -y install https://archive.fedoraproject.org/pub/archive/epel/7/x86_64/Packages/p/{python36-3.6.8-1,python36-libs-3.6.8-1}.el7.x86_64.rpm
-fi
-yum -q -y install systemd-ci-environment python-lxml ninja-build libasan net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
+yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
 python3.6 -m ensurepip
 python3.6 -m pip install meson
 
