@@ -70,6 +70,10 @@ Vagrant.configure("2") do |config|
 
     # Pass through /dev/random from the host to the VM
     libvirt.random :model => 'random'
+
+    # Enable nested KVM
+    libvirt.nested = true
+    libvirt.cpu_mode = "host-model"
   end
 
   # View the documentation for the provider you are using for more
@@ -116,10 +120,11 @@ Vagrant.configure("2") do |config|
       # Enable as much debug logging as we can to make debugging easier
       # (especially for boot issues)
       export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
-      # Bump the QEMU timeout, since we're running without KVM
-      export QEMU_TIMEOUT=1200
+      export QEMU_TIMEOUT=600
       # Skip the nspawn version of the test
       export TEST_NO_NSPAWN=1
+      # Enforce nested KVM
+      export TEST_NESTED_KVM=1
 
       make -C test/TEST-01-BASIC clean setup run clean-again
     ) 2>&1 | tee vagrant-arch-sanity-boot-check.log
