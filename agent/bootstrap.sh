@@ -45,7 +45,7 @@ fi
 yum -q -y install epel-release yum-utils gdb
 yum-config-manager -q --enable epel
 yum -q -y update
-yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
+yum -q -y install systemd-ci-environment python-lxml python36 ninja-build libasan net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm pcre2-devel
 python3.6 -m ensurepip
 python3.6 -m pip install meson==0.51.2
 
