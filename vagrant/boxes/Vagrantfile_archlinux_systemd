@@ -55,7 +55,7 @@ Vagrant.configure("2") do |config|
     # Install build dependencies
     pacman --needed --noconfirm -S acl cryptsetup docbook-xsl gperf lz4 xz pam libelf intltool \
         iptables kmod libcap libidn2 libgcrypt libmicrohttpd libxslt util-linux \
-        linux-api-headers python-lxml quota-tools shadow gnu-efi-libs git meson \
+        linux-api-headers python-lxml quota-tools shadow gnu-efi-libs git \
         libseccomp pcre2 audit kexec-tools libxkbcommon bash-completion git ninja \
         gcc m4 pkgconf ethtool
     # Install test dependencies
@@ -63,6 +63,11 @@ Vagrant.configure("2") do |config|
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S net-tools strace openbsd-netcat busybox e2fsprogs quota-tools \
         dnsmasq automake make dhclient rsync qemu socat wireguard-arch gdb
+
+    # Install meson from pip, so we can pin it to a specific version
+    # See: https://github.com/systemd/systemd/issues/13742
+    python3 -m ensurepip
+    python3 -m pip install meson==0.51.2
 
     # Disable 'quiet' mode on the kernel command line and forward everything
     # to ttyS0 instead of just tty0, so we can collect it using QEMU's
