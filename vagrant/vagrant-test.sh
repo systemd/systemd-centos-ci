@@ -113,7 +113,7 @@ systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout 45m ./$t"
+    exectask "${t##*/}" "timeout -k 60s 45m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any
