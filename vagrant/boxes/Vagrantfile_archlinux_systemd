@@ -62,7 +62,8 @@ Vagrant.configure("2") do |config|
     # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S net-tools strace openbsd-netcat busybox e2fsprogs quota-tools \
-        dnsmasq automake make dhclient rsync qemu socat wireguard-arch gdb dhcpcd
+        dnsmasq automake make dhclient rsync qemu socat wireguard-arch gdb dhcpcd diffutils \
+        coreutils
 
     # Install meson from pip, so we can pin it to a specific version
     # See: https://github.com/systemd/systemd/issues/13742
