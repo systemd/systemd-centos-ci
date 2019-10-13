@@ -111,6 +111,11 @@ TEST_LIST=(
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
+# FIXME
+# As the DHCP lease time in libvirt is quite short, and it's not configurable,
+# yet, let's start a DHCP daemon _only_ for the "master" network device to
+# keep it up during the systemd-networkd testsuite
+dhcpcd -q eth0
 
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout -k 60s 45m ./$t"
