@@ -72,6 +72,7 @@ class AgentControl(object):
         --------
         A tuple with node hostname and ssid
         """
+        jroot = None
         payload = {
             "ver"  : version,
             "arch" : architecture
@@ -101,6 +102,9 @@ class AgentControl(object):
         host = None
         ssid = None
         try:
+            if not jroot:
+                raise ValueError("Duffy didn't return any nodes")
+
             host = jroot["hosts"][0]
             ssid = jroot["ssid"]
         except (ValueError, IndexError):
