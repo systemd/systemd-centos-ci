@@ -82,7 +82,7 @@ systemctl reload dbus.service
 # As the DHCP lease time in libvirt is quite short, and it's not configurable,
 # yet, let's start a DHCP daemon _only_ for the "master" network device to
 # keep it up during the systemd-networkd testsuite
-dhcpcd -q eth0
+dhcpcd --reconfigure --persistent --waitip -q eth0
 
 exectask "systemd-networkd_sanitizers" \
             "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS" \
