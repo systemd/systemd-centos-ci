@@ -85,7 +85,7 @@ systemctl reload dbus.service
 dhcpcd --reconfigure --persistent --waitip -q eth0
 
 exectask "systemd-networkd_sanitizers" \
-            "test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+            "timeout -k 60s 45m test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
