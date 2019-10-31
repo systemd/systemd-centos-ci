@@ -179,7 +179,9 @@ coredumpctl_collect() {
     # Collect executable paths of all coredumps and filter out the expected ones
     # FILTER_RX:
     #   test-execute - certain subtests die with SIGSEGV intentionally
-    FILTER_RX="/test-execute$"
+    #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
+    #            further investigation
+    FILTER_RX="/(test-execute|dhcpcd)$"
     if ! coredumpctl "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
         echo "[$FUNCNAME] No relevant coredumps found"
         return 0
