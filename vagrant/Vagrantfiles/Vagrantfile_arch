@@ -105,7 +105,9 @@ Vagrant.configure("2") do |config|
     # Build phase
     meson build \
           --werror \
-          -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv' \
+          -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+          --buildtype=debug \
+          --optimization=1 \
           -Dslow-tests=true \
           -Dtests=unsafe \
           -Dinstall-tests=true \
