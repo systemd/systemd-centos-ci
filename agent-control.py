@@ -365,7 +365,7 @@ if __name__ == "__main__":
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", action="store_const", const=True,
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
-    parser.add_argument("--version", default="7",
+    parser.add_argument("--version", default=7,
             help="CentOS version")
     args = parser.parse_args()
 
@@ -407,10 +407,15 @@ if __name__ == "__main__":
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
         ac.artifacts_storage = artifacts_dir
 
+        # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
+        pkg_man = "yum" if args.version <= 7 else "dnf"
+        # Clean dnf/yum caches to drop stale metadata and prevent unexpected
+        # installation fails before installing core dependencies
+        dep_cmd = "{0} clean all && {0} makecache && {0} -y install bash git rsync".format(pkg_man)
+
         # Actual testing process
         logging.info("PHASE 1: Setting up basic dependencies to configure CI repository")
-        command = "yum -y install bash git && rm -fr {} && git clone {}{}".format(GITHUB_CI_REPO,
-                  GITHUB_BASE, GITHUB_CI_REPO)
+        command = "{0} && rm -fr {1} && git clone {2}{1}".format(dep_cmd, GITHUB_CI_REPO, GITHUB_BASE)
         ac.execute_remote_command(node, command)
 
         if args.ci_pr:
