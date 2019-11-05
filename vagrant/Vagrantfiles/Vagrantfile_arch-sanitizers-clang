@@ -76,6 +76,13 @@ Vagrant.configure("2") do |config|
     libvirt.cpu_mode = "host-model"
   end
 
+  config.ssh.extra_args = [
+    "-o", "ConnectionAttempts=60",
+    "-o", "ConnectTimeout=180",
+    "-o", "ServerAliveInterval=2",
+    "-o", "TCPKeepAlive=yes"
+  ]
+
   # View the documentation for the provider you are using for more
   # information on available options.
 
