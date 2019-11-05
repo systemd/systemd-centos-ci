@@ -113,7 +113,9 @@ Vagrant.configure("2") do |config|
 
     meson build \
           --werror \
-          -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv' \
+          -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+          --buildtype=debug \
+          --optimization=1 \
           -Dtests=unsafe \
           -Ddbuspolicydir=/usr/share/dbus-1/system.d \
           -Dman=false \

@@ -45,7 +45,7 @@ fi
 yum -q -y install epel-release yum-utils gdb
 yum-config-manager -q --enable epel
 yum -q -y update
-yum -q -y install busybox dnsmasq e2fsprogs libasan libbpf-devel nc net-tools ninja-build \
+yum -q -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel nc net-tools ninja-build \
                   pcre2-devel python36 python-lxml qemu-kvm quota strace systemd-ci-environment
 python3.6 -m ensurepip
 python3.6 -m pip install meson==0.51.2
@@ -91,7 +91,9 @@ systemctl disable firewalld
 (
     # Make sure we copy over the meson logs even if the compilation fails
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
-    meson build -Dc_args='-g -O1 -fno-omit-frame-pointer -ftrapv' \
+    meson build -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+                --buildtype=debug \
+                --optimization=1 \
                 --werror \
                 -Dslow-tests=true \
                 -Dtests=unsafe \
