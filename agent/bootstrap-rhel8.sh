@@ -160,7 +160,8 @@ fi
 
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
 grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
-grep "user_namespace.enable=1" /boot/grub2/grub.cfg
+# grub on RHEL 8 uses BLS
+grep -r "user_namespace.enable=1" /boot/loader/entries/
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
