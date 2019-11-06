@@ -22,7 +22,7 @@ trap at_exit EXIT
 set -e -u
 set -o pipefail
 
-ADDITIONAL_DEPS=(libasan libubsan net-tools strace nc e2fsprogs quota dnsmasq)
+ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
 
 # Install and enable EPEL
 dnf -q -y install epel-release dnf-utils "${ADDITIONAL_DEPS[@]}"
