@@ -24,8 +24,13 @@ if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
 fi
 
 # Install test dependencies
-exectask "yum-depinstall" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm socat"
+exectask "dnf-depinstall" \
+    "dnf -y install dnsmasq e2fsprogs nc net-tools qemu-kvm quota socat strace wget"
+
+# As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
+# using a different way. Needed by TEST-13-NSPAWN-SMOKE
+exectask "install-busybox" \
+    "wget -O /bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /bin/busybox"
 
 set +e
 
@@ -42,6 +47,14 @@ SKIP_LIST=(
 
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
+
+# Workaround for RHEL 8 (TEST-13-NSPAWN-SMOKE)
+# Even though RHEL 8 supports cgroups v2, we can't run systemd-nspawn with
+# unified cgroup hierarchy on it, as it still uses the legacy hierarchy.
+# As the auto-detection checks only for cgroups v2 support and not which
+# hierarchy is currently used on the host system, let's override the
+# auto-detection completely and skip tests using the unified hierarchy.
+sed -i 's/is_v2_supported=yes/is_v2_supported=no/g' test/TEST-13-NSPAWN-SMOKE/test.sh
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
