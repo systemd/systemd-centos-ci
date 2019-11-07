@@ -50,24 +50,21 @@ Vagrant.configure("2") do |config|
 
     # Initialize pacman's keyring
     pacman-key --init
+    pacman-key --populate archlinux
+    pacman --noconfirm -S archlinux-keyring
     # Upgrade the system
     pacman --noconfirm -Syu
     # Install build dependencies
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel acl audit bash-completion docbook-xsl ethtool \
         git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libgcrypt libidn2 \
-        libmicrohttpd libseccomp libxkbcommon libxslt linux-api-headers lz4 ninja \
+        libmicrohttpd libseccomp libxkbcommon libxslt linux-api-headers lz4 meson ninja \
         pam pcre2 python-lxml quota-tools xz
     # Install test dependencies
     # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S coreutils busybox dhclient dhcpcd diffutils dnsmasq e2fsprogs \
         gdb inetutils net-tools openbsd-netcat qemu rsync socat strace vi wireguard-arch
-
-    # Install meson from pip, so we can pin it to a specific version
-    # See: https://github.com/systemd/systemd/issues/13742
-    python3 -m ensurepip
-    python3 -m pip install meson==0.51.2
 
     # Compile & install libbpf-next
     pacman --needed --noconfirm -S elfutils libelf

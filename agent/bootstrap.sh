@@ -48,7 +48,7 @@ yum -q -y update
 yum -q -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel nc net-tools ninja-build \
                   pcre2-devel python36 python-lxml qemu-kvm quota strace systemd-ci-environment
 python3.6 -m ensurepip
-python3.6 -m pip install meson==0.51.2
+python3.6 -m pip install meson
 
 # python36 package doesn't create the python3 symlink
 rm -f /usr/bin/python3
