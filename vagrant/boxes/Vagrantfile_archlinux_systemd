@@ -50,6 +50,8 @@ Vagrant.configure("2") do |config|
 
     # Initialize pacman's keyring
     pacman-key --init
+    pacman-key --populate archlinux
+    pacman --noconfirm -S archlinux-keyring
     # Upgrade the system
     pacman --noconfirm -Syu
     # Install build dependencies
