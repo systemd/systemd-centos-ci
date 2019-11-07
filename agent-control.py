@@ -365,7 +365,8 @@ if __name__ == "__main__":
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", action="store_const", const=True,
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
-    parser.add_argument("--version", default=7,
+    # 'version' must be a string, as we want to support "8-stream" as well
+    parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
 
@@ -408,7 +409,7 @@ if __name__ == "__main__":
         ac.artifacts_storage = artifacts_dir
 
         # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
-        pkg_man = "yum" if args.version <= 7 else "dnf"
+        pkg_man = "yum" if args.version in ["6", "7"] else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
         # installation fails before installing core dependencies
         dep_cmd = "{0} clean all && {0} makecache && {0} -y install bash git rsync".format(pkg_man)
