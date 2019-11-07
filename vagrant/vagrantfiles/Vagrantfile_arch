@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+@ui = Vagrant::UI::Colored.new
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -85,8 +87,11 @@ Vagrant.configure("2") do |config|
 
   # Use an external bootstrap script if set
   if ENV["VAGRANT_BOOTSTRAP_SCRIPT"] then
+    @ui.info("Using a custom bootstrap script: " + ENV["VAGRANT_BOOTSTRAP_SCRIPT"])
     config.vm.provision "shell",
       privileged: true,
       path: ENV["VAGRANT_BOOTSTRAP_SCRIPT"]
+  else
+    @ui.info("No bootstrap script given (use VAGRANT_BOOTSTRAP_SCRIPT env variable to fix this)")
   end
 end
