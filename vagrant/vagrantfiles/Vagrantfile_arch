@@ -1,6 +1,8 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+@ui = Vagrant::UI::Colored.new
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -9,7 +11,7 @@ Vagrant.configure("2") do |config|
   # The most common configuration options are documented and commented below.
   # For a complete reference, please see the online documentation at
   # https://docs.vagrantup.com.
-  config.vm.define :archlinux_systemd_sanitizers
+  config.vm.define :archlinux_systemd_ci
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
@@ -66,7 +68,7 @@ Vagrant.configure("2") do |config|
     libvirt.qemuargs :value => "-nographic"
     libvirt.qemuargs :value => "-serial"
     # This file needs to be collected later by vagrant-ci-wrapper.sh
-    libvirt.qemuargs :value => "file:/tmp/vagrant-arch-sanitizers-serial-console.log"
+    libvirt.qemuargs :value => "file:/tmp/vagrant-arch-serial-console.log"
 
     # Pass through /dev/random from the host to the VM
     libvirt.random :model => 'random'
@@ -83,57 +85,13 @@ Vagrant.configure("2") do |config|
     "-o", "TCPKeepAlive=yes"
   ]
 
-  # View the documentation for the provider you are using for more
-  # information on available options.
-
-  # Enable provisioning with a shell script. Additional provisioners such as
-  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
-  # documentation for more information about their specific syntax and use.
-  config.vm.provision "shell", privileged: true, inline: <<-SHELL
-    set -e
-
-    whoami
-    uname -a
-
-    # The custom CentOS CI box should be updated and provide necessary
-    # build & test dependencies
-    pacman --noconfirm --needed -S clang compiler-rt llvm llvm-libs
-
-    # Use systemd repo path specified by SYSTEMD_ROOT
-    pushd /build
-
-    # Dump list of installed packages
-    pacman -Q > vagrant-arch-sanitizers-clang-installed-pkgs.txt
-    # Dump additional OS info
-    cat <(echo "# CPUINFO") /proc/cpuinfo >> vagrant-arch-sanitizers-clang-osinfo.txt
-    cat <(echo "# MEMINFO") /proc/meminfo >> vagrant-arch-sanitizers-clang-osinfo.txt
-    cat <(echo "# VERSION") /proc/version >> vagrant-arch-sanitizers-clang-osinfo.txt
-
-    rm -fr build
-    # Build phase
-    # Compile systemd with the Address Sanitizer (ASan) and Undefined Behavior
-    # Sanitizer (UBSan) using llvm/clang
-    export CC=clang
-    export CXX=clang++
-    export CFLAGS="-shared-libasan"
-    export CXXFLAGS="-shared-libasan"
-
-    meson build \
-          --werror \
-          -Dc_args='-fno-omit-frame-pointer -ftrapv' \
-          --buildtype=debug \
-          --optimization=1 \
-          -Dtests=unsafe \
-          -Ddbuspolicydir=/usr/share/dbus-1/system.d \
-          -Dman=false \
-          -Db_sanitize=address,undefined \
-          -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
-    ninja -C build
-
-    # Manually install upstream D-Bus config file for org.freedesktop.network1
-    # so systemd-networkd testsuite can use potentially new/updated methods
-    cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
-
-    popd
-  SHELL
+  # Use an external bootstrap script if set
+  if ENV["VAGRANT_BOOTSTRAP_SCRIPT"] then
+    @ui.info("Using a custom bootstrap script: " + ENV["VAGRANT_BOOTSTRAP_SCRIPT"])
+    config.vm.provision "shell",
+      privileged: true,
+      path: ENV["VAGRANT_BOOTSTRAP_SCRIPT"]
+  else
+    @ui.info("No bootstrap script given (use VAGRANT_BOOTSTRAP_SCRIPT env variable to fix this)")
+  end
 end
