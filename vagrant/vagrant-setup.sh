@@ -9,6 +9,9 @@ VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.4/vagrant_2.2.4_x86_
 set -o pipefail
 set -e -u
 
+# Use dnf if present, otherwise fall back to yum
+command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
+
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
 # fine with running tests without nested KVM
@@ -35,12 +38,12 @@ fi
 
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    yum -y install "$VAGRANT_PKG_URL"
+    $PKG_MAN -y install "$VAGRANT_PKG_URL"
 fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    yum -y install qemu libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
+    $PKG_MAN -y install libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
