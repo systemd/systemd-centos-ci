@@ -7,7 +7,6 @@ uname -a
 
 # The custom CentOS CI box should be updated and provide necessary
 # build & test dependencies
-pacman --noconfirm --needed -S clang compiler-rt llvm llvm-libs
 
 # Use systemd repo path specified by SYSTEMD_ROOT
 pushd /build
