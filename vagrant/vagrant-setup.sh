@@ -43,7 +43,7 @@ fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    $PKG_MAN -y install libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
+    $PKG_MAN -y install gcc libguestfs-tools-c libvirt libvirt-devel make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
