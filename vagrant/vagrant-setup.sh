@@ -4,7 +4,7 @@
 # vagrant-libvirt module to support "proper" virtualization (kvm/qemu) instead
 # of default containers.
 
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.4/vagrant_2.2.4_x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_x86_64.rpm"
 
 set -o pipefail
 set -e -u
