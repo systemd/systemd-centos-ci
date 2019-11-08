@@ -51,6 +51,11 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     vagrant version
     # Install vagrant-libvirt plugin
     # See: https://github.com/vagrant-libvirt/vagrant-libvirt
+    # Env variables taken from https://github.com/vagrant-libvirt/vagrant-libvirt#possible-problems-with-plugin-installation-on-linux
+    export CONFIGURE_ARGS='with-ldflags=-L/opt/vagrant/embedded/lib with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
+    export GEM_HOME=~/.vagrant.d/gems
+    export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
+    export PATH=/opt/vagrant/embedded/bin:$PATH
     vagrant plugin install vagrant-libvirt
 fi
 
