@@ -57,6 +57,12 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
     export PATH=/opt/vagrant/embedded/bin:$PATH
     vagrant plugin install vagrant-libvirt
+
+    # Enable NFS over UDP, which Vagrant uses by default
+    # (this used to work on CentOS 7, as UDP was enabled by default for nfsd)
+    sed -i '/\[nfsd\]/a udp=y' /etc/nfs.conf
+    systemctl restart nfs-server.service
+    systemctl status nfs-server.service
 fi
 
 vagrant --version
