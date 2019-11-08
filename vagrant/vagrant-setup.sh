@@ -4,10 +4,13 @@
 # vagrant-libvirt module to support "proper" virtualization (kvm/qemu) instead
 # of default containers.
 
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.4/vagrant_2.2.4_x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.6/vagrant_2.2.6_x86_64.rpm"
 
 set -o pipefail
 set -e -u
+
+# Use dnf if present, otherwise fall back to yum
+command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
 
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
@@ -35,12 +38,12 @@ fi
 
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    yum -y install "$VAGRANT_PKG_URL"
+    $PKG_MAN -y install "$VAGRANT_PKG_URL"
 fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    yum -y install qemu libvirt libvirt-devel ruby-devel gcc qemu-kvm libguestfs-tools-c
+    $PKG_MAN -y install gcc libguestfs-tools-c libvirt libvirt-devel make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
@@ -48,7 +51,18 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     vagrant version
     # Install vagrant-libvirt plugin
     # See: https://github.com/vagrant-libvirt/vagrant-libvirt
+    # Env variables taken from https://github.com/vagrant-libvirt/vagrant-libvirt#possible-problems-with-plugin-installation-on-linux
+    export CONFIGURE_ARGS='with-ldflags=-L/opt/vagrant/embedded/lib with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
+    export GEM_HOME=~/.vagrant.d/gems
+    export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
+    export PATH=/opt/vagrant/embedded/bin:$PATH
     vagrant plugin install vagrant-libvirt
+
+    # Enable NFS over UDP, which Vagrant uses by default
+    # (this used to work on CentOS 7, as UDP was enabled by default for nfsd)
+    sed -i '/\[nfsd\]/a udp=y' /etc/nfs.conf
+    systemctl restart nfs-server.service
+    systemctl status nfs-server.service
 fi
 
 vagrant --version
