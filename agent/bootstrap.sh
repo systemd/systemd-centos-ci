@@ -117,6 +117,15 @@ grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kern
 grep -r "user_namespace.enable=1" /boot/loader/entries/
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
+# Following steps are needed to 'unconfuse' systemd after being replaced by
+# an upstream version
+# 1) user-0.slice get stuck for a while, which breaks ssh connections
+# 2) systemd-reboot.service has an incompatible format, so daemon-reexec
+#    is needed to fix this
+SYSTEMD_LOG_LEVEL=debug systemctl restart user-0.slice
+systemctl status user-0.slice
+SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
 echo "-         CONTINUING        -"
