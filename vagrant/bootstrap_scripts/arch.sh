@@ -2,6 +2,7 @@
 # Vagrant provider for a standard systemd setup
 
 set -e
+set -o pipefail
 
 whoami
 uname -a
