@@ -31,8 +31,10 @@ if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
 fi
 
 # Install test dependencies
+# kernel-modules-extra is necessary for L2P, QDisc, and other modules required
+# by the systemd-networkd testsuite
 exectask "dnf-depinstall" \
-    "dnf -y install dnsmasq e2fsprogs nc net-tools qemu-kvm quota socat strace wget"
+    "dnf -y install dnsmasq e2fsprogs iproute-tc kernel-modules-extra nc net-tools qemu-kvm quota socat strace wget"
 
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
