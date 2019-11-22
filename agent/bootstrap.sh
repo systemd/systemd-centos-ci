@@ -95,6 +95,7 @@ systemctl disable firewalld
                 --buildtype=debug \
                 --optimization=1 \
                 --werror \
+                -Dhomed=false \
                 -Dslow-tests=true \
                 -Dtests=unsafe \
                 -Dinstall-tests=true \
