@@ -263,6 +263,9 @@ class AgentControl(object):
         node_ssid : str
             Session ID of the node allocation
         """
+        if not node_ssid:
+            return
+
         logging.info("Freeing session {}".format(node_ssid))
         res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
         logging.info(res)
