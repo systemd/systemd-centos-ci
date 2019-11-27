@@ -61,3 +61,8 @@ fi
 
 vagrant --version
 vagrant plugin list
+
+# Configure NFS for Vagrant's shared folders
+$PKG_MAN -y install nfs-utils
+systemctl enable --now nfs-server
+systemctl status nfs-server
