@@ -53,4 +53,4 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 #./agent-control.py --no-index --vagrant arch-sanitizers-gcc $ARGS
-./agent-control.py --version 8-stream --no-index --vagrant arch-sanitizers-clang $ARGS
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang $ARGS
