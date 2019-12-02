@@ -93,7 +93,7 @@ systemctl disable firewalld
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     meson build -Dc_args='-fno-omit-frame-pointer -ftrapv' \
                 --buildtype=debug \
-                --optimization=1 \
+                --optimization=g \
                 --werror \
                 -Dhomed=false \
                 -Dslow-tests=true \

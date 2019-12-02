@@ -31,7 +31,7 @@ meson build \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       --buildtype=debug \
-      --optimization=1 \
+      --optimization=g \
       -Dtests=unsafe \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \

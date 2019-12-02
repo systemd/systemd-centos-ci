@@ -26,7 +26,7 @@ meson build \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       --buildtype=debug \
-      --optimization=1 \
+      --optimization=g \
       -Dslow-tests=true \
       -Dtests=unsafe \
       -Dinstall-tests=true \
