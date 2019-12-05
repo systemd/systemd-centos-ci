@@ -36,6 +36,15 @@ else
     echo "[vagrant-setup] No KVM module found, can't setup nested KVM"
 fi
 
+# Configure NTP (chronyd)
+if ! rpm -q chrony; then
+    $PKG_MAN -y install chrony
+fi
+
+systemctl enable --now chronyd
+systemctl status chronyd
+
+# Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
     $PKG_MAN -y install "$VAGRANT_PKG_URL"
