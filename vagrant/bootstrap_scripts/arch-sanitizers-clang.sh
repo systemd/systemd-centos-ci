@@ -35,6 +35,7 @@ meson build \
       -Dtests=unsafe \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
+      -Dinstall-tests=true \
       -Db_sanitize=address,undefined \
       -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
 ninja -C build

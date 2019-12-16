@@ -30,6 +30,7 @@ meson build \
       -Dtests=unsafe \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
+      -Dinstall-tests=true \
       -Db_sanitize=address,undefined
 ninja -C build
 
