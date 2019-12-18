@@ -30,10 +30,6 @@ if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     exit 1
 fi
 
-# Install test dependencies
-exectask "yum-depinstall" \
-    "yum -y install net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm socat"
-
 set +e
 
 ### TEST PHASE ###
