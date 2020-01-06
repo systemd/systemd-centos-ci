@@ -25,7 +25,7 @@ set -o pipefail
 ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
 
 # Install and enable EPEL
-dnf -q -y install epel-release dnf-utils "${ADDITIONAL_DEPS[@]}"
+dnf -q -y install epel-release "${ADDITIONAL_DEPS[@]}"
 dnf config-manager -q --enable epel
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
