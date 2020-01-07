@@ -22,7 +22,7 @@ set -o pipefail
 
 # Install necessary dependencies
 # - systemd-* packages are necessary for correct users/groups to be created
-yum -q -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
+yum -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
 yum-builddep -y systemd
 
 # Fetch the downstream systemd repo

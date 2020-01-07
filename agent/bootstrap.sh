@@ -42,10 +42,10 @@ sed -i 's/skip_if_unavailable=True/skip_if_unavailable=False/' "$COPR_REPO_PATH"
 if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/systemd-centos-ci/pubkey.gpg; then
     rpm --import http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci/pubkey.gpg
 fi
-yum -q -y install epel-release yum-utils gdb
-yum-config-manager -q --enable epel
-yum -q -y update
-yum -q -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools ninja-build \
+yum -y install epel-release yum-utils gdb
+yum-config-manager --enable epel
+yum -y update
+yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools ninja-build \
                   openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat strace systemd-ci-environment
 python3.6 -m ensurepip
 python3.6 -m pip install meson

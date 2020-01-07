@@ -25,12 +25,12 @@ set -o pipefail
 ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
 
 # Install and enable EPEL
-dnf -q -y install epel-release "${ADDITIONAL_DEPS[@]}"
-dnf config-manager -q --enable epel
+dnf -y install epel-release "${ADDITIONAL_DEPS[@]}"
+dnf config-manager --enable epel
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
 # Install systemd's build dependencies
-dnf -q -y --enablerepo "PowerTools" builddep systemd
+dnf -y --enablerepo "PowerTools" builddep systemd
 
 # Fetch the systemd repo
 test -e systemd && rm -rf systemd
