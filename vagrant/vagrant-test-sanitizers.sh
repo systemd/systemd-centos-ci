@@ -17,6 +17,7 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 # Sanitizer-specific options
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
+export LSAN_OPTIONS=verbosity=1:log_threads=1
 
 _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
 
