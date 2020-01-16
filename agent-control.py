@@ -411,6 +411,10 @@ if __name__ == "__main__":
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
         ac.artifacts_storage = artifacts_dir
 
+        # FIXME: temporary workaround for broken internal mirrorlist
+        if args.version == "8":
+            ac.execute_remote_command(node, "sed -i -e '/^mirrorlist/s/^/#/g' -e '/^#baseurl/s/^#//g'  /etc/yum.repos.d/*.repo")
+
         # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
         pkg_man = "yum" if args.version in ["6", "7"] else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
