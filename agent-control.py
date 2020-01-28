@@ -178,7 +178,7 @@ class AgentControl(object):
         expected_rc : int (default: 0)
             Expected return code
         artifacts_dir : str (default: None)
-            If not None and the `self.artifacts_dir` is set, all files from the
+            If not None and `self.artifacts_storage` is set, all files from the
             `artifacts_dir` directory on the remote host will be downloaded into
             the local `self.artifacts_storage` directory after the command is
             finished
@@ -302,7 +302,7 @@ class AgentControl(object):
         time.sleep(30)
 
     def upload_file(self, node, local_source, remote_target):
-        """Upload a file (or directory) to a remote host
+        """Upload a file (or a directory) to a remote host
 
         Params:
         -------
