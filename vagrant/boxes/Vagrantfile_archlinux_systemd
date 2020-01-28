@@ -101,5 +101,12 @@ EOF
   # See: https://github.com/systemd/systemd/issues/14548
   pacman --noconfirm -U https://archive.archlinux.org/packages/l/libcap/libcap-2.28-1-x86_64.pkg.tar.xz
 
+  # FIXME
+  # Temporarily pin util-linux & libutil-linux to 2.34 until fixed 2.35 version
+  # is released
+  # See: https://github.com/systemd/systemd/pull/14677#issuecomment-579200696
+  pacman --noconfirm -U https://archive.archlinux.org/packages/l/libutil-linux/libutil-linux-2.34-8-x86_64.pkg.tar.xz \
+                        https://archive.archlinux.org/packages/u/util-linux/util-linux-2.34-8-x86_64.pkg.tar.xz
+
   SHELL
 end
