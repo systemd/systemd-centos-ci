@@ -43,4 +43,10 @@ ninja -C build
 # so systemd-networkd testsuite can use potentially new/updated methods
 cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
 
+# Manually install upstream systemd-networkd service unit files in case a PR
+# introduces a change in them
+# See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
+cp -fv build/units/systemd-networkd.service /usr/lib/systemd/system/systemd-networkd.service
+cp -fv build/units/systemd-networkd-wait-online.service /usr/lib/systemd/system/systemd-networkd-wait-online.service
+
 popd
