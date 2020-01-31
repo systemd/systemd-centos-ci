@@ -41,8 +41,30 @@ fi
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 
+## Temporary wrapper for `meson test` which disables LSan for `test-execute`
+# LSan keeps randomly crashing during `test-execute` so let's (temporarily)
+# disable it until we find out the culprit.
+# See:
+#   https://github.com/systemd/systemd-centos-ci/pull/217#issuecomment-580717687
+#   https://github.com/systemd/systemd/issues/14598
+ASAN_WRAPPER="$(mktemp $PWD/build/asan-wrapper-XXX.sh)"
+cat > "$ASAN_WRAPPER" << EOF
+#!/bin/bash
+
+export ASAN_OPTIONS=$ASAN_OPTIONS
+export UBSAN_OPTIONS=$UBSAN_OPTIONS
+
+if [[ \$(basename "\$1") == 'test-execute' ]]; then
+    ASAN_OPTIONS="\$ASAN_OPTIONS:detect_leaks=0"
+fi
+
+exec "\$@"
+EOF
+
+chmod +x "$ASAN_WRAPPER"
+
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C build --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
 
 ## Run TEST-01-BASIC under sanitizers
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
