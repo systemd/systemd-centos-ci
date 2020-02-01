@@ -8,16 +8,23 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
-# task-control.sh is copied from the systemd-centos-ci/common directory by vagrant-builder.sh
+# Following scripts are copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# Sanitizer-specific options
+## Sanitizer-specific options
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
+## To be able to run integration tests under sanitizers we have to use the dynamic
+## versions of sanitizer libraries, especially when it comes to ASAn. With gcc
+## it's quite easy as ASan is compiled dynamically by default there and all necessary
+## libraries are in standard locations.
+## With clang things get a little bit complicated as we need to explicitly tell clang
+## to use the dynamic ASan library and then instruct the rest of the system
+## to where it can find it, as it is in a non-standard library location.
 _clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
 
 if [[ -n "$_clang_asan_rt_name" ]]; then
@@ -30,14 +37,36 @@ if [[ -n "$_clang_asan_rt_name" ]]; then
     ldconfig
 fi
 
-# Disable certain flaky tests
+## Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 
-# Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+## Temporary wrapper for `meson test` which disables LSan for `test-execute`
+# LSan keeps randomly crashing during `test-execute` so let's (temporarily)
+# disable it until we find out the culprit.
+# See:
+#   https://github.com/systemd/systemd-centos-ci/pull/217#issuecomment-580717687
+#   https://github.com/systemd/systemd/issues/14598
+ASAN_WRAPPER="$(mktemp $PWD/build/asan-wrapper-XXX.sh)"
+cat > "$ASAN_WRAPPER" << EOF
+#!/bin/bash
 
-## Run TEST-01-BASIC under test sanitizers
+export ASAN_OPTIONS=$ASAN_OPTIONS
+export UBSAN_OPTIONS=$UBSAN_OPTIONS
+
+if [[ \$(basename "\$1") == 'test-execute' ]]; then
+    ASAN_OPTIONS="\$ASAN_OPTIONS:detect_leaks=0"
+fi
+
+exec "\$@"
+EOF
+
+chmod +x "$ASAN_WRAPPER"
+
+# Run the internal unit tests (make check)
+exectask "ninja-test_sanitizers" "meson test -C build --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
+
+## Run TEST-01-BASIC under sanitizers
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=600
 export NSPAWN_TIMEOUT=600
@@ -55,6 +84,15 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
+## As running integration tests with broken systemd can be quite time consuming
+## (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
+## $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
+## the basic integration test under systemd-nspawn (note that we don't install
+## built systemd during sanitizers run, so we use the stable systemd-nspawn
+## version provided by package manager).
+##
+## If the sanity check passes we can be at least somewhat sure the systemd
+## 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
@@ -64,21 +102,48 @@ NSPAWN_EC=$?
 rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null || :
 
 if [[ $NSPAWN_EC -eq 0 ]]; then
-    # 2) Run it under QEMU, but only if the systemd-nspawn run was successful
+    # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
+    #    (under QEMU) and possibly other selected tests
     export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-qemu"
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
-    if [[ -d $TESTDIR/journal ]]; then
-        # Attempt to collect coredumps from test-specific journals as well
-        exectask "TEST-01-BASIC_coredumpctl_collect" "coredumpctl_collect '$TESTDIR/journal'"
-        # Keep the journal files only if the associated test case failed
-        if [[ ! -f "$TESTDIR/pass" ]]; then
-            rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null
+    ## Run certain other integration tests under sanitizers to cover bigger
+    ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
+    ## be somewhat sure the 'base' systemd components work).
+    INTEGRATION_TESTS=(
+        test/TEST-04-JOURNAL # systemd-journald
+        test/TEST-45-REPART  # systemd-repart & friends
+        test/TEST-46-HOMED   # systemd-homed & friends
+    )
+
+    for t in "${INTEGRATION_TESTS[@]}"; do
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+
+        rm -fr "$TESTDIR"
+        mkdir -p "$TESTDIR"
+
+        exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    done
+
+    # Save journals created by integration tests
+    for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
+        testdir="/var/tmp/systemd-test-${t##*/}"
+        if [[ -d "$testdir/journal" ]]; then
+            # Attempt to collect coredumps from test-specific journals as well
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+            # Check for sanitizer errors in test journals
+            exectask "${t##*/}_sanitizer_errors" "journalctl -D $testdir/journal/ | check_for_sanitizer_errors"
+            # Keep the journal files only if the associated test case failed
+            if [[ ! -f "$testdir/pass" ]]; then
+                rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+            fi
         fi
-    fi
+    done
 fi
 
+## systemd-networkd testsuite
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
