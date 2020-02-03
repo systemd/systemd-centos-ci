@@ -30,9 +30,7 @@ dnf config-manager --enable epel
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
 # Install systemd's build dependencies
-# FIXME: temporarily disable CodeReady repo, which contains package conflict
-#   > Problem: libblkid-2.32.1-17.el8.i686 has inferior architecture
-dnf -y --enablerepo "PowerTools" --disablerepo=cr builddep systemd
+dnf -y --enablerepo "PowerTools" builddep systemd
 
 # Fetch the systemd repo
 test -e systemd && rm -rf systemd
