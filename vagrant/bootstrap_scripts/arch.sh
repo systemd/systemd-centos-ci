@@ -9,6 +9,8 @@ uname -a
 
 # The custom CentOS CI box should be updated and provide necessary
 # build & test dependencies
+# debug-only: update libcap to test out systemd/systemd#14768
+pacman -S --noconfirm libcap
 
 # Use systemd repo path specified by SYSTEMD_ROOT
 pushd /build
