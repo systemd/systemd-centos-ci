@@ -54,6 +54,21 @@ SKIP_LIST=(
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
 
+## Generate a custom-tailored initrd for the integration tests
+# The host initrd contains multipath modules & services which are unused
+# in the integration tests and sometimes cause unexpected failures. Let's build
+# a custom initrd used solely by the integration tests
+#
+# Set a path to the custom initrd into the INITRD variable which is read by
+# the integration test suite "framework"
+export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
+# Copy over the original initrd, as we want to keep the custom installed
+# files we installed during the bootstrap phase (i.e. we want to keep the
+# command line arguments the original initrd was built with)
+cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
+# Rebuild the original initrd without the multipath module
+dracut -o multipath --rebuild "$INITRD"
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
         echo -e "\n[SKIP] Skipping test $t"
@@ -62,7 +77,7 @@ for t in test/TEST-??-*; do
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    export INITRD="/boot/initramfs-$(uname -r).img"
+    # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Explicitly enable user namespaces
     export KERNEL_APPEND="user_namespace.enable=1"
