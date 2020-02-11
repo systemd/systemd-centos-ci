@@ -65,6 +65,10 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
+    if [[ ! -f $t ]]; then
+        echo "Test '$t' not found, skipping..."
+        continue
+    fi
     exectask "${t##*/}" "timeout 15m ./$t"
 done
 
