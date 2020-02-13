@@ -29,7 +29,7 @@ export CXXFLAGS="-shared-libasan"
 
 meson build \
       --werror \
-      -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+      -Dc_args='-Og -fno-omit-frame-pointer -ftrapv' \
       --buildtype=debug \
       --optimization=g \
       -Dtests=unsafe \
