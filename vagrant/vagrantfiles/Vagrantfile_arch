@@ -90,7 +90,7 @@ Vagrant.configure("2") do |config|
   config.ssh.extra_args = [
     "-o", "ConnectionAttempts=60",
     "-o", "ConnectTimeout=180",
-    "-o", "ServerAliveInterval=15",
+    "-o", "ServerAliveInterval=60",
     "-o", "TCPKeepAlive=no"
   ]
 
