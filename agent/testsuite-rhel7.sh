@@ -54,9 +54,10 @@ for t in test/TEST-??-*; do
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
 
-    exectask "${t##*/}" "make -C $t clean setup run clean"
-    # Each integration test dumps the system journal when something breaks
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}" &>/dev/null || :
+    if ! exectask "${t##*/}" "make -C $t clean setup run"; then
+        # Each integration test dumps the system journal when something breaks
+        rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/${t##*/}" &>/dev/null || :
+    fi
 done
 
 ## Other integration tests ##
