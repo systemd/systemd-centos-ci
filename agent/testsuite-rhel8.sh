@@ -82,7 +82,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run clean"
+    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
@@ -90,8 +90,10 @@ exectask_p_finish
 
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
-    if [[ -d /var/tmp/systemd-test-${t##*/}/journal ]]; then
-        rsync -aq "/var/tmp/systemd-test-${t##*/}/journal" "$LOGDIR/${t##*/}"
+    testdir="/var/tmp/systemd-test-${t##*/}"
+    # Store journals only for failed tests to conserve artifact storage
+    if [[ -d $testdir/journal && ! -f $testdir/pass ]]; then
+        rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
     fi
 done
 
