@@ -123,7 +123,7 @@ systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 45m ./$t"
+    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any
