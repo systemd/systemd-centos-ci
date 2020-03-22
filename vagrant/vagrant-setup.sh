@@ -73,5 +73,8 @@ vagrant plugin list
 
 # Configure NFS for Vagrant's shared folders
 $PKG_MAN -y install nfs-utils
-systemctl enable --now nfs-server
+lsmod | grep -E '^nfs$' || modprobe -v nfs
+lsmod | grep -E '^nfsd$' || modprobe -v nfsd
+systemctl enable  nfs-server
+systemctl restart nfs-server
 systemctl status nfs-server
