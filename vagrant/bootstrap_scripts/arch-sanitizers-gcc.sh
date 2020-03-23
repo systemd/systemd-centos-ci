@@ -28,6 +28,7 @@ meson build \
       --buildtype=debug \
       --optimization=g \
       -Dtests=unsafe \
+      -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
       -Db_sanitize=address,undefined
