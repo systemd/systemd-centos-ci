@@ -21,6 +21,15 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
+# Make the parallelization temporarily conditional
+# See: https://github.com/systemd/systemd/pull/14338
+if grep "IMAGE_NAME=" test/test-functions; then
+    PARALLELIZE=0
+    OPTIMAL_QEMU_SMP=$(nproc)
+else
+    PARALLELIZE=1
+fi
+
 # Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
@@ -59,11 +68,15 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    if [[ $PARALLELIZE -ne 0 ]]; then
+        exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    else
+        exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    fi
 done
 
 # Wait for remaining running tasks
-exectask_p_finish
+[[ $PARALLELIZE -ne 0 ]] && exectask_p_finish
 
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
@@ -81,7 +94,7 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    export QEMU_SMP=$(nproc)
     # Enforce nested KVM
     export TEST_NESTED_KVM=1
     # Use a "unique" name for each nspawn container to prevent scope clash
