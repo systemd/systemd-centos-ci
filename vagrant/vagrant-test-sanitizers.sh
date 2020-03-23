@@ -104,7 +104,7 @@ rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null || :
 if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
     #    (under QEMU) and possibly other selected tests
-    export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-qemu"
+    export TESTDIR="/var/tmp/systemd-test-TEST-01-BASIC_sanitizers-qemu"
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
