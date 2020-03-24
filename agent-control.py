@@ -84,7 +84,8 @@ class AgentControl(object):
         # an error (Insufficient Nodes in READY State) which is not a valid
         # JSON object. Let's attempt to handle that and give Duffy some breathing
         # time to allocate more machines.
-        for timeout in [60, 300, 600, 1800, 3600]:
+        # The last value (0) is there to allow one last try after the last wait
+        for timeout in [60, 300, 600, 1800, 3600, 0]:
             try:
                 res = self._execute_api_command("/Node/get", payload)
                 jroot = json.loads(res)
