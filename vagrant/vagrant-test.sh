@@ -38,6 +38,17 @@ echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
 ## Integration test suite ##
+# Prepare a custom-tailored initrd image (with the systemd module included).
+# This is necessary, as the default mkinitcpio config includes only the udev module,
+# which breaks certain things, like setting global env variables for systemd from
+# the kernel command line.
+# The exported INITRD variable is picked up by all following integration tests
+export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
+if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
+    echo >&2 "Failed to generate initrd, can't continue"
+    exit 1
+fi
+
 # Parallelized tasks
 SKIP_LIST=(
     "test/TEST-10-ISSUE-2467"       # Serialized below
