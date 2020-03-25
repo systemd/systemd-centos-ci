@@ -40,9 +40,10 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 ## Integration test suite ##
 # Parallelized tasks
 SKIP_LIST=(
-    "test/TEST-10-ISSUE-2467" # Serialized below
-    "test/TEST-25-IMPORT"     # Serialized below
-    "test/TEST-16-EXTEND-TIMEOUT" # flaky test
+    "test/TEST-10-ISSUE-2467"       # Serialized below
+    "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
+    "test/TEST-25-IMPORT"           # Serialized below
+    "test/TEST-46-HOMED"            # Serialized below
 )
 
 for t in test/TEST-??-*; do
@@ -83,6 +84,7 @@ done
 SERIALIZED_TASKS=(
     # "test/TEST-10-ISSUE-2467" # Temporarily disabled...
     "test/TEST-25-IMPORT"
+    "test/TEST-46-HOMED"
 )
 
 for t in "${SERIALIZED_TASKS[@]}"; do
