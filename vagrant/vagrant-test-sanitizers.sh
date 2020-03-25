@@ -67,6 +67,16 @@ chmod +x "$ASAN_WRAPPER"
 exectask "ninja-test_sanitizers" "meson test -C build --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
 
 ## Run TEST-01-BASIC under sanitizers
+# Prepare a custom-tailored initrd image (with the systemd module included).
+# This is necessary, as the default mkinitcpio config includes only the udev module,
+# which breaks certain things, like setting global env variables for systemd from
+# the kernel command line.
+# The exported INITRD variable is picked up by all following integration tests
+export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
+if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
+    echo >&2 "Failed to generate initrd, can't continue"
+    exit 1
+fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=600
 export NSPAWN_TIMEOUT=600

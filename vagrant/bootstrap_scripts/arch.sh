@@ -38,6 +38,10 @@ ninja -C build install
 
 # Make sure the revision we just compiled is actually bootable
 (
+  # We need a custom initrd (with the systemd module) for integration tests
+  # See vagrant-test.sh for reasoning
+  export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
+  mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
   # Enable as much debug logging as we can to make debugging easier
   # (especially for boot issues)
   export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
@@ -48,6 +52,8 @@ ninja -C build install
   export TEST_NESTED_KVM=1
 
   make -C test/TEST-01-BASIC clean setup run clean-again
+
+  rm -f "$INITRD"
 ) 2>&1 | grep --line-buffered '^' | tee vagrant-arch-sanity-boot-check.log
 
 popd
