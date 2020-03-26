@@ -107,7 +107,7 @@ for t in test/TEST-??-*; do
     if [[ $PARALLELIZE -ne 0 ]]; then
         exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
     else
-        exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+        exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
     fi
 
 done
