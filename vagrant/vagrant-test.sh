@@ -8,6 +8,10 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
+# This variable is automagically consumed by the "framework" for integration tests
+# See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
+export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+
 # Following scripts are copied from the systemd-centos-ci/common directory
 # by vagrant-build.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
@@ -35,7 +39,7 @@ fi
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -172,7 +176,7 @@ if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
     done
 fi
 
-[[ -d /build/build/meson-logs ]] && cp -r /build/build/meson-logs "$LOGDIR"
+[[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 exit $FAILED

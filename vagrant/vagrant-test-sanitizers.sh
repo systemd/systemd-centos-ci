@@ -8,6 +8,10 @@
 
 DISTRO="${1:-unspecified}"
 SCRIPT_DIR="$(dirname $0)"
+# This variable is automagically consumed by the "framework" for integration tests
+# See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
+export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+
 # Following scripts are copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 . "$SCRIPT_DIR/utils.sh" || exit 1
@@ -25,7 +29,7 @@ export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 ## With clang things get a little bit complicated as we need to explicitly tell clang
 ## to use the dynamic ASan library and then instruct the rest of the system
 ## to where it can find it, as it is in a non-standard library location.
-_clang_asan_rt_name="$(ldd build/systemd | awk '/libclang_rt.asan/ {print $1; exit}')"
+_clang_asan_rt_name="$(ldd "$BUILD_DIR/systemd" | awk '/libclang_rt.asan/ {print $1; exit}')"
 
 if [[ -n "$_clang_asan_rt_name" ]]; then
     # We are compiled with clang & -shared-libasan, let's tweak the runtime library
@@ -47,7 +51,7 @@ echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 # See:
 #   https://github.com/systemd/systemd-centos-ci/pull/217#issuecomment-580717687
 #   https://github.com/systemd/systemd/issues/14598
-ASAN_WRAPPER="$(mktemp $PWD/build/asan-wrapper-XXX.sh)"
+ASAN_WRAPPER="$(mktemp "$BUILD_DIR/asan-wrapper-XXX.sh")"
 cat > "$ASAN_WRAPPER" << EOF
 #!/bin/bash
 
@@ -64,7 +68,7 @@ EOF
 chmod +x "$ASAN_WRAPPER"
 
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C build --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
 
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -170,7 +174,7 @@ systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
 exectask "systemd-networkd_sanitizers" \
-            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$PWD/build --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
@@ -194,7 +198,7 @@ if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
     done
 fi
 
-[[ -d /build/build/meson-logs ]] && cp -r /build/build/meson-logs "$LOGDIR"
+[[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 exit $FAILED

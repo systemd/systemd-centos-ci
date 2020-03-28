@@ -1,7 +1,7 @@
 #!/bin/bash
 # Vagrant provider for a standard systemd setup
 
-set -e
+set -eu
 set -o pipefail
 
 whoami
@@ -9,6 +9,15 @@ uname -a
 
 # The custom CentOS CI box should be updated and provide necessary
 # build & test dependencies
+
+# Let's make the $BUILD_DIR for meson reside outside of the NFS volume mounted
+# under /build to avoid certain race conditions, like:
+# /usr/bin/ld: error: /build/build/src/udev/libudev.so.1: file too short
+# The same path must be exported in the respective tests scripts (vagrant-test.sh,
+# etc.) so the unit & integration tests can find the compiled binaries
+# Note: avoid using /tmp or /var/tmp, as certain tests use binaries from the
+#       buildir in combination with PrivateTmp=true
+export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
 # Use systemd repo path specified by SYSTEMD_ROOT
 pushd /build
@@ -20,9 +29,9 @@ cat <(echo "# CPUINFO") /proc/cpuinfo >> vagrant-arch-osinfo.txt
 cat <(echo "# MEMINFO") /proc/meminfo >> vagrant-arch-osinfo.txt
 cat <(echo "# VERSION") /proc/version >> vagrant-arch-osinfo.txt
 
-rm -fr build
+rm -fr "$BUILD_DIR"
 # Build phase
-meson build \
+meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       --buildtype=debug \
@@ -33,8 +42,8 @@ meson build \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=true \
       -Dhtml=true
-ninja -C build
-ninja -C build install
+ninja -C "$BUILD_DIR"
+ninja -C "$BUILD_DIR" install
 
 # Make sure the revision we just compiled is actually bootable
 (
