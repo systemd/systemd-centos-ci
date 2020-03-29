@@ -34,6 +34,7 @@ else
     PARALLELIZE=1
 fi
 
+if false; then
 # Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
@@ -135,11 +136,17 @@ for t in test/TEST-??-*; do
         fi
     fi
 done
+fi
 
 ## Other integration tests ##
+NETWORK_NAMESPACE="$(mktemp /systemd-networkd-network-namespace-XXX)"
+sed -i "s#'ExecStart=\!\!'#'ExecStart=\!\!/bin/nsenter --net=$NETWORK_NAMESPACE '#g" "test/test-network/systemd-networkd-tests.py"
+sed -ri "/drop_in.+nsenter/a\        drop_in += ['RestrictNamespaces=no', 'AmbientCapabilities=CAP_SYS_ADMIN', 'CapabilityBoundingSet=CAP_SYS_ADMIN']" "test/test-network/systemd-networkd-tests.py"
+sed -ri "/nsenter.+udevd_bin/a\        'RestrictNamespaces=no',\n\        'AmbientCapabilities=CAP_SYS_ADMIN',\n\        'CapabilityBoundingSet=CAP_SYS_ADMIN'," "test/test-network/systemd-networkd-tests.py"
+
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+    "./test/test-exec-deserialization.py"
+    "unshare --net=$NETWORK_NAMESPACE test/test-network/systemd-networkd-tests.py"
 )
 
 # Prepare environment for the systemd-networkd testsuite
@@ -152,9 +159,13 @@ systemctl reload dbus.service
 systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
-for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
-done
+if ! timeout -k 60s 60m unshare --net=$NETWORK_NAMESPACE test/test-network/systemd-networkd-tests.py; then
+    ((FAILED++))
+fi
+
+#for t in "${TEST_LIST[@]}"; do
+#    exectask "${t##*/}" "timeout -k 60s 60m $t"
+#done
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
