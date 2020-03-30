@@ -35,15 +35,6 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# Make the parallelization temporarily conditional
-# See: https://github.com/systemd/systemd/pull/14338
-if grep "IMAGE_NAME=" test/test-functions; then
-    PARALLELIZE=0
-    OPTIMAL_QEMU_SMP=$(nproc)
-else
-    PARALLELIZE=1
-fi
-
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 
@@ -78,6 +69,9 @@ cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
 dracut -o multipath --rebuild "$INITRD"
 
+# Generate the base image
+exectask "gen-image" "make -C test/TEST-01-BASIC clean setup"
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
         echo -e "\n[SKIP] Skipping test $t"
@@ -104,11 +98,7 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    if [[ $PARALLELIZE -ne 0 ]]; then
-        exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
-    else
-        exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
-    fi
+    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 
 done
 
@@ -131,7 +121,7 @@ done
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+#    "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
