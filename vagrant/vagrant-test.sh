@@ -126,12 +126,12 @@ done
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
     testdir="/var/tmp/systemd-test-${t##*/}"
-    if [[ -d "$testdir/journal" ]]; then
+    if [[ -f "$testdir/system.journal" ]]; then
         # Attempt to collect coredumps from test-specific journals as well
-        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
         # Keep the journal files only if the associated test case failed
         if [[ ! -f "$testdir/pass" ]]; then
-            rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}"
         fi
     fi
 done

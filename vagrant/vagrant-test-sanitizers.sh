@@ -149,14 +149,14 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Save journals created by integration tests
     for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
-        if [[ -d "$testdir/journal" ]]; then
+        if [[ -f "$testdir/system.journal" ]]; then
             # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
             # Check for sanitizer errors in test journals
-            exectask "${t##*/}_sanitizer_errors" "journalctl -D $testdir/journal/ | check_for_sanitizer_errors"
+            exectask "${t##*/}_sanitizer_errors" "journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
             if [[ ! -f "$testdir/pass" ]]; then
-                rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+                rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}"
             fi
         fi
     done
