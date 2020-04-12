@@ -190,13 +190,32 @@ coredumpctl_collect() {
     # For each unique executable path call 'coredumpctl info' to get the stack
     # trace and other useful info
     while read -r path; do
+        local EXE
+        local GDB_CMD="bt full\nquit"
+
         echo "[$FUNCNAME] Gathering coredumps for '$path'"
         coredumpctl "${ARGS[@]}" info "$path"
+        # Make sure we use the built binaries for getting gdb trace
+        # This is relevant mainly for the sanitizers run, where we don't install
+        # the just built revision, so `coredumpctl debug` pulls in a local binary
+        # instead of the built one, which produces useless results.
+        # Note: this works _ONLY_ when $BUILD_DIR is set (the same variable
+        # as used by the systemd integration tests) so we know from where to
+        # pull binaries in
+        if [[ -v BUILD_DIR && -d $BUILD_DIR && -x $BUILD_DIR/${path##*/} ]]; then
+            # $BUILD_DIR is set and we found the binary in it, let's override
+            # the gdb command
+            EXE="$BUILD_DIR/${path##*/}"
+            GDB_CMD="file $EXE\nframe\nbt full\nquit"
+            echo "[$FUNCNAME] \$BUILD_DIR is set and '${path##*/}' was found in it"
+            echo "[$FUNCNAME] Overriding the executable to '$EXE' and gdb command to '$GDB_CMD'"
+        fi
+
         # Attempt to get a full stack trace for the first occurrence of the
         # given executable path
         if gdb -v > /dev/null; then
-            echo -e "\n[$FUNCNAME] Trying to run gdb with 'bt full' for '$path'"
-            echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+            echo -e "\n[$FUNCNAME] Trying to run gdb with '$GDB_CMD' for '$path'"
+            echo -e "$GDB_CMD" | coredumpctl "${ARGS[@]}" debug "$path"
             echo -e "\n"
         fi
     done <<< "$(sort -u $TEMPFILE)"
