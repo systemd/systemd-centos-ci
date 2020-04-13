@@ -3,6 +3,11 @@
 
 __COREDUMPCTL_TS=""
 
+# Internal logging helpers which make use of the internal call stack to get
+# the function name of the caller
+_log() { echo "[${FUNCNAME[1]}] $1"; }
+_err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
+
 # Checkout to the requsted branch:
 #   1) if pr:XXX where XXX is a pull request ID is passed to the script,
 #      the corresponding branch for this PR is be checked out
@@ -11,7 +16,7 @@ __COREDUMPCTL_TS=""
 #   3) if the script is called without arguments, the default (possibly master)
 #      branch is used
 git_checkout_pr() {
-    echo "[$FUNCNAME] Arguments: $*"
+    _log "Arguments: $*"
     (
         set -e -u
         case $1 in
@@ -37,14 +42,15 @@ git_checkout_pr() {
     # Initialize git submodules, if any
     git submodule update --init --recursive
 
-    echo -n "[$FUNCNAME] Checked out version: "
-    git describe
+    _log "Checked out version: $(git describe)"
     git log -1
 }
 
 # Check input from stdin for sanitizer errors/warnings
 # Takes no arguments, reads input directly from stdin to allow piping, like:
 #   journalctl -b | check_for_sanitizer_errors
+#
+# shellcheck disable=SC1004
 check_for_sanitizer_errors() {
     awk '
     BEGIN {
@@ -117,7 +123,7 @@ coredumpctl_init() {
     local EC
 
     if ! systemctl start systemd-coredump.socket; then
-        echo >&2 "[$FUNCNAME] Failed to start systemd-coredump.socket"
+        _err "Failed to start systemd-coredump.socket"
         return 1
     fi
 
@@ -128,7 +134,7 @@ coredumpctl_init() {
     EC=$?
 
     if ! [[ $EC -eq 0 || $EC -eq 1 ]]; then
-        echo >&2 "[$FUNCNAME] coredumpctl is not in operative state"
+        _err "coredumpctl is not in operative state"
         return 1
     fi
 }
@@ -158,13 +164,14 @@ coredumpctl_collect() {
     local TEMPFILE="$(mktemp)"
 
     # Register a cleanup handler
+    # shellcheck disable=SC2064
     trap "rm -f '$TEMPFILE'" EXIT
 
-    echo "[$FUNCNAME] Attempting to collect info about possible coredumps"
+    _log "Attempting to collect info about possible coredumps"
 
     # If coredumpctl_set_ts() was called beforehand, use the saved timestamp
     if [[ -n "$__COREDUMPCTL_TS" ]]; then
-        echo "[$FUNCNAME] Looking for coredumps since $__COREDUMPCTL_TS"
+        _log "Looking for coredumps since $__COREDUMPCTL_TS"
         ARGS+=(--since "$__COREDUMPCTL_TS")
     fi
 
@@ -172,7 +179,7 @@ coredumpctl_collect() {
     # when it comes to full stack traces), systemd-coredump should be configured
     # with 'Storage=journal'
     if [[ -n "$JOURNALDIR" ]]; then
-        echo "[$FUNCNAME] Using a custom journal directory: $JOURNALDIR"
+        _log "Using a custom journal directory: $JOURNALDIR"
         ARGS+=(-D "$JOURNALDIR")
     fi
 
@@ -183,23 +190,43 @@ coredumpctl_collect() {
     #            further investigation
     FILTER_RX="/(test-execute|dhcpcd)$"
     if ! coredumpctl "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
-        echo "[$FUNCNAME] No relevant coredumps found"
+        _log "No relevant coredumps found"
         return 0
     fi
 
     # For each unique executable path call 'coredumpctl info' to get the stack
     # trace and other useful info
     while read -r path; do
-        echo "[$FUNCNAME] Gathering coredumps for '$path'"
+        local EXE
+        local GDB_CMD="bt full\nquit"
+
+        _log "Gathering coredumps for '$path'"
         coredumpctl "${ARGS[@]}" info "$path"
+        # Make sure we use the built binaries for getting gdb trace
+        # This is relevant mainly for the sanitizers run, where we don't install
+        # the just built revision, so `coredumpctl debug` pulls in a local binary
+        # instead of the built one, which produces useless results.
+        # Note: this works _ONLY_ when $BUILD_DIR is set (the same variable
+        # as used by the systemd integration tests) so we know from where to
+        # pull binaries in
+        if [[ -v BUILD_DIR && -d $BUILD_DIR && -x $BUILD_DIR/${path##*/} ]]; then
+            # $BUILD_DIR is set and we found the binary in it, let's override
+            # the gdb command
+            EXE="$BUILD_DIR/${path##*/}"
+            GDB_CMD="file $EXE\nframe\nbt full\nquit"
+            _log "\$BUILD_DIR is set and '${path##*/}' was found in it"
+            _log "Overriding the executable to '$EXE' and gdb command to '$GDB_CMD'"
+        fi
+
         # Attempt to get a full stack trace for the first occurrence of the
         # given executable path
         if gdb -v > /dev/null; then
-            echo -e "\n[$FUNCNAME] Trying to run gdb with 'bt full' for '$path'"
-            echo -e "bt full\nquit" | coredumpctl "${ARGS[@]}" debug "$path"
+            echo -e "\n"
+            _log "Trying to run gdb with '$GDB_CMD' for '$path'"
+            echo -e "$GDB_CMD" | coredumpctl "${ARGS[@]}" debug "$path"
             echo -e "\n"
         fi
-    done <<< "$(sort -u $TEMPFILE)"
+    done <<< "$(sort -u "$TEMPFILE")"
 
     return 1
 }

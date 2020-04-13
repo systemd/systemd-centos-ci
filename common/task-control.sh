@@ -2,6 +2,11 @@
 
 set -u
 
+# Internal logging helpers which make use of the internal call stack to get
+# the function name of the caller
+_log() { echo "[${FUNCNAME[1]}] $1"; }
+_err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
+
 if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
@@ -37,7 +42,7 @@ fi
 #   - PID (must be a child of current shell)
 waitforpid() {
     if [[ $# -lt 1 ]]; then
-        echo >&2 "[$FUNCNAME]: missing arguments"
+        _err "Missing argument: PID"
         return 1
     fi
 
@@ -45,14 +50,14 @@ waitforpid() {
     SECONDS=0
 
     echo "Waiting for PID $1 to finish"
-    while kill -0 $1 2>/dev/null; do
+    while kill -0 "$1" 2>/dev/null; do
         if ((SECONDS % 10 == 0)); then
             echo -n "."
         fi
         sleep 1
     done
 
-    wait $1
+    wait "$1"
     EC=$?
 
     echo
@@ -74,7 +79,7 @@ waitforpid() {
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 printresult() {
     if [[ $# -lt 3 ]]; then
-        echo >&2 "[$FUNCNAME]: missing arguments"
+        _err "Missing arguments"
         return 1
     fi
 
@@ -98,7 +103,7 @@ printresult() {
     if mv "$TASK_LOGFILE" "$NEW_LOGFILE"; then
         TASK_LOGFILE="$NEW_LOGFILE"
     else
-        echo >&2 "[$FUNCNAME]: log rename failed"
+        _err "Log rename failed"
     fi
 
     # Don't update internal counters if we want to ignore task's EC
@@ -128,7 +133,7 @@ printresult() {
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
     if [[ $# -lt 2 ]]; then
-        echo >&2 "[$FUNCNAME]: missing arguments"
+        _err "Missing arguments"
         return 1
     fi
 
@@ -139,6 +144,7 @@ exectask() {
     echo -e "\n[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
+    # shellcheck disable=SC2086
     eval $2 &>> "$LOGFILE" &
     local PID=$!
     waitforpid $PID
@@ -160,7 +166,7 @@ exectask() {
 #   $2 - task command
 exectask_p() {
     if [[ $# -lt 2 ]]; then
-        echo >&2 "[$FUNCNAME]: missing arguments"
+        _err "Missing arguments"
         return 1
     fi
 
@@ -174,9 +180,9 @@ exectask_p() {
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
-            if ! kill -0 ${TASK_QUEUE[$key]} &>/dev/null; then
+            if ! kill -0 "${TASK_QUEUE[$key]}" &>/dev/null; then
                 # Task has finished, report its result and drop it from the queue
-                wait ${TASK_QUEUE[$key]}
+                wait "${TASK_QUEUE[$key]}"
                 ec=$?
                 logfile="$LOGDIR/$key.log"
                 echo "[TASK END] $(date)" >> "$logfile"
@@ -192,6 +198,7 @@ exectask_p() {
         sleep 0.01
     done
 
+    # shellcheck disable=SC2086
     eval $TASK_COMMAND &>> "$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
