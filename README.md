@@ -4,69 +4,195 @@ This project contains code to build, install and test [systemd](https://github.c
 on test machines provisioned from a pool provided by the [CentOS CI](https://ci.centos.org/) project,
 using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
-# Setup
+As of right now these scripts provide CI for [upstream](https://github.com/systemd/systemd)
+on CentOS 7 and Arch Linux, and for [RHEL downstream](https://github.com/systemd-rhel)
+on both CentOS 7 and CentOS 8.
 
-The code in this repository is used from two sides; the agent control host (named `slave01` in the CentOS CI environment),
-and on the provisioned machines themselves.
+# Structure
 
-On the agent control host, the entry point for running new tests is called `agent-control.py`. This script uses
-[Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) to provision new machines, and then uses SSH to log into them and run
-scripts from the `agent/` subdirectory.
+The main entrypoint is the `agent-control.py` script, which is responsible for
+getting a provisioned machine from the Duffy pool, run the respective CI scripts,
+and gather results. To make this work with GitHub pull requests, the `jenkins/`
+directory contains *glue* scripts which generate a correct set of arguments for
+the `agent-control.py` script for each PR.
 
-# Duffy
+The CI scripts are scattered among several directories:
 
-Quoting their [Wiki](https://wiki.centos.org/QaWiki/CI/Duffy),
+* `agent/`
 
-> Duffy is the middle layer running ci.centos.org that manages the provisioning, maintenance and teardown / rebuild of the Nodes (physical hardware for now, VMs coming soon) that are used to run the tests in the CI Cluster.
+    Bootstrap and test runner scripts used to run tests directly on the provisioned
+    machines (i.e. for running tests on CentOS 7 and CentOS 8).
 
-This project contains code to provision a new machine from the pool, and to either release one specific one or all of them.
+* `common/`
 
-See below for the usage of this tool.
+    Various *libraries* and support functions used by other scripts.
 
-# Usage
+* `jenkins/`
 
-The only script end users should be accessing is `agent-control.py` on the `slave01` host.
+    Scripts which are responsible for feeding `agent-control.py` correct parameters
+    based on data from the Jenkins GitHub plugin.
 
-```
-$ ./agent-control.py --help
-usage: agent-control.py [-h] [--arch ARCH] [--branch BRANCH] [--ci-pr CI_PR]
-                        [--free-all-nodes] [--free-session FREE_SESSION]
-                        [--keep] [--list-nodes] [--pr PR] [--version VERSION]
+    These scripts are used directly in the *Execute shell* step of each Jenkins job
+    in following manner:
 
-optional arguments:
-  -h, --help            show this help message and exit
-  --arch ARCH           Architecture
-  --branch BRANCH       Commit/tag/branch to checkout
-  --ci-pr CI_PR         Pull request ID to check out (systemd-centos-ci
-                        repository)
-  --free-all-nodes      Free all currently provisioned nodes
-  --free-session FREE_SESSION
-                        Return nodes from a session back to the pool
-  --keep                Do not kill provisioned build host
-  --list-nodes          List currectly allocated nodes
-  --pr PR               Pull request ID to check out (systemd repository)
-  --version VERSION     CentOS version
+```bash
+#!/bin/sh
 
+set -e
+
+curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/systemd-pr-build.sh
+chmod +x runner.sh
+./runner.sh
 ```
 
-When called without parameters, it will build the current systemd master branch.
-The `--keep` option is helpful during development.
+* `utils/`
 
-# Jenkins glue
+    Various utility scripts used by the pipeline.
 
-The `agent-control.py` script and Jenkins are *glued* together using a simple shell script. See the [Jenkins Configuration](https://github.com/systemd/systemd-centos-ci/wiki/Jenkins-Configuration) wiki page for more information.
+* `vagrant/`
 
-# Manually running the tests
-```sh
-# bootstrap
-yum install -q -y git
-git clone https://github.com/systemd/systemd-centos-ci
-systemd-centos-ci/agent/bootstrap.sh pr:pr-number # for example pr:4456
-systemctl reboot
+    Setup, build, and test runner scripts to test systemd on other distributions than CentOS
+    using Vagrant VMs.
 
-# testsuite
-systemd-centos-ci/agent/testsuite.sh
-systemctl reboot
+# Pipelines
 
-systemctl poweroff
+Jenkins view: https://ci.centos.org/view/systemd/
+
+## Upstream on CentOS 7 (systemd-pr-build)
+
 ```
+agent-control.py +-> agent/bootstrap.sh +-> reboot +-> agent/testsuite.sh
+```
+
+To test compatibility of the upstream systemd with older kernels, this job builds, installs, and
+tests an upstream PR on a CentOS 7 baremetal machine.
+
+To achieve this, `agent-control.py` runs `agent/bootstrap.sh` script to fetch, build, and install
+the respective PR (along with other necessary dependencies), reboots the machine, and executes
+`agent/testsuite.sh` to to the actual testing.
+
+## Downstream on CentOS 7 and CentOS 8 (systemd-rhel7-pr-build and systemd-rhel8-pr-build)
+
+The same worklflow as above, but for systemd in RHEL:
+
+  * [RHEL 7/CentOS 7](https://github.com/systemd-rhel/rhel-7)
+
+```
+agent-control.py +-> agent/bootstrap-rhel7.sh +-> reboot +-> agent/testsuite-rhel7.sh
+```
+
+  * [RHEL 8/CentOS 8](https://github.com/systemd-rhel/rhel-8)
+
+```
+agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhel8.sh
+```
+
+## Upstream on Arch Linux using Vagrant (systemd-pr-build-vagrant)
+
+To achieve the exact opposite of the testing on CentOS 7, this pipeline check the compatibility
+of systemd with the latest versions of kernel and other components. As the CentOS CI
+pool provides only CentOS machines, this pipeline introduces an intermediary in form of
+a [Vagrant](https://www.vagrantup.com) VM along with [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt)
+plugin to spin up a virtual machine in which we do the actual testing.
+
+### Structure
+
+Each VM consists of two images: the base image (Vagrant Box) and a runtime image.
+
+Vagrant Box templates are stored under `vagrant/boxes/` and the images themselves
+are rebuilt every few days by a separate job to keep the package set up-to-date,
+but to not slow down the CI pipeline.
+
+The templates for each VM used in the CI can be found in `vagrant/vagrantfiles/`.
+As the majority of the current (single) Vagrantfile remains identical across several
+instances of the VMs except for the bootstrap phase, the bootstrap scripts were
+separated into their own directory - `vagrant/bootstrap_script/` and the Vagrantfile
+itself is now parametrized, to avoid code duplication.
+
+### Pipeline
+
+```
+agent-control.py +-> vagrant/vagrant-ci-wrapper.sh +-> vagrant/vagrant-build.sh +-> reboot +-> vagrant/vagrant-test.sh
+                        +               ^                +                 ^
+                        |               |                |                 |
+                        v               +                v                 +
+                     vagrant/vagrant-setup.sh          vagrant/vagrantfiles/Vagrantfile_<distro>
+                                                         +                 ^
+                                                         |                 |
+                                                         v                 +
+                                                       vagrant/bootstrap-scripts/<distro>-<type>.sh
+
+```
+
+The pipeline consists of several steps (scripts):
+
+1. `vagrant/vagrant-ci-wrapper.sh`
+
+    This script acts as a bootstrap where it checks out the systemd repository
+    on a revision based on information passed down by the respective Jenkins
+    glue script, configures the underlying system for Vagrant (by calling
+    `vagrant/vagrant-setup.sh`) and the test suite, and starts the VM build process
+    by executing `vagrant/vagrant-build.sh`
+
+2. `vagrant/vagrant-build.sh`
+
+    Builds a *runtime* VM image based on the base one (Vagrant Box). The Vagrantfile
+    for each VM (`vagrant/vagrantfiles/`) can reference an external bootstrap script
+    (`vagrant/bootstrap_scripts/`) making itself reusable for multiple different
+    scenarios.
+
+    When the VM is built, the local systemd repo is mounted into it over NFS
+    and the bootstrap script is executed, which builds the checked out revision
+    and makes other necessary changes to the VM itself.
+
+    After this step the VM is rebooted (*reloaded* in the Vagrant terms) and the
+    test runner script (`vagrant/vagrant-test.sh`) is executed inside.
+
+## Upstream on Arch Linux with sanitizers using Vagrant (systemd-pr-build-vagrant-sanitizers)
+
+To tackle the question of security a little bit, this job does *almost* the same thing
+as the one above, but here systemd is compiled with [Address Sanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer)
+and [Undefined Behavior Sanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html). In this
+case we skip the *reboot* step of the pipeline and replace the `vagrant/vagrant-test.sh` script
+with `vagrant/vagrant-test-sanitizer.sh` one, as running the test suite under
+sanitizers is a little bit trickier and limited. See the respective scripts for more
+information.
+
+## (Auxiliary) Rebuild the Vagrant images (systemd-centos-ci-vagrant-make-cache)
+
+```
+agent-control.py +-> vagrant/vagrant-make-cache.sh
+```
+
+To keep the images up-to-date but to not slow every CI pipeline down while doing so,
+this job's sole purpose is to rebuild the base images (Vagrant Boxes) every few days
+(based on Jenkins cron) and upload it to the artifacts server, where it can be
+used by the respective Vagrantfile.
+
+## (Auxiliary) Mirror the Copr repo with CentOS 7 dependencies (systemd-centos-ci-reposync)
+
+```
+utils/reposync.sh
+```
+
+As CentOS 7 is quite old, upstream systemd won't work/compile there without further help.
+To amend this, we have a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/)
+with necessary (newer) build/runtime dependencies (specfiles for these packages
+can be found in their [dedicated repository](https://github.com/systemd/systemd-centos-ci-specs)).
+
+However, we found out that the infrastructure Copr is running in is quite unreliable
+so a fair share of our jobs was failing just because they couldn't install dependencies.
+Having a local mirror in the CentOS CI infrastructure definitely helps in this case and
+the purpose of this script is to update it every few hours (again, using Jenkins cron).
+
+## (Auxiliary) CI for the CI repository (systemd-ci-build)
+
+To make sure changes to this repository don't break the CI pipeline, this job
+provides a way to run a specific revision of the CI scripts (from a PR) against
+the master branch of the respective systemd repository.
+
+As this requires twiddling around with various bits and knobs given which part
+of the CI pipeline we want to test (instead of just running everything and pointlessly
+waiting many hours until it finishes), the job configuration is stored in the Jenkins
+job itself and thus requires access to the instance.
+
