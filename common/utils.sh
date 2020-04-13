@@ -62,6 +62,13 @@ check_for_sanitizer_errors() {
     }
 
     # Extractors
+    # Internal errors (==119906==LeakSanitizer has encountered a fatal error.)
+    /==[0-9]+==.+?\w+Sanitizer has encountered a fatal error/,/==[0-9]+==HINT: \w+Sanitizer/ {
+        print $0;
+        next;
+    }
+
+    # "Standard" errors
     /([0-9]+: runtime error|==[0-9]+==.+?\w+Sanitizer)/,/SUMMARY:\s+(\w+)Sanitizer/ {
         print $0;
     }
