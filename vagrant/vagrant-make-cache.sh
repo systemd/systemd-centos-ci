@@ -48,6 +48,7 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
     # even in case of an error
     set +e
     (
+        timeout 5m vagrant reload
         case $? in
             0)
                 ;;

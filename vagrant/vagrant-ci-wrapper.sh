@@ -1,8 +1,8 @@
 #!/usr/bin/bash
-# Auxilliary script for the CentOS CI infrastructure.
+# Auxiliary script for the CentOS CI infrastructure.
 #
 # This script basically checks out the requested branch of the systemd/systemd
-# repository, install & configures Vagrant, and runs the configured testsuite
+# repository, install & configures Vagrant, and runs the configured test suite
 # in the Vagrant container on given distributions.
 
 # TODO: argument parsing, so we can properly distinguish between branch/commit
@@ -27,8 +27,9 @@ SCRIPT_ROOT="$(dirname "$0")"
 # Supported distros:
 #
 # Arch Linux with sanitizers (Address Sanitizer, Undefined Behavior Sanitizer
-# Runs only unit tests (i.e. meson test)
-# distro-tag: arch-sanitizers
+# Runs only a selected part of the test suite, see vagrant-test-sanitizers.sh
+# for more information
+# distro-tag: arch-sanitizers-gcc or arch-sanitizers-clang
 #
 # "Standalone" Arch Linux
 # Runs unit tests, fuzzers, and integration tests

@@ -1,4 +1,0 @@
-- parametrize Jenkins builds
-    - PR, CI PR, etc.
-- make environment overridable from systemd repo
-    - maybe introduce .centosci-env which would be sources if it exists
