@@ -69,21 +69,6 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
         # Workaround for `virt-sysprep` - work with the image via qemu directly
         # instead of using libvirt
         export LIBGUESTFS_BACKEND=direct
-        # Another, pretty ugly, workaround for `vagrant package`, where the
-        # embedded `virt-sysprep` strips away vagrant's ssh keys and makes
-        # any new images based on such box unusable for our purposes.
-        # The temporary fix is taken from
-        #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/759#issuecomment-293585359
-        # a better fix is already merged in the master of vagrant-libvirt, but
-        # not yet released:
-        #   https://github.com/vagrant-libvirt/vagrant-libvirt/pull/955
-        # Note: this is only half of the workaround, the second half is in the
-        # 'box' Vagrantfile, where the original Vagrant SSH key is not replaced
-        # by a more secure one (option config.ssh.insert_key=false).
-        # That's also necessary, as described here:
-        #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/759#issuecomment-432200391
-        # I'm slowly starting to question my choices
-        sed -i'' 's/virt-sysprep --no-logfile.*$/virt-sysprep --no-logfile --operations defaults,-ssh-userdir,-ssh-hostkeys -a #{@tmp_img}`/' $(find ~/.vagrant.d/ -name package_domain.rb)
         # You guessed it, another workaround - let's include the original
         # Vagrantfile as well, as it usually contains important settings
         # which make the box actually bootable. For this, we need to detect the location
