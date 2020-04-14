@@ -15,6 +15,21 @@ trap at_exit EXIT
 # Exit on error in the setup phase
 set -e -u
 
+# To get meaningful results from coredumps collected from integration tests
+# we need to store them in journal. This patchset is currently only in upcoming
+# RHEL 8.3, see https://github.com/systemd-rhel/rhel-8/pull/85.
+if grep -q "Storage=journal" systemd/test/test-functions; then
+    COLLECT_COREDUMPS=1
+else
+    COLLECT_COREDUMPS=0
+fi
+
+# Enable systemd-coredump
+if [[ $COLLECT_COREDUMPS -ne 0 ]] && ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
+
 if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
 fi
@@ -26,7 +41,7 @@ fi
 
 # Install test dependencies
 exectask "dnf-depinstall" \
-    "dnf -y install dnsmasq e2fsprogs nc net-tools qemu-kvm quota socat strace wget"
+    "dnf -y install dnsmasq e2fsprogs gdb nc net-tools qemu-kvm quota socat strace wget"
 
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
@@ -94,9 +109,15 @@ exectask_p_finish
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
     testdir="/var/tmp/systemd-test-${t##*/}"
-    # Store journals only for failed tests to conserve artifact storage
-    if [[ -d $testdir/journal && ! -f $testdir/pass ]]; then
-        rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+    if [[ -d "$testdir/journal" ]]; then
+        if [[ $COLLECT_COREDUMPS -ne 0 ]]; then
+            # Attempt to collect coredumps from test-specific journals as well
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/journal'"
+        fi
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$testdir/pass" ]]; then
+            rsync -aq "$testdir/journal" "$LOGDIR/${t##*/}"
+        fi
     fi
 done
 
@@ -109,6 +130,11 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "./$t"
 done
+
+if [[ $COLLECT_COREDUMPS -ne 0 ]]; then
+    # Collect coredumps using the coredumpctl utility, if any
+    exectask "coredumpctl_collect" "coredumpctl_collect"
+fi
 
 # Summary
 echo
