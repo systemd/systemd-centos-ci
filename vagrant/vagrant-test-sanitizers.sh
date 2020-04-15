@@ -113,7 +113,7 @@ rm -fr "$TESTDIR"
 exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
 NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
-rsync -amq "$TESTDIR/journal" "$LOGDIR/${TESTDIR##*/}" &>/dev/null || :
+rsync -amq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/" &>/dev/null || :
 
 if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
@@ -156,7 +156,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
             exectask "${t##*/}_sanitizer_errors" "journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
             if [[ ! -f "$testdir/pass" ]]; then
-                rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}"
+                rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
             fi
         fi
     done
