@@ -131,7 +131,7 @@ for t in test/TEST-??-*; do
         exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
         # Keep the journal files only if the associated test case failed
         if [[ ! -f "$testdir/pass" ]]; then
-            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}"
+            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
         fi
     fi
 done
