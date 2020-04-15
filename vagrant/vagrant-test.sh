@@ -27,11 +27,11 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 # Make the parallelization temporarily conditional
 # See: https://github.com/systemd/systemd/pull/14338
-if grep "IMAGE_NAME=" test/test-functions; then
-    PARALLELIZE=0
-    OPTIMAL_QEMU_SMP=$(nproc)
-else
+if grep "#PARALLELIZE" test/test-functions; then
     PARALLELIZE=1
+else
+    OPTIMAL_QEMU_SMP=$(nproc)
+    PARALLELIZE=0
 fi
 
 # Disable certain flaky tests
