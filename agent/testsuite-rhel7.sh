@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 . "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-rhel7" || exit 1
+. "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
 function at_exit {
@@ -37,7 +38,7 @@ SKIP_LIST=()
 qemu-kvm --version
 
 for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+    if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "\n[SKIP] Skipping test $t"
         continue
     fi

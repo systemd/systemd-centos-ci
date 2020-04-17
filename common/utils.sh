@@ -8,6 +8,39 @@ __COREDUMPCTL_TS=""
 _log() { echo "[${FUNCNAME[1]}] $1"; }
 _err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
 
+# Checks if the first argument is in a set consisting of the rest of the arguments
+#
+# Works around the limitation of not being able to pass arrays as arguments in bash
+# (well, there *are* ways, but not convenient ones). It, of course, doesn't work
+# for _extra_ large arrays (but that's not a case we need, at least for now).
+# Example usage:
+#   my_array=("one", "two", "three")
+#   if ! in_set "five" "${my_array[@]}"; then...
+#
+# Arguments:
+#   $1    - element to check
+#   $2-$n - "set" of elements
+#
+# Returns:
+#   0 on success, 1 otherwise
+in_set() {
+    if [[ $# -lt 2 ]]; then
+        _err "Not enough arguments"
+        return 1
+    fi
+
+    local NEEDLE="$1"
+    shift
+
+    for _elem in "$@"; do
+        if [[ "$_elem" == "$NEEDLE" ]]; then
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 # Checkout to the requsted branch:
 #   1) if pr:XXX where XXX is a pull request ID is passed to the script,
 #      the corresponding branch for this PR is be checked out

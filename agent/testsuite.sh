@@ -79,7 +79,7 @@ cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 dracut -o multipath --rebuild "$INITRD"
 
 for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 && " ${SKIP_LIST[@]} " =~ " $t " ]]; then
+    if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "\n[SKIP] Skipping test $t"
         continue
     fi
