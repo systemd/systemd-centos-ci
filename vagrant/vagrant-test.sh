@@ -123,12 +123,20 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
+COREDUMPCTL_SKIP=(
+    # This test intentionally kills several processes using SIGABRT, thus generating
+    # cores which we're not interested in
+    "test/TEST-48-UDEV-EVENT-TIMEOUT"
+)
+
 # Save journals created by integration tests
 for t in test/TEST-??-*; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -f "$testdir/system.journal" ]]; then
-        # Attempt to collect coredumps from test-specific journals as well
-        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+        if ! in_set "$t" "${COREDUMPCTL_SKIP[@]}"; then
+            # Attempt to collect coredumps from test-specific journals as well
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+        fi
         # Keep the journal files only if the associated test case failed
         if [[ ! -f "$testdir/pass" ]]; then
             rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
