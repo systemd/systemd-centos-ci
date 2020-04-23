@@ -143,7 +143,7 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 45m ./$t"
+    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any
