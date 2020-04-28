@@ -127,14 +127,14 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     ## be somewhat sure the 'base' systemd components work).
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL # systemd-journald
-        test/TEST-46-HOMED   # systemd-homed & friends
     )
 
-    # FIXME: temporary workaround for systemd/systemd#14338
-    # TEST-45-REPART has been moved to a unit-test, so it's run as part
-    # of `meson test` above
-    ! grep "IMAGE_NAME=" test/test-functions && INTEGRATION_TESTS+=(test/TEST-45-REPART)
-
+    # FIXME: LLVM 10 has an interesting issue, which breaks library detection
+    # when -fsanitize=address is used, causing ASan to segfault during
+    # TEST-46-HOMED. Let's disable it for now (only for LLVM runs) until it's
+    # fixed, so we can still use the rest of the LLVM run.
+    # See: https://bugzilla.redhat.com/show_bug.cgi?id=1827338
+    [[ -z "$_clang_asan_rt_name" ]] && INTEGRATION_TESTS+=(test/TEST-46-HOMED) # systemd-homed & friends
 
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
