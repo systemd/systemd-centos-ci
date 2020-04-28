@@ -130,12 +130,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-46-HOMED   # systemd-homed & friends
     )
 
-    # FIXME: temporary workaround for systemd/systemd#14338
-    # TEST-45-REPART has been moved to a unit-test, so it's run as part
-    # of `meson test` above
-    ! grep "IMAGE_NAME=" test/test-functions && INTEGRATION_TESTS+=(test/TEST-45-REPART)
-
-
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
