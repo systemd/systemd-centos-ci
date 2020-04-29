@@ -10,7 +10,7 @@ REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 function at_exit {
     # Let's collect some build-related logs
     set +e
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :
+    rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR" &>/dev/null || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
     exectask "list-of-installed-packages" "rpm -qa"
 }
