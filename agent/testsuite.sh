@@ -46,6 +46,8 @@ fi
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+# Copy over meson test artifacts
+[[ -d "build/meson-logs" ]] && rsync -aq "build/meson-logs" "$LOGDIR"
 
 # If we're not testing the master branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration
