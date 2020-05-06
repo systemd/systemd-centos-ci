@@ -120,6 +120,12 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
+    # TODO: check if disabling nested KVM for this particular test case
+    #       helps with the unexpected test hangs
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        unset TEST_NESTED_KVM
+    fi
+
     exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
 done
 
