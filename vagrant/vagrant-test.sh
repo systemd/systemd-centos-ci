@@ -124,6 +124,7 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     #       helps with the unexpected test hangs
     if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
         unset TEST_NESTED_KVM
+        export QEMU_TIMEOUT=1200
     fi
 
     exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
