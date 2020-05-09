@@ -42,7 +42,7 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
     export VAGRANT_DISK_BUS
 
     cp "$vagrantfile" Vagrantfile
-    vagrant up --provider=libvirt
+    vagrant up --no-tty --provider=libvirt
     # Register a cleanup handler
     trap "cd $PWD && vagrant destroy -f && cd / && rm -fr $TEMP_DIR" EXIT
 
@@ -87,7 +87,7 @@ for vagrantfile in "${VAGRANTFILES[@]}"; do
         vagrant box add --name testbox "$BOX_NAME"
         pushd "$TEST_DIR"
         vagrant init testbox
-        vagrant up --provider=libvirt
+        vagrant up --no-tty --provider=libvirt
         vagrant ssh -c "uname -a" || EC=1
 
         # Cleanup
