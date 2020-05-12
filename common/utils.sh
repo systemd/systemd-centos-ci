@@ -270,3 +270,38 @@ coredumpctl_collect() {
 
     return 1
 }
+
+chrony_sync_time() {
+    if ! command -v chronyc; then
+        _err "Missing 'chronyc' binary"
+        return 1
+    fi
+
+    # Check if chronyd is running. If not, try to start it
+    if ! systemctl -q is-active chronyd; then
+        # chronyd is Type=forking, so give it a second after systemctl returns
+        # to properly initialize
+        systemctl start chronyd || :
+        sleep 1
+
+        if ! systemctl status chronyd; then
+            _err "Failed to start 'chronyd' service"
+            return 1
+        fi
+    fi
+
+    # Attempt to sync the local time:
+    # sources: list currently configured NTP servers
+    # tracking: show info about current local time state
+    # makestep: perform a time jump to immediately correct the local time
+    #           instead of making small adjustments
+    # waitsync: check if the time is indeed synced or wait up to 60 seconds
+    #           until it is (6 steps * 10 seconds per step)
+    # tracking: show post-sync info about local time, see above
+    if ! chronyc -m "sources" "tracking" "makestep" "waitsync 6" "tracking"; then
+        _err "Failed to synchronize time"
+        return 1
+    fi
+
+    return 0
+}
