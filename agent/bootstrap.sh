@@ -22,6 +22,10 @@ trap at_exit EXIT
 set -e -u
 set -o pipefail
 
+# Sync local time using chrony
+yum -y install chrony
+chrony_sync_time
+
 COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
 COPR_REPO_PATH="/etc/yum.repos.d/${COPR_REPO##*/}"
 
