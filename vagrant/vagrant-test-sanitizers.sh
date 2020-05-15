@@ -134,7 +134,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # TEST-46-HOMED. Let's disable it for now (only for LLVM runs) until it's
     # fixed, so we can still use the rest of the LLVM run.
     # See: https://bugzilla.redhat.com/show_bug.cgi?id=1827338
-    [[ -z "$_clang_asan_rt_name" ]] && INTEGRATION_TESTS+=(test/TEST-46-HOMED) # systemd-homed & friends
+    # FIXME#2: GCC 10 picked up the issue as well, I'll need to come up with
+    # a workaround
+    #[[ -z "$_clang_asan_rt_name" ]] && INTEGRATION_TESTS+=(test/TEST-46-HOMED) # systemd-homed & friends
 
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
