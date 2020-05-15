@@ -31,6 +31,21 @@ rm -fr "$BUILD_DIR"
 # Build phase
 # Compile systemd with the Address Sanitizer (ASan) and Undefined Behavior
 # Sanitizer (UBSan)
+
+# FIXME
+# Since version 10, both gcc and clang started to ignore certain linker errors
+# when compiling with -fsanitize=address. This eventually leads up to -lcrypt
+# not being correctly propagated, but the fact is masked by the aforementioned
+# issue. However, when the binary attempts to load a symbol from the libcrypt
+# binary, it crashes since it's not linked correctly against it.
+# Negating the -Wl,--as-needed used by default by -Wl,--no-as-needed seems to
+# help in this case.
+#
+# See:
+#   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
+#   https://github.com/systemd/systemd-centos-ci/issues/247
+export LDFLAGS="-Wl,--no-as-needed"
+
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
