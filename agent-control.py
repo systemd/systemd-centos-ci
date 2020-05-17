@@ -455,7 +455,7 @@ if __name__ == "__main__":
 
             logging.info("PHASE 3: Upstream testsuite")
             if args.rhel is not None:
-                command = "{}/agent/testsuite-rhel{}.sh {}".format(GITHUB_CI_REPO, args.rhel, remote_ref)
+                command = "{}/agent/testsuite-rhel{}.sh".format(GITHUB_CI_REPO, args.rhel)
             else:
                 command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
             ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
