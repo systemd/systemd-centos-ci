@@ -80,6 +80,13 @@ for t in test/TEST-??-*; do
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
+    # TODO: check if disabling nested KVM for this particular test case
+    #       helps with the unexpected test hangs
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        unset TEST_NESTED_KVM
+        export QEMU_TIMEOUT=1200
+    fi
+
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
