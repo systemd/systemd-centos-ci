@@ -270,3 +270,19 @@ coredumpctl_collect() {
 
     return 1
 }
+
+# Print the currently used cgroups hierarchy in a "human-friendly" form:
+# unified, hybrid, legacy, or unknown.
+print_cgroup_hierarchy() {
+    if [[ "$(stat -c '%T' -f /sys/fs/cgroup)" == cgroup2fs ]]; then
+        echo "unified"
+    elif [[ "$(stat -c '%T' -f /sys/fs/cgroup)" == tmpfs ]]; then
+        if [[ -d /sys/fs/cgroup/unified && "$(stat -c '%T' -f /sys/fs/cgroup/unified)" == cgroup2fs ]]; then
+            echo "hybrid"
+        else
+            echo "legacy"
+        fi
+    else
+        echo "unknown"
+    fi
+}

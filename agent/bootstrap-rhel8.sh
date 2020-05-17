@@ -5,6 +5,8 @@ LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel8" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
+CGROUP_HIERARCHY="legacy"
+REMOTE_REF=""
 
 # EXIT signal handler
 function at_exit {
@@ -16,6 +18,28 @@ function at_exit {
 }
 
 trap at_exit EXIT
+
+# Parse optional script arguments
+while getopts "r:h:" opt; do
+    case "$opt" in
+        h)
+            CGROUP_HIERARCHY="$OPTARG"
+            if [[ "$CGROUP_HIERARCHY" != legacy && "$CGROUP_HIERARCHY" != unified ]]; then
+                echo "Invalid cgroup hierarchy specified: $CGROUP_HIERARCHY"
+                exit 1
+            fi
+            ;;
+        r)
+            REMOTE_REF="$OPTARG"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "Usage: $0 [-h CGROUP_HIERARCHY] [-r REMOTE_REF]"
+            exit 1
+    esac
+done
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
@@ -37,7 +61,7 @@ test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-git_checkout_pr "${1:-""}"
+git_checkout_pr "$REMOTE_REF"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
@@ -158,10 +182,19 @@ if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
     exit 1
 fi
 
+# Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
+echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy"
+if [[ "$CGROUP_HIERARCHY" == unified ]]; then
+    GRUBBY_ARGS="systemd.unified_cgroup_hierarchy=1 systemd.legacy_systemd_cgroup_controller=0"
+else
+    GRUBBY_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
+fi
+
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
-grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
+grubby --args="user_namespace.enable=1 $GRUBBY_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "user_namespace.enable=1" /boot/loader/entries/
+grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
