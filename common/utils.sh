@@ -266,7 +266,7 @@ coredumpctl_collect() {
             echo -e "$GDB_CMD" | coredumpctl "${ARGS[@]}" debug "$path"
             echo -e "\n"
         fi
-    done <<< "$(sort -u "$TEMPFILE")"
+    done < <(sort -u "$TEMPFILE")
 
     return 1
 }

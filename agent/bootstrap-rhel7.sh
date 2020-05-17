@@ -5,7 +5,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel7" || exit 1
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     # Let's collect some build-related logs
     set +e
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :

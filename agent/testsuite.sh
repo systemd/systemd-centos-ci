@@ -4,7 +4,7 @@
 . "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     set +e
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }

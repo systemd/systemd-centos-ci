@@ -8,7 +8,7 @@
 # TODO: argument parsing, so we can properly distinguish between branch/commit
 #       and distro tag
 
-function at_exit() {
+at_exit() {
     set +e
     # Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
     # can gather them for further investigation

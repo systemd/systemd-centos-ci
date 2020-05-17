@@ -7,7 +7,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     # Let's collect some build-related logs
     set +e
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :

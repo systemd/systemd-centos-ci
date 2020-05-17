@@ -187,7 +187,7 @@ exectask_p() {
                 logfile="$LOGDIR/$key.log"
                 echo "[TASK END] $(date)" >> "$logfile"
                 printresult $ec "$logfile" "$key"
-                unset TASK_QUEUE["$key"]
+                unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
                 # the sleep below when we find a free slot in the queue
                 break 2
@@ -214,6 +214,6 @@ exectask_p_finish() {
         ec=$?
         logfile="$LOGDIR/$key.log"
         printresult $ec "$logfile" "$key"
-        unset TASK_QUEUE["$key"]
+        unset "TASK_QUEUE[$key]"
     done
 }
