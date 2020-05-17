@@ -61,7 +61,7 @@ sed -i 's/is_v2_supported=yes/is_v2_supported=no/g' test/TEST-13-NSPAWN-SMOKE/te
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "\n[SKIP] Skipping test $t"
+        echo -e "[SKIP] Skipping test $t\n"
         continue
     fi
 

@@ -141,7 +141,7 @@ exectask() {
     local IGNORE_EC="${3:-0}"
     touch "$LOGFILE"
 
-    echo -e "\n[TASK] $1"
+    echo "[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
     # shellcheck disable=SC2086
@@ -152,6 +152,7 @@ exectask() {
     echo "[TASK END] $(date)" >> "$LOGFILE"
 
     printresult $EC "$LOGFILE" "$1" "$IGNORE_EC"
+    echo
 
     return $EC
 }
@@ -175,7 +176,7 @@ exectask_p() {
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
-    echo -e "\n[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
+    echo "[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
@@ -187,6 +188,7 @@ exectask_p() {
                 logfile="$LOGDIR/$key.log"
                 echo "[TASK END] $(date)" >> "$logfile"
                 printresult $ec "$logfile" "$key"
+                echo
                 unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
                 # the sleep below when we find a free slot in the queue
