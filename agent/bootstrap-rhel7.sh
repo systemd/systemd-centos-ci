@@ -4,6 +4,8 @@ LIB_ROOT="$(dirname "$0")/../common"
 . "$LIB_ROOT/utils.sh" || exit 1
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel7" || exit 1
 
+REMOTE_REF=""
+
 # EXIT signal handler
 function at_exit {
     # Let's collect some build-related logs
@@ -14,6 +16,25 @@ function at_exit {
 }
 
 trap at_exit EXIT
+
+# Parse optional script arguments
+# Note: in RHEL7 version of the bootstrap script this is kind of pointless
+#       (since it's parsing only a single option), but it allows us to have
+#       a single interface in agent-control.py for all RHEL versions without
+#       additonal hassle
+while getopts "r:" opt; do
+    case "$opt" in
+        r)
+            REMOTE_REF="$OPTARG"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "Usage: $0 [-r REMOTE_REF]"
+            exit 1
+    esac
+done
 
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
@@ -30,7 +51,7 @@ test -e systemd && rm -rf systemd
 git clone https://github.com/systemd-rhel/rhel-7.git systemd
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-git_checkout_pr "${1:-""}"
+git_checkout_pr "$REMOTE_REF"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.

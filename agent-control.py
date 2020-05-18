@@ -349,11 +349,11 @@ if __name__ == "__main__":
             help="Architecture")
     parser.add_argument("--branch",
             help="Commit/tag/branch to checkout")
-    parser.add_argument("--ci-pr",
+    parser.add_argument("--ci-pr", metavar="PR",
             help="Pull request ID to check out (systemd-centos-ci repository)")
     parser.add_argument("--free-all-nodes", action="store_const", const=True,
             help="Free all currently provisioned nodes")
-    parser.add_argument("--free-session",
+    parser.add_argument("--free-session", metavar="SESSION_ID",
             help="Return nodes from a session back to the pool")
     parser.add_argument("--keep", action="store_const", const=True,
             help="Do not kill provisioned build host")
@@ -363,9 +363,11 @@ if __name__ == "__main__":
             help="Don't generate the artifact HTML page")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
-    parser.add_argument("--rhel", metavar="version", type=int,
+    parser.add_argument("--rhel", metavar="VERSION", type=int,
             help="Use RHEL downstream systemd repo")
-    parser.add_argument("--vagrant", metavar="distro-tag", type=str,
+    parser.add_argument("--rhel-bootstrap-args", metavar="ARGS", type=str,
+            help="Pass optional arguments to the RHEL bootstrap script")
+    parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", action="store_const", const=True,
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
@@ -402,11 +404,11 @@ if __name__ == "__main__":
 
         # Figure out a systemd branch to compile
         if args.pr:
-            branch = "pr:{}".format(args.pr)
+            remote_ref = "pr:{}".format(args.pr)
         elif args.branch:
-            branch = args.branch
+            remote_ref = args.branch
         else:
-            branch = ""
+            remote_ref = ""
 
         # Setup artifacts storage
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
@@ -424,7 +426,7 @@ if __name__ == "__main__":
         ac.execute_remote_command(node, command)
 
         if args.ci_pr:
-            logging.info("PHASE 1.5: Using a custom CI repository branch (PR#{})".format(args.ci_pr))
+            logging.info("PHASE 1.5: Using a custom CI repository ref (PR#{})".format(args.ci_pr))
             command = "cd {} && git fetch -fu origin 'refs/pull/{}/merge:pr' && " \
                       "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
             ac.execute_remote_command(node, command)
@@ -438,22 +440,22 @@ if __name__ == "__main__":
         elif args.vagrant:
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
-            command = "{}/vagrant/vagrant-ci-wrapper.sh {} {}".format(GITHUB_CI_REPO, args.vagrant, branch)
+            command = "{}/vagrant/vagrant-ci-wrapper.sh {} {}".format(GITHUB_CI_REPO, args.vagrant, remote_ref)
             ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine
-            logging.info("PHASE 2: Bootstrap (branch: {})".format(branch))
+            logging.info("PHASE 2: Bootstrap (ref: {})".format(remote_ref))
             if args.rhel is not None:
-                command = "{}/agent/bootstrap-rhel{}.sh {}".format(GITHUB_CI_REPO, args.rhel,branch)
+                command = "{}/agent/bootstrap-rhel{}.sh -r '{}' {}".format(GITHUB_CI_REPO, args.rhel, remote_ref, args.rhel_bootstrap_args)
             else:
-                command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, branch)
+                command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, remote_ref)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
             ac.reboot_node(node)
 
             logging.info("PHASE 3: Upstream testsuite")
             if args.rhel is not None:
-                command = "{}/agent/testsuite-rhel{}.sh {}".format(GITHUB_CI_REPO, args.rhel, branch)
+                command = "{}/agent/testsuite-rhel{}.sh".format(GITHUB_CI_REPO, args.rhel)
             else:
                 command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
             ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")

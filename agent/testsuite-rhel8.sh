@@ -1,7 +1,9 @@
 #!/usr/bin/bash
 
-. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-rhel8" || exit 1
+# The common/utils.sh include needs to come first, as it includes definition
+# of print_cgroup_hierarchy()
 . "$(dirname "$0")/../common/utils.sh" || exit 1
+. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-$(print_cgroup_hierarchy)-rhel8" || exit 1
 
 # EXIT signal handler
 function at_exit {
@@ -14,6 +16,8 @@ trap at_exit EXIT
 ### SETUP PHASE ###
 # Exit on error in the setup phase
 set -e -u
+
+echo "Current cgroup hierarchy: $(print_cgroup_hierarchy)"
 
 # To get meaningful results from coredumps collected from integration tests
 # we need to store them in journal. This patchset is currently only in upcoming
