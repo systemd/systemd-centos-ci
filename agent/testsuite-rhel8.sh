@@ -17,7 +17,15 @@ trap at_exit EXIT
 # Exit on error in the setup phase
 set -e -u
 
-echo "Current cgroup hierarchy: $(print_cgroup_hierarchy)"
+CGROUP_HIERARCHY="$(print_cgroup_hierarchy)"
+
+echo "Current cgroup hierarchy: $CGROUP_HIERARCHY"
+# Reflect the current cgroup hierarchy in each test VM
+if [[ "$CGROUP_HIERARCHY" == unified ]]; then
+    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=1 systemd.legacy_systemd_cgroup_controller=0"
+else
+    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
+fi
 
 # To get meaningful results from coredumps collected from integration tests
 # we need to store them in journal. This patchset is currently only in upcoming
@@ -67,6 +75,11 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
 
+if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
+    # This test explicitly requires unified cgroup hierarchy
+    SKIP_LIST=("test/TEST-19-DELEGATE")
+fi
+
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 qemu-kvm --version
 
@@ -89,7 +102,7 @@ for t in test/TEST-??-*; do
     export INITRD="/boot/initramfs-$(uname -r).img"
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
+    export KERNEL_APPEND="user_namespace.enable=1 $CGROUP_KERNEL_ARGS"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600

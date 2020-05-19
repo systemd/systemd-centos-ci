@@ -147,6 +147,14 @@ ninja-build -C build install
 getent group systemd-resolve &>/dev/null || groupadd -r -g 193 systemd-resolve 2>&1
 getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-resolve -d / -s /sbin/nologin -c "systemd Resolver" systemd-resolve &>/dev/null
 
+# Configure the selected cgroup hierarchy for both the host machine and each
+# integration test VM
+if [[ "$CGROUP_HIERARCHY" == unified ]]; then
+    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=1 systemd.legacy_systemd_cgroup_controller=0"
+else
+    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
+fi
+
 # Let's check if the new systemd at least boots before rebooting the system
 (
     # Ensure the initrd contains the same systemd version as the one we're
@@ -160,7 +168,7 @@ getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-res
     export INITRD="/boot/initramfs-$(uname -r).img"
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
+    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console $CGROUP_KERNEL_ARGS"
     # Set timeout for QEMU tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
@@ -183,15 +191,10 @@ if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
 fi
 
 # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
-echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy"
-if [[ "$CGROUP_HIERARCHY" == unified ]]; then
-    GRUBBY_ARGS="systemd.unified_cgroup_hierarchy=1 systemd.legacy_systemd_cgroup_controller=0"
-else
-    GRUBBY_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
-fi
+echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
 # Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
-grubby --args="user_namespace.enable=1 $GRUBBY_ARGS" --update-kernel="$(grubby --default-kernel)"
+grubby --args="user_namespace.enable=1 $CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "user_namespace.enable=1" /boot/loader/entries/
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
