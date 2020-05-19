@@ -176,9 +176,30 @@ if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
     exit 1
 fi
 
-# Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
-grubby --args="user_namespace.enable=1" --update-kernel="$(grubby --default-kernel)"
-grep "user_namespace.enable=1" /boot/grub2/grub.cfg
+GRUBBY_ARGS=(
+    # Needed for systemd-nspawn -U
+    "user_namespace.enable=1"
+    # As the RTC on CentOS CI machines is notoriously incorrect, let's override
+    # it early in the boot process to properly execute units using
+    # ConditionNeedsUpdate=
+    # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
+    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+)
+grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
+# Check if the $GRUBBY_ARGS were applied correctly
+for arg in "${GRUBBY_ARGS[@]}"; do
+    if ! grep -q "$arg" /boot/grub2/grub.cfg; then
+        echo >&2 "Kernel parameter '$arg' was not found in /boot/grub2/grub.cfg"
+        exit 1
+    fi
+done
+
+# Let's leave this here for a while for debugging purposes
+echo "Current date:         $(date)"
+echo "RTC:                  $(hwclock --show)"
+echo "/usr mtime:           $(date -r /usr)"
+echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
+
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
