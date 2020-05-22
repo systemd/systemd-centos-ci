@@ -52,9 +52,10 @@ export LDFLAGS="-Wl,--no-as-needed"
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-Og -fno-omit-frame-pointer -ftrapv' \
-      --buildtype=debug \
+      -Ddebug=true \
       --optimization=g \
       -Dtests=unsafe \
+      -Dfuzz-tests=true \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
