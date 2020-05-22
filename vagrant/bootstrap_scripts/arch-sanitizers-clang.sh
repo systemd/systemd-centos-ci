@@ -52,7 +52,7 @@ export LDFLAGS="-Wl,--no-as-needed"
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-Og -fno-omit-frame-pointer -ftrapv' \
-      --buildtype=debug \
+      -Ddebug=true \
       --optimization=g \
       -Dtests=unsafe \
       -Dinstall-tests=true \
