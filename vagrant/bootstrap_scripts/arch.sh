@@ -34,7 +34,7 @@ rm -fr "$BUILD_DIR"
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
-      -Ddebug=debug \
+      -Ddebug=true \
       --optimization=g \
       -Dslow-tests=true \
       -Dtests=unsafe \
