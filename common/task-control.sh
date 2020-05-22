@@ -141,7 +141,7 @@ exectask() {
     local IGNORE_EC="${3:-0}"
     touch "$LOGFILE"
 
-    echo -e "\n[TASK] $1"
+    echo "[TASK] $1"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
     # shellcheck disable=SC2086
@@ -152,6 +152,7 @@ exectask() {
     echo "[TASK END] $(date)" >> "$LOGFILE"
 
     printresult $EC "$LOGFILE" "$1" "$IGNORE_EC"
+    echo
 
     return $EC
 }
@@ -175,7 +176,7 @@ exectask_p() {
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
-    echo -e "\n[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
+    echo "[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
     echo "[TASK START] $(date)" >> "$LOGFILE"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
@@ -187,7 +188,8 @@ exectask_p() {
                 logfile="$LOGDIR/$key.log"
                 echo "[TASK END] $(date)" >> "$logfile"
                 printresult $ec "$logfile" "$key"
-                unset TASK_QUEUE["$key"]
+                echo
+                unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
                 # the sleep below when we find a free slot in the queue
                 break 2
@@ -214,6 +216,75 @@ exectask_p_finish() {
         ec=$?
         logfile="$LOGDIR/$key.log"
         printresult $ec "$logfile" "$key"
-        unset TASK_QUEUE["$key"]
+        unset "TASK_QUEUE[$key]"
     done
+}
+
+# Initialize all specific images used by integration tests in one go so
+# the tests could be run in parallel if needed.
+#
+# Arguments:
+#   $1 - path to the local copy of system git repository
+initialize_integration_tests() {
+    # Breakdown:
+    #  - grep all IMAGE_NAME= variable definitions from each test's setup script
+    #    (TEST-*/test.sh) - this yields following output for each such file:
+    #       test/TEST-14-MACHINE-ID/test.sh:IMAGE_NAME="badid"
+    #  - sort the result by the second column separated by colon and show only
+    #    lines with unique IMAGE_NAME= definitions (to initialize each image only
+    #    once)
+    #  - split the line into file and image name using comma as the delimiter
+    #  - run the clean and setup phases for the respective test ($file minus
+    #    the /test.sh part)
+    #
+    # Also, to make things more fast (and more complicated at the same time)
+    # attempt to run the setup tasks in parallel. Since the current, ehm,
+    # implementation of the parallel queue doesn't support nesting, this
+    # function should not be executed when other tasks use it. That is not
+    # an issue (as of right now), since the initialization runs before
+    # integration tests which are currently the only users of the parallelization.
+    if [[ $# -ne 1 ]]; then
+        _err "Function takes exactly one argument: path to systemd git repository"
+        return 1
+    fi
+
+    local EC=0
+    local OLD_FAILED=$FAILED
+
+    pushd "$1" || { _err "pushd failed"; return 1; }
+
+    while read -r line; do
+        file="${line%%:*}"
+        image="${line#*:}"
+        testdir="${file%/*}/"
+
+        if [[ ! -d "$testdir" ]]; then
+            _err "Parsed path '$testdir' from '$file' is not a directory"
+            EC=1
+            break
+        fi
+
+        _log "Running setup for '$image' from '$file'"
+        exectask_p "setup-${testdir//\//_}" "make -C '$testdir' clean setup"
+    done < <(grep IMAGE_NAME= test/TEST-*/test.sh | sort -k 2 -t : -u)
+
+    # Wait for remaining parallel tasks to complete
+    exectask_p_finish
+
+    # Compare the previously saved number of failed tasks in the parallel queue
+    # with the current state to check if any of the setup tasks failed. As we
+    # should be the only users of the parallel queue right now (see the comment
+    # at the beginning of this function) it should reflect the correct state.
+    if [[ $OLD_FAILED -ne $FAILED ]]; then
+        _err "Some setup tasks failed:"
+        for task in "${FAILED_LIST[@]}"; do
+            echo "$task"
+        done
+
+        EC=1
+    fi
+
+    popd || { _err "popd failed"; return 1; }
+
+    return $EC
 }

@@ -4,7 +4,7 @@
 . "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     set +e
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
@@ -34,15 +34,6 @@ set +e
 
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
-
-# Make the parallelization temporarily conditional
-# See: https://github.com/systemd/systemd/pull/14338
-if grep "#PARALLELIZE" test/test-functions; then
-    PARALLELIZE=1
-else
-    OPTIMAL_QEMU_SMP=$(nproc)
-    PARALLELIZE=0
-fi
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
@@ -80,13 +71,26 @@ cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
 dracut -o multipath --rebuild "$INITRD"
 
+# The current revision of the integration test suite uses a set of base images
+# to reduce the overhead of building the same image over and over again.
+# However, this isn't compatible with parallelization & concurrent access.
+# To mitigate this, we need to run all tests with TEST_PARALLELIZE=1 (set below)
+# and to initialize the set of base images beforehand.
+if ! initialize_integration_tests "$PWD"; then
+    echo >&2 "Failed to initialize integration tests, can't continue..."
+    exit 1
+fi
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "\n[SKIP] Skipping test $t"
+        echo -e "[SKIP] Skipping test $t\n"
         continue
     fi
 
     ## Configure test environment
+    # Tell the test framework to copy the base image for each test, so we
+    # can run them in parallel
+    export TEST_PARALLELIZE=1
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
@@ -106,16 +110,11 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    if [[ $PARALLELIZE -ne 0 ]]; then
-        exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
-    else
-        exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
-    fi
-
+    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
-[[ $PARALLELIZE -ne 0 ]] && exectask_p_finish
+exectask_p_finish
 
 COREDUMPCTL_SKIP=(
     # This test intentionally kills several processes using SIGABRT, thus generating
@@ -136,6 +135,9 @@ for t in test/TEST-??-*; do
             rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
         fi
     fi
+
+    # Clean the no longer necessary test artifacts
+    make -C "$t" clean-again > /dev/null
 done
 
 ## Other integration tests ##

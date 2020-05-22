@@ -8,7 +8,7 @@ DOWNLOAD_LOCATION="${1:-.}"
 # authenticate against the CentOS CI rsync server
 DUFFY_KEY_FILE="$HOME/duffy.key"
 
-function at_exit() {
+at_exit() {
     # Clean up before exiting (either successfully or on an error)
     if [[ -n $WORK_DIR ]]; then
         rm -fr "$WORK_DIR"

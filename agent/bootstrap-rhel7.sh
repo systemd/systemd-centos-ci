@@ -7,7 +7,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 REMOTE_REF=""
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     # Let's collect some build-related logs
     set +e
     rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :

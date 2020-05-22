@@ -25,15 +25,6 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# Make the parallelization temporarily conditional
-# See: https://github.com/systemd/systemd/pull/14338
-if grep "#PARALLELIZE" test/test-functions; then
-    PARALLELIZE=1
-else
-    OPTIMAL_QEMU_SMP=$(nproc)
-    PARALLELIZE=0
-fi
-
 # Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
@@ -53,21 +44,33 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 
+# The current revision of the integration test suite uses a set of base images
+# to reduce the overhead of building the same image over and over again.
+# However, this isn't compatible with parallelization & concurrent access.
+# To mitigate this, we need to run all tests with TEST_PARALLELIZE=1 (set below)
+# and to initialize the set of base images beforehand.
+if ! initialize_integration_tests "$PWD"; then
+    echo >&2 "Failed to initialize integration tests, can't continue..."
+    exit 1
+fi
+
 # Parallelized tasks
 SKIP_LIST=(
     "test/TEST-10-ISSUE-2467"       # Serialized below
-    "test/TEST-13-NSPAWN-SMOKE"     # Serialized below
     "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
     "test/TEST-25-IMPORT"           # Serialized below
 )
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "\n[SKIP] Skipping test $t"
+        echo -e "[SKIP] Skipping test $t\n"
         continue
     fi
 
     ## Configure test environment
+    # Tell the test framework to copy the base image for each test, so we
+    # can run them in parallel
+    export TEST_PARALLELIZE=1
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=900
     export NSPAWN_TIMEOUT=900
@@ -81,24 +84,26 @@ for t in test/TEST-??-*; do
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
+    # TODO: check if disabling nested KVM for this particular test case
+    #       helps with the unexpected test hangs
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        unset TEST_NESTED_KVM
+        export QEMU_TIMEOUT=1200
+    fi
+
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    if [[ $PARALLELIZE -ne 0 ]]; then
-        exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
-    else
-        exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
-    fi
+    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
-[[ $PARALLELIZE -ne 0 ]] && exectask_p_finish
+exectask_p_finish
 
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
 SERIALIZED_TASKS=(
     # "test/TEST-10-ISSUE-2467" # Temporarily disabled...
-    "test/TEST-13-NSPAWN-SMOKE"
     "test/TEST-25-IMPORT"
 )
 
@@ -120,7 +125,7 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
 
 COREDUMPCTL_SKIP=(
@@ -142,6 +147,9 @@ for t in test/TEST-??-*; do
             rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
         fi
     fi
+
+    # Clean the no longer necessary test artifacts
+    make -C "$t" clean-again > /dev/null
 done
 
 ## Other integration tests ##

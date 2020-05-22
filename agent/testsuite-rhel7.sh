@@ -4,7 +4,7 @@
 . "$(dirname "$0")/../common/utils.sh" || exit 1
 
 # EXIT signal handler
-function at_exit {
+at_exit() {
     set +e
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
@@ -39,7 +39,7 @@ qemu-kvm --version
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "\n[SKIP] Skipping test $t"
+        echo -e "[SKIP] Skipping test $t\n"
         continue
     fi
 
