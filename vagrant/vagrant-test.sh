@@ -54,6 +54,13 @@ if ! initialize_integration_tests "$PWD"; then
     exit 1
 fi
 
+# Time has shown that the kernel has apparently a hard time with 4 parallel VMs
+# inside of another VM, causing frequent soft/hard vCPU lockups.
+# Let's halve the amount of parallel tasks in an attempt to avoid this.
+# (This overrides variables defined in task-control.sh)
+export OPTIMAL_QEMU_SMP=4
+export MAX_QUEUE_SIZE=2
+
 # Parallelized tasks
 SKIP_LIST=(
     "test/TEST-10-ISSUE-2467"       # Serialized below
