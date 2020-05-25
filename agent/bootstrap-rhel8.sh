@@ -159,13 +159,17 @@ fi
 (
     # Ensure the initrd contains the same systemd version as the one we're
     # trying to test
-    dracut -f --filesystems ext4
+    # Also, rebuild the original initrd without the multipath module, see
+    # comments in `testsuite.sh` for the explanation
+    export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
+    cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
+    dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
 
     [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
     ## Configure test environment
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    export INITRD="/boot/initramfs-$(uname -r).img"
+    # Explicitly set paths to initramfs (see above) and kernel images
+    # (for QEMU tests)
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console $CGROUP_KERNEL_ARGS"
@@ -175,6 +179,8 @@ fi
     export TEST_NO_NSPAWN=1
 
     make -C test/TEST-01-BASIC clean setup run clean
+
+    rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
