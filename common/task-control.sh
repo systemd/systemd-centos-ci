@@ -256,7 +256,8 @@ initialize_integration_tests() {
     while read -r line; do
         file="${line%%:*}"
         image="${line#*:}"
-        testdir="${file%/*}/"
+        testdir="${file%/*}"
+        testname="${testdir##*/}"
 
         if [[ ! -d "$testdir" ]]; then
             _err "Parsed path '$testdir' from '$file' is not a directory"
@@ -264,8 +265,16 @@ initialize_integration_tests() {
             break
         fi
 
+        # Set the $TESTDIR to something predictable, as it's going to be reused
+        # for test results as well, since we don't clean up the state directory
+        # after setup. The same $TESTDIR format is then used in each test suite
+        # script.
+        export TESTDIR="/var/tmp/systemd-test-$testname"
+        # Avoid creating symlinks to the base images
+        export TEST_PARALLELIZE=1
+
         _log "Running setup for '$image' from '$file'"
-        exectask_p "setup-${testdir//\//_}" "make -C '$testdir' clean setup"
+        exectask_p "setup-$testname" "make -C '$testdir' clean setup"
     done < <(grep IMAGE_NAME= test/TEST-*/test.sh | sort -k 2 -t : -u)
 
     # Wait for remaining parallel tasks to complete
