@@ -72,9 +72,15 @@ vagrant --version
 vagrant plugin list
 
 # Configure NFS for Vagrant's shared folders
-$PKG_MAN -y install nfs-utils
+rpm -q nfs-utils || $PKG_MAN -y install nfs-utils
+systemctl stop nfs-server
+systemctl start proc-fs-nfsd.mount
 lsmod | grep -E '^nfs$' || modprobe -v nfs
 lsmod | grep -E '^nfsd$' || modprobe -v nfsd
+echo 10 > /proc/sys/fs/nfs/nlm_grace_period
+echo 10 > /proc/fs/nfsd/nfsv4gracetime
+echo 10 > /proc/fs/nfsd/nfsv4leasetime
 systemctl enable  nfs-server
 systemctl restart nfs-server
 systemctl status nfs-server
+sleep 10
