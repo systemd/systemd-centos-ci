@@ -45,10 +45,8 @@ fi
 yum -y install epel-release yum-utils gdb
 yum-config-manager --enable epel
 yum -y update
-yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools ninja-build \
+yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel meson nc net-tools ninja-build \
                   openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat strace systemd-ci-environment
-python3.6 -m ensurepip
-python3.6 -m pip install meson
 
 # python36 package doesn't create the python3 symlink
 rm -f /usr/bin/python3
@@ -91,9 +89,9 @@ systemctl disable firewalld
 (
     # Make sure we copy over the meson logs even if the compilation fails
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
-    meson build -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+    meson build -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
+                -Dcpp_args='-Og' \
                 -Ddebug=true \
-                --optimization=g \
                 --werror \
                 -Dhomed=false \
                 -Dslow-tests=true \
