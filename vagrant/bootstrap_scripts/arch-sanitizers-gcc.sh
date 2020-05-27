@@ -68,4 +68,13 @@ cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
 cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
 cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
 
+# Support udevadm/systemd-udevd merge efforts from
+# https://github.com/systemd/systemd/pull/15918
+# The udevadm -> systemd-udevd symlink is created in the install phase which
+# we don't execute in sanitizer runs, so let's create it manually where
+# we need it
+if [[ -x "$BUILD_DIR/udevadm" && ! -x "$BUILD_DIR/systemd-udevd" ]]; then
+    ln -frsv "$BUILD_DIR/udevadm" "$BUILD_DIR/systemd-udevd"
+fi
+
 popd
