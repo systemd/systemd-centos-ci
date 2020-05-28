@@ -84,3 +84,8 @@ systemctl enable  nfs-server
 systemctl restart nfs-server
 systemctl status nfs-server
 sleep 10
+
+# Debug
+grep nfsd /proc/filesystems
+exportfs -sv
+modinfo nfs nfsd
