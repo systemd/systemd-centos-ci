@@ -119,7 +119,7 @@ exectask_p_finish
 COREDUMPCTL_SKIP=(
     # This test intentionally kills several processes using SIGABRT, thus generating
     # cores which we're not interested in
-    "test/TEST-48-UDEV-EVENT-TIMEOUT"
+    "test/TEST-49-UDEV-EVENT-TIMEOUT"
 )
 
 # Save journals created by integration tests
