@@ -64,7 +64,15 @@ fi
 export SYSTEMD_ROOT="${SYSTEMD_ROOT:-$HOME/systemd}"
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
-export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+if [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]]; then
+    # All dusty machines have Intel Xeon CPUs with 4 cores and HT enabled,
+    # which causes issues when the HT cores are counted as "real" ones, namely
+    # CPU over-saturation and strange hangups. As all dusty server have the
+    # same HW, let's manually override the # of CPUs for the VM to 4.
+    export VAGRANT_CPUS=4
+else
+    export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+fi
 export VAGRANT_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT"
 
 # Absolute systemd git root path on the host machine
