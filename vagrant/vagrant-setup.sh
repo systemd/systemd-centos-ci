@@ -85,7 +85,8 @@ systemctl restart nfs-server
 systemctl status nfs-server
 sleep 10
 
-# Debug
-grep nfsd /proc/filesystems
-exportfs -sv
-modinfo nfs nfsd
+# Debug for #272
+echo "[DEBUG] Simulate Vagrant's nfs_installed check"
+/usr/bin/systemctl list-units '*nfs*server*' --no-pager --no-legend
+/bin/sh -c "systemctl --no-pager --no-legend --plain list-unit-files --all --type=service | grep nfs-server.service"
+echo "[DEBUG] End"
