@@ -390,6 +390,10 @@ if __name__ == "__main__":
         ac.allocated_nodes(verbose=True)
         sys.exit(0)
 
+    if args.version == "6":
+        logging.fatal("Unsupported CentOS version: {}".format(args.version))
+        sys.exit(1)
+
     rc = 0
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
@@ -414,8 +418,8 @@ if __name__ == "__main__":
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
         ac.artifacts_storage = artifacts_dir
 
-        # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
-        pkg_man = "yum" if args.version in ["6", "7"] else "dnf"
+        # Let's differentiate between CentOS 7 (yum) and CentOS >= 8 (dnf)
+        pkg_man = "yum" if args.version == "7" else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
         # installation fails before installing core dependencies
         dep_cmd = "{0} clean all && {0} makecache && {0} -y install bash git rsync".format(pkg_man)
