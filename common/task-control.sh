@@ -35,9 +35,6 @@ else
     OPTIMAL_QEMU_SMP=${OPTIMAL_QEMU_SMP:-1}
 fi
 
-echo "[TASK-CONTROL] OPTIMAL_QEMU_SMP = $OPTIMAL_QEMU_SMP"
-echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
-
 # Active wait for PID to finish
 #   - print '.' every 10 seconds
 #   - return the exit code of the waited for process
