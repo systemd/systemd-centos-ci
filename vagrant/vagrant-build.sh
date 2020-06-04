@@ -64,7 +64,7 @@ fi
 export SYSTEMD_ROOT="${SYSTEMD_ROOT:-$HOME/systemd}"
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
-export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 export VAGRANT_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT"
 
 # Absolute systemd git root path on the host machine

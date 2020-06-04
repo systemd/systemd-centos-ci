@@ -64,4 +64,17 @@ sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 systemctl stop firewalld
 systemctl restart libvirtd
 
-"$SCRIPT_ROOT/vagrant-build.sh" "$DISTRO" 2>&1 | tee "$LOGDIR/console-$DISTRO.log"
+# DEBUG ONLY
+dnf install -y sysstat
+sar -d -q -p -P ALL -u ALL -w 30 &
+SAR_PID=$!
+
+if ! "$SCRIPT_ROOT/vagrant-build.sh" "$DISTRO" 2>&1 | tee "$LOGDIR/console-$DISTRO.log"; then
+    EC=1
+else
+    EC=0
+fi
+
+kill $SAR_PID
+
+exit $EC

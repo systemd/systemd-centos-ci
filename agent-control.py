@@ -5,6 +5,7 @@ import argparse
 import json
 import logging
 import os.path
+import re
 import subprocess
 import sys
 import time
@@ -405,6 +406,11 @@ if __name__ == "__main__":
         if node is None or ssid is None:
             logging.critical("Can't continue without a valid node")
             sys.exit(1)
+
+        # TBD
+        if args.vagrant and re.search("\.dusty$", node):
+            ac.execute_remote_command(node, "grubby --args 'mitigations=auto,nosmt tsx=auto' --update-kernel=ALL")
+            ac.reboot_node(node)
 
         # Figure out a systemd branch to compile
         if args.pr:
