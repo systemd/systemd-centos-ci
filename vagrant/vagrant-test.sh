@@ -147,7 +147,7 @@ done
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
+#    "test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"
 )
 
