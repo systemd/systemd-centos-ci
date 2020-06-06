@@ -29,10 +29,6 @@ Vagrant.configure("2") do |config|
     libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
     libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
 
-    if ENV["VAGRANT_DISK_BUS"] then
-      libvirt.disk_bus = ENV["VAGRANT_DISK_BUS"]
-    end
-
     # Pass through /dev/random from the host to the VM
     libvirt.random :model => 'random'
   end
@@ -45,6 +41,15 @@ Vagrant.configure("2") do |config|
   # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", privileged: true, inline: <<-SHELL
     set -e
+
+    # The latest generic/arch image switched from 'scsi' disk bus driver to 'virtio'
+    # but /etc/fstab still contains '/dev/sda*' entries instead of '/dev/vda*'
+    # causing slow downs and unexpected system fails. Let's workaround it until
+    # it's fixed.
+    # See: https://github.com/lavabit/robox/issues/152
+    grep /dev/sda /etc/fstab && sed -i "s#/dev/sda#/dev/vda#g" /etc/fstab && systemctl daemon-reload
+    cat /etc/fstab
+    lsblk
 
     whoami
 

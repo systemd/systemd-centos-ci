@@ -35,6 +35,25 @@ DISTRO_STRING="${1,,}"
 # e.g.: if DISTRO_STRING=arch-sanitizers-clang then DISTRO=arch
 DISTRO="${DISTRO_STRING%%-*}"
 
+# To test generated images before they get into "production" vagran-make-cache.sh
+# suffixes them with "-new", so they're not picked automatically by the pipeline
+# and we can test them separately first without affecting the CI.
+if [[ $DISTRO_STRING =~ -new$ ]]; then
+    # Tell the respective Vagrantfile to use a test box name/url instead of the
+    # regular ("production") one
+    export VAGRANT_TEST_IMAGE=1
+    # Drop the '-new' suffix from the distro string to use the "standard"
+    # bootstrap scripts
+    DISTRO_STRING="${DISTRO_STRING%-new}"
+fi
+
+# If the distro string is in "<distro>-sanitizers-*" format, we're testing
+# systemd using various sanitizers (ASan, UBSan, etc.) and due to performance
+# issue we want to skip certain steps (like reboot and integration tests).
+if [[ $DISTRO_STRING =~ -sanitizers- ]]; then
+    USING_SANITIZERS=true
+fi
+
 # Decide which Vagrant file to use
 VAGRANT_FILE="$VAGRANT_FILES/Vagrantfile_$DISTRO"
 # Use a custom external script, so we can use one Vagrantfile with multiple
@@ -50,13 +69,6 @@ fi
 if [[ ! -f $BOOTSTRAP_SCRIPT ]]; then
     echo >&2 "Bootstrap script '$BOOTSTRAP_SCRIPT' not found"
     exit 1
-fi
-
-# If the distro string is in "<distro>-sanitizers-*" format, we're testing
-# systemd using various sanitizers (ASan, UBSan, etc.) and due to performance
-# issue we want to skip certain steps (like reboot and integration tests).
-if [[ $DISTRO_STRING =~ -sanitizers- ]]; then
-    USING_SANITIZERS=true
 fi
 
 # Configure environment (following env variables are used in the respective

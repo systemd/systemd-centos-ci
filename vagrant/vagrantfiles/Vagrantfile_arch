@@ -16,8 +16,13 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
-  config.vm.box = "archlinux_systemd"
-  config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd"
+  if ENV["VAGRANT_TEST_IMAGE"] then
+    config.vm.box = "archlinux_systemd-new"
+    config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd-new"
+  else
+    config.vm.box = "archlinux_systemd"
+    config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd"
+  end
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -67,10 +72,6 @@ Vagrant.configure("2") do |config|
     libvirt.driver = if ENV["VAGRANT_DRIVER"] then ENV["VAGRANT_DRIVER"] else "kvm" end
     libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
     libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
-
-    if ENV["VAGRANT_DISK_BUS"] then
-      libvirt.disk_bus = ENV["VAGRANT_DISK_BUS"]
-    end
 
     # Collect output from a serial console into a file to make debugging easier
     # The -nographic option allows us to collect BIOS messages as well
