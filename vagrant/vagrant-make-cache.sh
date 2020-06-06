@@ -38,7 +38,6 @@ pushd "$TEMP_DIR" || { echo >&2 "Can't pushd to $TEMP_DIR"; exit 1; }
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
 export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
-export VAGRANT_DISK_BUS
 
 cp "$VAGRANTFILE" Vagrantfile
 vagrant up --no-tty --provider=libvirt
