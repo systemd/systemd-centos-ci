@@ -37,7 +37,7 @@ pushd "$TEMP_DIR" || { echo >&2 "Can't pushd to $TEMP_DIR"; exit 1; }
 # Start a VM described in the Vagrantfile with all provision steps
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
-export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 export VAGRANT_DISK_BUS
 
 cp "$VAGRANTFILE" Vagrantfile
@@ -60,10 +60,11 @@ case $? in
 esac
 vagrant halt
 
-# Create a box from the VM, so it can be reused later
+# Create a box from the VM, so it can be reused later. The box name is suffixed
+# with '-new' to avoid using it immediately in "production".
 # Output file example:
-#   boxes/Vagrantfile_archlinux_systemd => archlinux_systemd
-BOX_NAME="${VAGRANTFILE##*/Vagrantfile_}"
+#   boxes/Vagrantfile_archlinux_systemd => archlinux_systemd-new
+BOX_NAME="${VAGRANTFILE##*/Vagrantfile_}-new"
 # Workaround for `virt-sysprep` - work with the image via qemu directly
 # instead of using libvirt
 export LIBGUESTFS_BACKEND=direct
