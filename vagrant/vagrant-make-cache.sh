@@ -75,7 +75,7 @@ export LIBGUESTFS_BACKEND=direct
 # which contains the box name, but all slashes are replaced by
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANTFILE")"
-vagrant package --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}/*/libvirt/Vagrantfile
+vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}/*/libvirt/Vagrantfile
 
 # Check if we can build a usable VM from the just packaged box
 (
