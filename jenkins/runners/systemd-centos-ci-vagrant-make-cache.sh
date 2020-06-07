@@ -41,6 +41,7 @@ cd systemd-centos-ci
 # Check if it doesn't break anything
 ./agent-control.py --version 8 --no-index --vagrant arch-new $ARGS
 ./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang-new $ARGS
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc-new $ARGS
 # Overwrite the production image with the just tested one. Since the CentOS CI
 # artifact server supports only rsync protocol, use a single-purpose script
 # to do that
