@@ -277,7 +277,7 @@ initialize_integration_tests() {
         export TEST_PARALLELIZE=1
 
         _log "Running setup for '$image' from '$file'"
-        exectask_p "setup-$testname" "make -C '$testdir' clean setup"
+        exectask_p "setup-$testname" "make -C '$testdir' clean setup debug=1"
     done < <(grep IMAGE_NAME= test/TEST-*/test.sh | sort -k 2 -t : -u)
 
     # Wait for remaining parallel tasks to complete

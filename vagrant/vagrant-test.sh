@@ -44,6 +44,8 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 
+sed -ri '/test_create_image|check_result_qemu/aecho "Current testdir: $TESTDIR"\nls -la $TESTDIR' test/TEST-02-CRYPTSETUP/test.sh
+
 # The current revision of the integration test suite uses a set of base images
 # to reduce the overhead of building the same image over and over again.
 # However, this isn't compatible with parallelization & concurrent access.
@@ -61,7 +63,7 @@ SKIP_LIST=(
     "test/TEST-25-IMPORT"           # Serialized below
 )
 
-for t in test/TEST-??-*; do
+for t in test/TEST-02-CRYPTSETUP; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
@@ -87,12 +89,13 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    exectask_p "${t##*/}" "make -C $t setup run debug=1 && touch $TESTDIR/pass"
 done
 
 # Wait for remaining running tasks
 exectask_p_finish
 
+if false; then
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
 SERIALIZED_TASKS=(
@@ -164,6 +167,7 @@ systemctl status dhcpcd@eth0.service
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
+fi
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
