@@ -84,8 +84,10 @@ for t in test/TEST-??-*; do
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    rm -fr "$TESTDIR"
+    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
+    # otherwise the `touch` command would fail
     mkdir -p "$TESTDIR"
+    rm -f "$TESTDIR/pass"
 
     exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
@@ -115,8 +117,10 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    rm -fr "$TESTDIR"
+    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
+    # otherwise the `touch` command would fail
     mkdir -p "$TESTDIR"
+    rm -f "$TESTDIR/pass"
 
     exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
