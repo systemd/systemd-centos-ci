@@ -111,14 +111,7 @@ if $USING_SANITIZERS; then
     # causes boot to timeout or die completely
     # Run tests with sanitizers
     vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test-sanitizers.sh $DISTRO_STRING"
-    EC=$?
-
-    if [[ $EC -ne 0 ]]; then
-        echo >&2 "'vagrant ssh' exited with an unexpected EC: $EC"
-        # Attempt to dump at least the system journal
-        vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
-        exit $EC
-    fi
+    SSH_EC=$?
 else
     # Reboot the VM to "apply" the new systemd
     timeout 5m vagrant reload
@@ -136,14 +129,16 @@ else
     esac
     # Run tests
     vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test.sh $DISTRO_STRING"
-    EC=$?
+    SSH_EC=$?
+fi
 
-    if [[ $EC -ne 0 ]]; then
-        echo >&2 "'vagrant ssh' exited with an unexpected EC: $EC"
-        # Attempt to dump at least the system journal
-        vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
-        exit $EC
-    fi
+if [[ $SSH_EC -ne 0 ]]; then
+    echo >&2 "'vagrant ssh' exited with an unexpected EC: $SSH_EC"
+    # Give the VM some time to reassess itself, if the fail is caused by networking
+    sleep 10
+    # Attempt to dump at least the system journal
+    vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
+    exit $SSH_EC
 fi
 
 # Destroy the VM
