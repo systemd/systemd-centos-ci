@@ -51,14 +51,6 @@ ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
 # Install and enable EPEL
 dnf -y install epel-release "${ADDITIONAL_DEPS[@]}"
 dnf config-manager --enable epel
-# FIXME: TEMPORARY WORKAROUND
-# The internal EPEL mirror seems to be serving invalid data (most likely caused
-# by the ongoing Fedora data center move. Let's skip it, temporarily, to not
-# disturb the CI.
-if [[ -f /etc/yum/pluginconf.d/fastestmirror.conf ]]; then
-    echo "exclude=mirror.ci.centos.org" >> /etc/yum/pluginconf.d/fastestmirror.conf
-    yum clean expire-cache
-fi
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
 # Install systemd's build dependencies

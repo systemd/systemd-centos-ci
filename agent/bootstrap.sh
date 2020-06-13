@@ -44,14 +44,6 @@ if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/syst
 fi
 yum -y install epel-release yum-utils gdb
 yum-config-manager --enable epel
-# FIXME: TEMPORARY WORKAROUND
-# The internal EPEL mirror seems to be serving invalid data (most likely caused
-# by the ongoing Fedora data center move. Let's skip it, temporarily, to not
-# disturb the CI.
-if [[ -f /etc/yum/pluginconf.d/fastestmirror.conf ]]; then
-    echo "exclude=mirror.ci.centos.org" >> /etc/yum/pluginconf.d/fastestmirror.conf
-    yum clean expire-cache
-fi
 yum -y update
 yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel meson nc net-tools ninja-build \
                   openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat squashfs-tools strace \
