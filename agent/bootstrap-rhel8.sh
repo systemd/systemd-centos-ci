@@ -50,6 +50,12 @@ ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
 
 # Install and enable EPEL
 dnf -y install epel-release "${ADDITIONAL_DEPS[@]}"
+
+# FIXME: internal EPEL mirrorlink seems to be out-of-date and causing unexpected
+#        CI fails. Let's disable it, temporarily, until it's resolved
+sed -i -e 's/^#baseurl/baseurl/g' -e 's/^metalink/#metalink/g' /etc/yum.repos.d/epel*
+yum clean expire-cache
+
 dnf config-manager --enable epel
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
