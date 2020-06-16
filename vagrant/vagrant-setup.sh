@@ -50,6 +50,26 @@ if ! vagrant version 2>/dev/null; then
     $PKG_MAN -y install "$VAGRANT_PKG_URL"
 fi
 
+# Workaround for current Vagrant's DSO hell
+# See:
+#   https://github.com/hashicorp/vagrant/issues/11020
+#   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/1031
+#   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/943
+(
+    BUILD_DIR="$(mktemp -d)"
+    pushd "$BUILD_DIR"
+    $PKG_MAN -y install gcc byacc tar make
+    $PKG_MAN download --source krb5
+    rpm2cpio krb5-*.src.rpm | cpio -imdV
+    tar xf krb5-*.tar.gz
+    cd krb5-*/src
+    ./configure
+    make -j $(($(nproc) * 2))
+    cp -a lib/crypto/libk5crypto.* /opt/vagrant/embedded/lib64/
+    popd
+    rm -fr "$BUILD_DIR"
+)
+
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
     $PKG_MAN -y install gcc libguestfs-tools-c libvirt libvirt-devel make qemu-kvm ruby-devel
@@ -61,7 +81,7 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt plugin
     # See: https://github.com/vagrant-libvirt/vagrant-libvirt
     # Env variables taken from https://github.com/vagrant-libvirt/vagrant-libvirt#possible-problems-with-plugin-installation-on-linux
-    export CONFIGURE_ARGS='with-ldflags=-L/opt/vagrant/embedded/lib with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
+    export CONFIGURE_ARGS='with-ldflags="-L/opt/vagrant/embedded/lib64 -L/opt/vagrant/embedded/lib" with-libvirt-include=/usr/include/libvirt with-libvirt-lib=/usr/lib'
     export GEM_HOME=~/.vagrant.d/gems
     export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
     export PATH=/opt/vagrant/embedded/bin:$PATH
