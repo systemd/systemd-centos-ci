@@ -4,7 +4,7 @@ from __future__ import print_function, with_statement
 import argparse
 import json
 import logging
-import os.path
+import os
 import subprocess
 import sys
 import time
@@ -25,9 +25,18 @@ class AgentControl(object):
         self._node = {}
         self._reboot_count = 0
 
-        # Load duffy key
-        with open(DUFFY_KEY_FILE, "r") as fh:
-            self._duffy_key = fh.read().strip()
+        # Load Duffy key
+        # First (file) method is for the legacy Jenkins, the second one (env)
+        # is for the new OCP Jenkins
+        try:
+            with open(DUFFY_KEY_FILE, "r") as fh:
+                self._duffy_key = fh.read().strip()
+        except IOError:
+            self._duffy_key = os.environ.get("CICO_API_KEY")
+
+        if not self._duffy_key:
+            logging.fatal("Invalid Duffy key")
+            sys.exit(1)
 
     def __del__(self):
         # Deallocate the allocated node on script exit, if not requested otherwise
@@ -433,8 +442,12 @@ if __name__ == "__main__":
 
         if args.vagrant_sync:
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
-            # We need the duffy key to be able to upload to the CentOS CI artifact server
-            ac.upload_file(node, DUFFY_KEY_FILE, "/duffy.key")
+            # We need the Duffy key to be able to upload to the CentOS CI artifact server
+            key_file = tempfile.NamedTemporaryFile()
+            key_file.write(ac._duffy_key)
+            ac.upload_file(node, key_file.name, "/duffy.key")
+            key_file.close()
+
             command = "{}/vagrant/vagrant-make-cache.sh".format(GITHUB_CI_REPO)
             ac.execute_remote_command(node, command)
         elif args.vagrant:
