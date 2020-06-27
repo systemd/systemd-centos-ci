@@ -18,6 +18,12 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
+git config --global user.email "ci@example.com"
+git config --global user.name "CI test"
+git revert a79be2f80777eb80e0d8177f6bccd7615de7ec1a
+git log -1
+ninja -C "$BUILD_DIR"
+
 ## Sanitizer-specific options
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
@@ -108,6 +114,8 @@ fi
 ## If the sanity check passes we can be at least somewhat sure the systemd
 ## 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
+## FIXME: debug-only
+#sed -i '/systemd-hwdb-update/s/TimeoutSec=180s/TimeoutSec=300s/' test/test-functions
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
 exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
@@ -167,11 +175,11 @@ systemctl reload dbus.service
 systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
-exectask "systemd-networkd_sanitizers" \
-            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
-
-exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
-exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
+#exectask "systemd-networkd_sanitizers" \
+#            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+#
+#exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+#exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
