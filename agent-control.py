@@ -445,6 +445,7 @@ if __name__ == "__main__":
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
             key_file = tempfile.NamedTemporaryFile()
             key_file.write(ac._duffy_key)
+            key_file.flush()
             ac.upload_file(node, key_file.name, "/duffy.key")
             key_file.close()
 
