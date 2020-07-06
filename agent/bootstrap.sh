@@ -188,13 +188,16 @@ GRUBBY_ARGS=(
     # it early in the boot process to properly execute units using
     # ConditionNeedsUpdate=
     # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
-    #"systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
     # Update: if the original time difference is too big, the mtime of
     # /etc/.updated is already too far in the future, so it doesn't matter if
     # we correct the time during the next boot, since it's still going to be
     # in the past. Let's just explicitly override all ConditionNeedsUpdate=
     # directives to true to fix this once and for all
     "systemd.condition-needs-update=1"
+    # Also, store & reuse the current (and corrected) time & date, as it doesn't
+    # persist across reboots without this kludge and can (actually it does)
+    # interfere with running tests
+    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
 )
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
