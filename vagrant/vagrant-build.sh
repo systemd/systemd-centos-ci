@@ -102,7 +102,7 @@ pushd "$TEST_DIR" || { echo >&2 "Can't pushd to $TEST_DIR"; exit 1; }
 cp $VAGRANT_ROOT/vagrant-test*.sh "$TEST_DIR/"
 
 # Provision the machine
-VAGRANT_LOG=info vagrant up --no-tty --provider=libvirt
+vagrant up --no-tty --provider=libvirt
 
 set +e
 
