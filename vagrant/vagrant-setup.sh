@@ -51,6 +51,16 @@ if ! vagrant version 2>/dev/null; then
 fi
 
 # Workaround for current Vagrant's DSO hell
+# ---
+# The krb5-libs RPM is compiled with --with-crypto-impl=openssl, which
+# includes symbols, that are not available in the Vagrant's embedded OpenSSL
+# library, causing errors like:
+#   /opt/vagrant/embedded/lib64/libk5crypto.so.3: undefined symbol: EVP_KDF_ctrl, version OPENSSL_1_1_1b
+
+# Workaround this by compiling a local version of the krb5-libs using the
+# builtin crypto implementation and copying the built libraries into
+# the embedded lib dir.
+#
 # See:
 #   https://github.com/hashicorp/vagrant/issues/11020
 #   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/1031
@@ -63,7 +73,7 @@ fi
     rpm2cpio krb5-*.src.rpm | cpio -imdV
     tar xf krb5-*.tar.gz
     cd krb5-*/src
-    ./configure
+    ./configure --with-crypto-impl=builtin
     make -j $(($(nproc) * 2))
     cp -a lib/crypto/libk5crypto.* /opt/vagrant/embedded/lib64/
     popd
