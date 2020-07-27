@@ -137,7 +137,7 @@ if [[ $SSH_EC -ne 0 ]]; then
     # Give the VM some time to reassess itself, if the fail is caused by networking
     sleep 10
     # Attempt to dump at least the system journal
-    vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
+    timeout 2m vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
     exit $SSH_EC
 fi
 
