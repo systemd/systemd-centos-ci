@@ -90,8 +90,8 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-export QEMU_TIMEOUT=600
-export NSPAWN_TIMEOUT=600
+export QEMU_TIMEOUT=1200
+export NSPAWN_TIMEOUT=1200
 # Set QEMU_SMP to speed things up
 export QEMU_SMP=$(nproc)
 # Arch Linux requires booting with initrd, as all commonly used filesystems
@@ -134,8 +134,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     ## be somewhat sure the 'base' systemd components work).
     INTEGRATION_TESTS=(
-        test/TEST-04-JOURNAL # systemd-journald
-        test/TEST-46-HOMED   # systemd-homed & friends
+        test/TEST-04-JOURNAL        # systemd-journald
+        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-46-HOMED          # systemd-homed & friends
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
