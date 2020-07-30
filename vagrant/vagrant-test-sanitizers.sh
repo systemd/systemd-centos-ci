@@ -156,7 +156,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
             # Attempt to collect coredumps from test-specific journals as well
             exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
             # Check for sanitizer errors in test journals
-            exectask "${t##*/}_sanitizer_errors" "journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
+            exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
             if [[ ! -f "$testdir/pass" ]]; then
                 rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
