@@ -200,12 +200,21 @@ coredumpctl_set_ts() {
 #   0 when no coredumps were found, 1 otherwise
 coredumpctl_collect() {
     local ARGS=(--no-legend --no-pager)
+    # Allow overriding the coredumpctl binary for cases when we read coredumps
+    # from a custom directory, which may contain journals with different features
+    # than are supported by the local journalctl/coredumpctl versions
+    local COREDUMPCTL_BIN="${COREDUMPCTL_BIN:-coredumpctl}"
     local JOURNALDIR="${1:-}"
     local TEMPFILE="$(mktemp)"
 
     # Register a cleanup handler
     # shellcheck disable=SC2064
     trap "rm -f '$TEMPFILE'" EXIT
+
+    if ! "$COREDUMPCTL_BIN" --version >/dev/null; then
+        _err "'$COREDUMPCTL_BIN' is not a valid binary"
+        return 1
+    fi
 
     _log "Attempting to collect info about possible coredumps"
 
@@ -229,7 +238,7 @@ coredumpctl_collect() {
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
     #            further investigation
     FILTER_RX="/(test-execute|dhcpcd)$"
-    if ! coredumpctl "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
+    if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
         _log "No relevant coredumps found"
         return 0
     fi
@@ -241,7 +250,7 @@ coredumpctl_collect() {
         local GDB_CMD="bt full\nquit"
 
         _log "Gathering coredumps for '$path'"
-        coredumpctl "${ARGS[@]}" info "$path"
+        "$COREDUMPCTL_BIN" "${ARGS[@]}" info "$path"
         # Make sure we use the built binaries for getting gdb trace
         # This is relevant mainly for the sanitizers run, where we don't install
         # the just built revision, so `coredumpctl debug` pulls in a local binary
@@ -263,7 +272,7 @@ coredumpctl_collect() {
         if gdb -v > /dev/null; then
             echo -e "\n"
             _log "Trying to run gdb with '$GDB_CMD' for '$path'"
-            echo -e "$GDB_CMD" | coredumpctl "${ARGS[@]}" debug "$path"
+            echo -e "$GDB_CMD" | "$COREDUMPCTL_BIN" "${ARGS[@]}" debug "$path"
             echo -e "\n"
         fi
     done < <(sort -u "$TEMPFILE")
