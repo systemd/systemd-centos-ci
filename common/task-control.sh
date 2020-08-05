@@ -109,6 +109,15 @@ printresult() {
         _err "Log rename failed"
     fi
 
+    # Compress the log file if gzip is available to conserve space
+    if command -v gzip >/dev/null; then
+        if gzip -S .gz "$TASK_LOGFILE" && [[ -f "${TASK_LOGFILE}.gz" ]]; then
+            TASK_LOGFILE="${TASK_LOGFILE}.gz"
+        else
+            _err "Failed to compress '$TASK_LOGFILE'"
+        fi
+    fi
+
     # Don't update internal counters if we want to ignore task's EC
     if [[ $IGNORE_EC -eq 0 ]]; then
         if [[ $TASK_EC -eq 0 ]]; then
