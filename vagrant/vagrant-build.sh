@@ -135,9 +135,9 @@ fi
 if [[ $SSH_EC -ne 0 ]]; then
     echo >&2 "'vagrant ssh' exited with an unexpected EC: $SSH_EC"
     # Give the VM some time to reassess itself, if the fail is caused by networking
-    sleep 10
+    sleep 60
     # Attempt to dump at least the system journal
-    timeout 2m vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
+    timeout 60 vagrant ssh -c "sudo journalctl --no-pager -b" > "$SYSTEMD_ROOT/vagrant-journal-dump.log"
     exit $SSH_EC
 fi
 
