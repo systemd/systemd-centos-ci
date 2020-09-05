@@ -45,9 +45,14 @@ fi
 yum -y install epel-release yum-utils gdb
 yum-config-manager --enable epel
 yum -y update
-yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel meson nc net-tools ninja-build \
+yum -y install busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools ninja-build \
                   openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat squashfs-tools strace \
                   systemd-ci-environment veritysetup
+
+# Since systemd/systemd#13842 the minimal meson version was bumped to 0.52.1,
+# which is no longer available in the CentOS 7 repos
+python3.6 -m ensurepip
+python3.6 -m pip install meson==0.52.1
 
 # python36 package doesn't create the python3 symlink
 rm -f /usr/bin/python3
