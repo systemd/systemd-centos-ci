@@ -239,7 +239,7 @@ coredumpctl_collect() {
     #            further investigation
     #   python3.8 - one of the test-execute subtests triggers SIGSYS in python3.8
     #               (since systemd/systemd#16675)
-    FILTER_RX="/(test-execute|dhcpcd|bin/python3.8)$"
+    FILTER_RX="/(test-execute|dhcpcd|bin/python3.[0-9]+)$"
     if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
         _log "No relevant coredumps found"
         return 0
