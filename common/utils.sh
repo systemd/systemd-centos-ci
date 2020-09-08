@@ -237,7 +237,7 @@ coredumpctl_collect() {
     #   test-execute - certain subtests die with SIGSEGV intentionally
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
     #            further investigation
-    #   python3.8 - one of the test-execute subtests triggers SIGSYS in python3.8
+    #   python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
     #               (since systemd/systemd#16675)
     FILTER_RX="/(test-execute|dhcpcd|bin/python3.[0-9]+)$"
     if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
