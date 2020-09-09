@@ -63,7 +63,7 @@ class AgentControl(object):
         payload["key"] = self._duffy_key
         logging.info("Duffy request URL: {}".format(url))
 
-        r = requests.get(url, payload)
+        r = requests.get(url, params=payload)
 
         return r.text
 
