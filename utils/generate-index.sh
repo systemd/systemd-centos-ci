@@ -29,7 +29,7 @@ PR="${ghprbPullId:-N/A}"
 PR_URL="${ghprbPullLink:-#}"
 
 # Generate a nice HTML directory listing using the tree utility
-tree -C -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H "$ARTIFACTS_DIR" "$ARTIFACTS_DIR" -o "$INDEX_FILE"
+tree --charset=utf-8 -C -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H "$ARTIFACTS_DIR" "$ARTIFACTS_DIR" -o "$INDEX_FILE"
 
 # Add some useful info below the main title
 ADDITIONAL_INFO_FILE="$(mktemp)"
