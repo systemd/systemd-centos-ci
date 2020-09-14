@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../systemd-pr-build.sh
+# curl -q -o runner.sh https://../upstream-centos7.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu

@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../systemd-rhel8-pr-build.sh
+# curl -q -o runner.sh https://../rhel8-centos8.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu

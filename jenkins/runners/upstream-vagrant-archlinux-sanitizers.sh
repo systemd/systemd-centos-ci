@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../systemd-pr-build-vagrant-sanitizers.sh
+# curl -q -o runner.sh https://../upstream-vagrant-archlinux-sanitizers.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu

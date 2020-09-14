@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../systemd-cron-build.sh
+# curl -q -o runner.sh https://../upstream-cron-build.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu

@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../systemd-pr-build-vagrant.sh
+# curl -q -o runner.sh https://../upstream-vagrant-archlinux.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu
