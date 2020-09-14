@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Note: this script MUST be self-contained - i.e. it MUST NOT source any
 # external scripts as it is used as a bootstrap script, thus it's
@@ -17,7 +17,7 @@ ARGS=
 set -e
 set -o pipefail
 
-if [ "$ghprbPullId" ]; then
+if [[ "$ghprbPullId" ]]; then
     ARGS="$ARGS --pr $ghprbPullId "
 fi
 

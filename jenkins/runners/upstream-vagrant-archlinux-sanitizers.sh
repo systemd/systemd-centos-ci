@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Note: this script MUST be self-contained - i.e. it MUST NOT source any
 # external scripts as it is used as a bootstrap script, thus it's
@@ -31,7 +31,7 @@ trap at_exit EXIT
 
 ARGS=
 
-if [ "$ghprbPullId" ]; then
+if [[ "$ghprbPullId" ]]; then
     ARGS="$ARGS --pr $ghprbPullId "
 
     # We're not testing the master branch, so let's see if the PR scope

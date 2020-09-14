@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Note: this script MUST be self-contained - i.e. it MUST NOT source any
 # external scripts as it is used as a bootstrap script, thus it's
@@ -32,7 +32,7 @@ at_exit() {
 
 trap at_exit EXIT
 
-if [ "$ghprbPullId" ]; then
+if [[ "$ghprbPullId" ]]; then
     ARGS="$ARGS --pr $ghprbPullId "
 fi
 
@@ -44,7 +44,7 @@ cd systemd-centos-ci
 
 # RHEL 8 supports unified cgroups since RHEL 8.2, so ignore RHEL 8.0 and
 # RHEL 8.1 branches
-if [ "$TARGET_BRANCH" != "rhel-8.0.0" ] && [ "$TARGET_BRANCH" != "rhel-8.1.0" ]; then
+if [[ "$TARGET_BRANCH" != "rhel-8.0.0" && "$TARGET_BRANCH" != "rhel-8.1.0" ]]; then
     # RHEL 8 job with unified cgroup hierarchy
     ./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h unified" $ARGS
 fi
