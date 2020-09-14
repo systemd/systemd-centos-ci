@@ -1,7 +1,7 @@
 # About
 
 This project contains code to build, install and test [systemd](https://github.com/systemd/systemd/)
-on test machines provisioned from a pool provided by the [CentOS CI](https://ci.centos.org/) project,
+on test machines provisioned from a pool provided by the [CentOS CI](https://wiki.centos.org/QaWiki/CI) project,
 using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
 As of right now these scripts provide CI for [upstream](https://github.com/systemd/systemd)
@@ -40,7 +40,7 @@ The CI scripts are scattered among several directories:
 
 set -e
 
-curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/systemd-pr-build.sh
+curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/upstream-centos7.sh
 chmod +x runner.sh
 ./runner.sh
 ```
@@ -56,9 +56,9 @@ chmod +x runner.sh
 
 # Pipelines
 
-Jenkins view: https://ci.centos.org/view/systemd/
+Jenkins instance: https://jenkins-systemd.apps.ocp.ci.centos.org/
 
-## Upstream on CentOS 7 (systemd-pr-build)
+## Upstream on CentOS 7 (upstream-centos7)
 
 ```
 agent-control.py +-> agent/bootstrap.sh +-> reboot +-> agent/testsuite.sh
@@ -71,7 +71,7 @@ To achieve this, `agent-control.py` runs `agent/bootstrap.sh` script to fetch, b
 the respective PR (along with other necessary dependencies), reboots the machine, and executes
 `agent/testsuite.sh` to to the actual testing.
 
-## Downstream on CentOS 7 and CentOS 8 (systemd-rhel7-pr-build and systemd-rhel8-pr-build)
+## Downstream (RHEL) on CentOS 7 and CentOS 8 (rhel7-centos7 and rhel8-centos8)
 
 The same worklflow as above, but for systemd in RHEL:
 
@@ -87,7 +87,7 @@ agent-control.py +-> agent/bootstrap-rhel7.sh +-> reboot +-> agent/testsuite-rhe
 agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhel8.sh
 ```
 
-## Upstream on Arch Linux using Vagrant (systemd-pr-build-vagrant)
+## Upstream on Arch Linux using Vagrant (upstream-vagrant-archlinux)
 
 To achieve the exact opposite of the testing on CentOS 7, this pipeline check the compatibility
 of systemd with the latest versions of kernel and other components. As the CentOS CI
@@ -148,7 +148,7 @@ The pipeline consists of several steps (scripts):
     After this step the VM is rebooted (*reloaded* in the Vagrant terms) and the
     test runner script (`vagrant/vagrant-test.sh`) is executed inside.
 
-## Upstream on Arch Linux with sanitizers using Vagrant (systemd-pr-build-vagrant-sanitizers)
+## Upstream on Arch Linux with sanitizers using Vagrant (upstream-vagrant-archlinux-sanitizers)
 
 To tackle the question of security a little bit, this job does *almost* the same thing
 as the one above, but here systemd is compiled with [Address Sanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer)
@@ -158,7 +158,7 @@ with `vagrant/vagrant-test-sanitizer.sh` one, as running the test suite under
 sanitizers is a little bit trickier and limited. See the respective scripts for more
 information.
 
-## (Auxiliary) Rebuild the Vagrant images (systemd-centos-ci-vagrant-make-cache)
+## (Auxiliary) Rebuild the Vagrant images (vagrant-make-cache)
 
 ```
 agent-control.py +-> vagrant/vagrant-make-cache.sh
@@ -169,7 +169,7 @@ this job's sole purpose is to rebuild the base images (Vagrant Boxes) every few 
 (based on Jenkins cron) and upload it to the artifacts server, where it can be
 used by the respective Vagrantfile.
 
-## (Auxiliary) Mirror the Copr repo with CentOS 7 dependencies (systemd-centos-ci-reposync)
+## (Auxiliary) Mirror the Copr repo with CentOS 7 dependencies (centos7-reposync)
 
 ```
 utils/reposync.sh
@@ -185,7 +185,7 @@ so a fair share of our jobs was failing just because they couldn't install depen
 Having a local mirror in the CentOS CI infrastructure definitely helps in this case and
 the purpose of this script is to update it every few hours (again, using Jenkins cron).
 
-## (Auxiliary) CI for the CI repository (systemd-ci-build)
+## (Auxiliary) CI for the CI repository (ci-build)
 
 To make sure changes to this repository don't break the CI pipeline, this job
 provides a way to run a specific revision of the CI scripts (from a PR) against
