@@ -12,10 +12,6 @@
 # curl -q -o runner.sh https://../systemd-pr-build-vagrant.sh
 # chmod +x runner.sh
 # ./runner.sh
-
-# Add a local ~/bin dir to path for custom binaries (currently used only
-# for the tree binary for generating the artifact landing page)
-export PATH="/home/systemd/bin:$PATH"
 ARGS=
 
 set -e

@@ -12,7 +12,6 @@
 # curl -q -o runner.sh https://../systemd-cron-build.sh
 # chmod +x runner.sh
 # ./runner.sh
-
 set -e
 set -o pipefail
 
@@ -30,7 +29,6 @@ at_exit() {
 
 trap at_exit EXIT
 
-export PATH="/home/systemd/bin:$PATH"
 ARGS=
 
 git clone https://github.com/systemd/systemd-centos-ci
