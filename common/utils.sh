@@ -41,7 +41,7 @@ in_set() {
     return 1
 }
 
-# Checkout to the requsted branch:
+# Checkout to the requested branch:
 #   1) if pr:XXX where XXX is a pull request ID is passed to the script,
 #      the corresponding branch for this PR is be checked out
 #   2) if any other string except pr:* is passed, it's used as a branch

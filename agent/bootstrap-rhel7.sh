@@ -21,7 +21,7 @@ trap at_exit EXIT
 # Note: in RHEL7 version of the bootstrap script this is kind of pointless
 #       (since it's parsing only a single option), but it allows us to have
 #       a single interface in agent-control.py for all RHEL versions without
-#       additonal hassle
+#       additional hassle
 while getopts "r:" opt; do
     case "$opt" in
         r)

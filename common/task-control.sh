@@ -29,7 +29,7 @@ if NPROC=$(nproc); then
         MAX_QUEUE_SIZE=1
     fi
 else
-    # Using nproc failed, let's fall back to defaults, which can be overriden
+    # Using nproc failed, let's fall back to defaults, which can be overridden
     # from the outside.
     MAX_QUEUE_SIZE=${MAX_QUEUE_SIZE:-1}
     OPTIMAL_QEMU_SMP=${OPTIMAL_QEMU_SMP:-1}

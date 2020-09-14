@@ -27,7 +27,7 @@ COPR_REPO_PATH="/etc/yum.repos.d/${COPR_REPO##*/}"
 
 # Enable necessary repositories and install required packages
 #   - enable custom Copr repo with newer versions of certain packages (necessary
-#     to sucessfully compile upstream systemd on CentOS)
+#     to successfully compile upstream systemd on CentOS)
 #   - enable EPEL repo for additional dependencies
 #   - update current system
 #   - install python 3.6 (required by meson) and install meson + other build deps
