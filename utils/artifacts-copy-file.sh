@@ -9,7 +9,6 @@ set -o pipefail
 # CentOS CI specific thing - a part of the duffy key is necessary to
 # authenticate against the CentOS CI rsync server
 # See: https://wiki.centos.org/QaWiki/CI/GettingStarted#Exporting_artifacts_.28if_needed.29_to_a_storage_box
-DUFFY_KEY_FILE="$HOME/duffy.key"
 PASSWORD_FILE="$(mktemp "$PWD/.rsync-passwd.XXX")"
 SRC="${1:?Missing argument: source}"
 DEST="${2:?Missing argument: destination}"
@@ -19,7 +18,7 @@ TEMP_DIR="$(mktemp -d "$PWD/.sync-dirXXX")"
 
 trap "cd && rm -fr '$TEMP_DIR' '$PASSWORD_FILE'" EXIT
 
-cut -b-13 "$DUFFY_KEY_FILE" > "$PASSWORD_FILE"
+echo "${CICO_API_KEY:0:13}" > "$PASSWORD_FILE"
 
 pushd "$TEMP_DIR"
 mkdir -p "$SRC_DIR" "$DEST_DIR"
