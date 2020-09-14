@@ -20,11 +20,30 @@ set -o pipefail
 
 trap at_exit EXIT
 
-# Make sure we have all packages we need
-rpm -q createrepo_c rsync wget yum-utils
-
 WORK_DIR="$(mktemp -d)"
 pushd "$WORK_DIR"
+
+# Make sure we have all packages we need
+# As we now run this task in a rootless container, let's do a little (and ugly)
+# hack to install necessary packages, instead of having to deal with custom
+# containers, etc.
+INSTALLROOT="$PWD/installroot"
+mkdir "$INSTALLROOT"
+
+for package in createrepo_c rsync wget yum-utils; do
+    if ! rpm -q "$package"; then
+        yumdownloader --destdir "$INSTALLROOT" --resolve "$package"
+    fi
+done
+
+if ls "$INSTALLROOT"/*.rpm >/dev/null; then
+    # cpio needs to be invoked separately for each RPM, thus the weird
+    # construction
+    cd "$INSTALLROOT" && find . -name "*.rpm" -printf "rpm2cpio %p | cpio -id\n" | sh
+
+    export PATH="$PATH:$INSTALLROOT/usr/bin"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$INSTALLROOT/usr/lib64"
+fi
 
 wget -O repo-config.repo "$ORIGINAL_REPO"
 
