@@ -4,9 +4,11 @@ ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci"
 LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci"
 DOWNLOAD_LOCATION="${1:-.}"
-# CentOS CI specific thing - a part of the duffy key is necessary to
-# authenticate against the CentOS CI rsync server
-DUFFY_KEY_FILE="$HOME/duffy.key"
+
+if [[ ! -v CICO_API_KEY ]]; then
+    echo >&2 "Missing \$CICO_API_KEY env variable, can't continue"
+    exit 1
+fi
 
 at_exit() {
     # Clean up before exiting (either successfully or on an error)
@@ -20,11 +22,30 @@ set -o pipefail
 
 trap at_exit EXIT
 
-# Make sure we have all packages we need
-rpm -q createrepo_c rsync wget yum-utils
-
 WORK_DIR="$(mktemp -d)"
 pushd "$WORK_DIR"
+
+# Make sure we have all packages we need
+# As we now run this task in a rootless container, let's do a little (and ugly)
+# hack to install necessary packages, instead of having to deal with custom
+# containers, etc.
+INSTALLROOT="$PWD/installroot"
+mkdir "$INSTALLROOT"
+
+for package in createrepo_c rsync wget yum-utils; do
+    if ! rpm -q "$package"; then
+        yumdownloader --destdir "$INSTALLROOT" --resolve "$package"
+    fi
+done
+
+if ls "$INSTALLROOT"/*.rpm >/dev/null; then
+    # cpio needs to be invoked separately for each RPM, thus the weird
+    # construction
+    cd "$INSTALLROOT" && find . -name "*.rpm" -printf "rpm2cpio %p | cpio -id\n" | sh
+
+    export PATH="$PATH:$INSTALLROOT/usr/bin"
+    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$INSTALLROOT/usr/lib64"
+fi
 
 wget -O repo-config.repo "$ORIGINAL_REPO"
 
@@ -47,7 +68,7 @@ fi
 
 # CentOS CI rsync password is the first 13 characters of the duffy key
 PASSWORD_FILE="$(mktemp .rsync-passwd.XXX)"
-cut -b-13 "$DUFFY_KEY_FILE" > "$PASSWORD_FILE"
+echo "${CICO_API_KEY:0:13}" > "$PASSWORD_FILE"
 
 # Sync the repo to the CentOS CI artifacts server
 rsync --password-file="$PASSWORD_FILE" -av "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID" systemd@artifacts.ci.centos.org::systemd/
