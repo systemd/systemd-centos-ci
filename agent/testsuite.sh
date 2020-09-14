@@ -81,42 +81,46 @@ if ! initialize_integration_tests "$PWD"; then
     exit 1
 fi
 
-for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "[SKIP] Skipping test $t\n"
-        continue
-    fi
+for i in {0..99}; do
+    for t in test/TEST-50-DISSECT; do
+        if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
+            echo -e "[SKIP] Skipping test $t\n"
+            continue
+        fi
 
-    ## Configure test environment
-    # Tell the test framework to copy the base image for each test, so we
-    # can run them in parallel
-    export TEST_PARALLELIZE=1
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$OPTIMAL_QEMU_SMP
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+        ## Configure test environment
+        # Tell the test framework to copy the base image for each test, so we
+        # can run them in parallel
+        export TEST_PARALLELIZE=1
+        # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+        # See $INITRD above
+        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+        # Explicitly enable user namespaces
+        export KERNEL_APPEND="user_namespace.enable=1"
+        # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+        export QEMU_TIMEOUT=600
+        export NSPAWN_TIMEOUT=600
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$OPTIMAL_QEMU_SMP
+        # Use a "unique" name for each nspawn container to prevent scope clash
+        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
-    # otherwise the `touch` command would fail
-    mkdir -p "$TESTDIR"
-    rm -f "$TESTDIR/pass"
+        # Skipped test don't create the $TESTDIR automatically, so do it explicitly
+        # otherwise the `touch` command would fail
+        mkdir -p "$TESTDIR"
+        rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+        if ! exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"; then
+            break 2
+        fi
+    done
 done
 
 # Wait for remaining running tasks
-exectask_p_finish
+#exectask_p_finish
 
 COREDUMPCTL_SKIP=(
     # This test intentionally kills several processes using SIGABRT, thus generating
@@ -144,8 +148,8 @@ done
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+#    "test/test-exec-deserialization.py"
+#    "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
