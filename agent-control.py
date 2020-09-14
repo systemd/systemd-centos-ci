@@ -26,13 +26,7 @@ class AgentControl(object):
         self._reboot_count = 0
 
         # Load Duffy key
-        # First (file) method is for the legacy Jenkins, the second one (env)
-        # is for the new OCP Jenkins
-        try:
-            with open(DUFFY_KEY_FILE, "r") as fh:
-                self._duffy_key = fh.read().strip()
-        except IOError:
-            self._duffy_key = os.environ.get("CICO_API_KEY")
+        self._duffy_key = os.environ.get("CICO_API_KEY")
 
         if not self._duffy_key:
             logging.fatal("Invalid Duffy key")
