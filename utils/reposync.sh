@@ -4,9 +4,11 @@ ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci"
 LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci"
 DOWNLOAD_LOCATION="${1:-.}"
-# CentOS CI specific thing - a part of the duffy key is necessary to
-# authenticate against the CentOS CI rsync server
-DUFFY_KEY_FILE="$HOME/duffy.key"
+
+if [[ ! -v CICO_API_KEY ]]; then
+    echo >&2 "Missing \$CICO_API_KEY env variable, can't continue"
+    exit 1
+fi
 
 at_exit() {
     # Clean up before exiting (either successfully or on an error)
@@ -66,7 +68,7 @@ fi
 
 # CentOS CI rsync password is the first 13 characters of the duffy key
 PASSWORD_FILE="$(mktemp .rsync-passwd.XXX)"
-cut -b-13 "$DUFFY_KEY_FILE" > "$PASSWORD_FILE"
+echo "${CICO_API_KEY:0:13}" > "$PASSWORD_FILE"
 
 # Sync the repo to the CentOS CI artifacts server
 rsync --password-file="$PASSWORD_FILE" -av "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID" systemd@artifacts.ci.centos.org::systemd/
