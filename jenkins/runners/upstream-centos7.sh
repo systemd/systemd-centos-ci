@@ -12,13 +12,13 @@
 # curl -q -o runner.sh https://../systemd-pr-build.sh
 # chmod +x runner.sh
 # ./runner.sh
-ARGS=
-
-set -e
+set -eu
 set -o pipefail
 
-if [[ "$ghprbPullId" ]]; then
-    ARGS="$ARGS --pr $ghprbPullId "
+ARGS=()
+
+if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
+    ARGS+=(--pr "$ghprbPullId")
 
     # We're not testing the master branch, so let's see if the PR scope
     # is something we should indeed test
@@ -28,7 +28,7 @@ if [[ "$ghprbPullId" ]]; then
     # Let's make the regex here less strict, so we can, for example, test man page
     # generation and other low-impact changes
     SCOPE_RX='(^(catalog|factory|hwdb|man|meson.*|network|[^\.].*\.d|rules|src|test|tools|units))'
-    if ! git diff $(git merge-base master pr) --name-only | grep -E "$SCOPE_RX" ; then
+    if ! git diff "$(git merge-base master pr)" --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
@@ -38,4 +38,4 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py $ARGS
+./agent-control.py "${ARGS[@]}"

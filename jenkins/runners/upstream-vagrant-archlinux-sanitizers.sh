@@ -12,7 +12,7 @@
 # curl -q -o runner.sh https://../systemd-pr-build-vagrant-sanitizers.sh
 # chmod +x runner.sh
 # ./runner.sh
-set -e
+set -eu
 set -o pipefail
 
 at_exit() {
@@ -29,10 +29,10 @@ at_exit() {
 
 trap at_exit EXIT
 
-ARGS=
+ARGS=()
 
-if [[ "$ghprbPullId" ]]; then
-    ARGS="$ARGS --pr $ghprbPullId "
+if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
+    ARGS+=(--pr "$ghprbPullId")
 
     # We're not testing the master branch, so let's see if the PR scope
     # is something we should indeed test
@@ -40,7 +40,7 @@ if [[ "$ghprbPullId" ]]; then
     git fetch -fu origin "refs/pull/$ghprbPullId/head:pr"
     git checkout pr
     SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d|rules|src|test|units))'
-    if ! git diff $(git merge-base master pr) --name-only | grep -E "$SCOPE_RX" ; then
+    if ! git diff "$(git merge-base master pr)" --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
@@ -51,4 +51,4 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 #./agent-control.py --no-index --vagrant arch-sanitizers-gcc $ARGS
-./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang $ARGS
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang "${ARGS[@]}"

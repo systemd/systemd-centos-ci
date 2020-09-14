@@ -12,16 +12,16 @@
 # curl -q -o runner.sh https://../systemd-rhel7-pr-build.sh
 # chmod +x runner.sh
 # ./runner.sh
-ARGS=
-
-set -e
+set -eu
 set -o pipefail
 
-if [[ "$ghprbPullId" ]]; then
-    ARGS="$ARGS --pr $ghprbPullId "
+ARGS=()
+
+if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
+    ARGS+=(--pr "$ghprbPullId")
 fi
 
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --rhel 7 $ARGS
+./agent-control.py --rhel 7 "${ARGS[@]}"

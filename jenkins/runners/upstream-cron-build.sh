@@ -12,7 +12,7 @@
 # curl -q -o runner.sh https://../systemd-cron-build.sh
 # chmod +x runner.sh
 # ./runner.sh
-set -e
+set -eu
 set -o pipefail
 
 at_exit() {
@@ -29,10 +29,10 @@ at_exit() {
 
 trap at_exit EXIT
 
-ARGS=
+ARGS=()
 
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc $ARGS
-#./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang $ARGS
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc "${ARGS[@]}"
+#./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang "${ARGS[@]}"

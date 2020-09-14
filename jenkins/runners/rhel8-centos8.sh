@@ -12,11 +12,11 @@
 # curl -q -o runner.sh https://../systemd-rhel8-pr-build.sh
 # chmod +x runner.sh
 # ./runner.sh
-ARGS=
-TARGET_BRANCH="${ghprbTargetBranch:-master}"
-
-set -e
+set -eu
 set -o pipefail
+
+ARGS=()
+TARGET_BRANCH="${ghprbTargetBranch:-master}"
 
 at_exit() {
     # Correctly collect artifacts from all cron jobs and generate a nice
@@ -32,19 +32,19 @@ at_exit() {
 
 trap at_exit EXIT
 
-if [[ "$ghprbPullId" ]]; then
-    ARGS="$ARGS --pr $ghprbPullId "
+if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
+    ARGS+=(--pr "$ghprbPullId")
 fi
 
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # RHEL 8 job with legacy cgroup hierarchy
-./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h legacy" $ARGS
+./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h legacy" "${ARGS[@]}"
 
 # RHEL 8 supports unified cgroups since RHEL 8.2, so ignore RHEL 8.0 and
 # RHEL 8.1 branches
 if [[ "$TARGET_BRANCH" != "rhel-8.0.0" && "$TARGET_BRANCH" != "rhel-8.1.0" ]]; then
     # RHEL 8 job with unified cgroup hierarchy
-    ./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h unified" $ARGS
+    ./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h unified" "${ARGS[@]}"
 fi
