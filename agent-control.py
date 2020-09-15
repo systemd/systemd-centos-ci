@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 from __future__ import print_function, with_statement
+from collections import OrderedDict
 import argparse
 import json
 import logging
@@ -13,7 +14,6 @@ import requests
 import signal
 
 API_BASE = "http://admin.ci.centos.org:8080"
-DUFFY_KEY_FILE = "/home/systemd/duffy.key"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
 
@@ -37,7 +37,7 @@ class AgentControl(object):
         if self._node is not None and "ssid" in self._node:
             self.free_session(self._node["ssid"])
 
-    def _execute_api_command(self, endpoint, payload={}):
+    def _execute_api_command(self, endpoint, payload={}, include_api_key=True):
         """Execute a Duffy command
 
         See also: https://wiki.centos.org/QaWiki/CI/Duffy
@@ -48,20 +48,23 @@ class AgentControl(object):
             API endpoint to use, including a leading slash (e.g. /Inventory)
         payload : dict
             A dictionary of arguments for given request
+        include_api_key: bool (default: True)
+            If True, includes the API key in the request
 
         Returns:
         --------
         Server response as a stringified JSON
         """
         url = "{}{}".format(API_BASE, endpoint)
-        payload["key"] = self._duffy_key
+        if include_api_key:
+            payload["key"] = self._duffy_key
         logging.info("Duffy request URL: {}".format(url))
 
         r = requests.get(url, params=payload)
 
         return r.text
 
-    def allocate_node(self, version, architecture):
+    def allocate_node(self, version, architecture, flavor=None):
         """Allocate a node with specified CentOS version and architecture
 
         Params:
@@ -69,7 +72,9 @@ class AgentControl(object):
         version : str/int
             CentOS version (e.g. 7)
         architecture: string
-            Desired node architecture (e.g. x86_64)
+            Desired node architecture (e.g. x86_64, ppc64le, ...)
+        flavor: string (Default: None)
+            OpenNebula VM flavor, if requesting a VM (e.g. tiny, medium, ...)
 
         Returns:
         --------
@@ -81,7 +86,11 @@ class AgentControl(object):
             "arch" : architecture
         }
 
-        logging.info("Attempting to allocate a node ({} {})".format(version, architecture))
+        if flavor:
+            payload["flavor"] = flavor
+
+        logging.info("Attempting to allocate a node (version: {}, arch: {}, flavor: {})".format(
+                     version, architecture, flavor if flavor else "n/a"))
 
         # When the machine pool runs out of pre-installed machines, Duffy returns
         # an error (Insufficient Nodes in READY State) which is not a valid
@@ -274,6 +283,34 @@ class AgentControl(object):
         res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
         logging.info(res)
 
+    def list_all_nodes(self):
+        """List all available nodes in the inventory"""
+        res = self._execute_api_command("/Inventory", include_api_key=False)
+        jroot = json.loads(res)
+
+        # Schema taken from https://github.com/CentOS/duffy/blob/master/duffy/api_v1/views.py#L172
+        schema = OrderedDict([
+            ("ID",       "{:>3}"),
+            ("hostname", "{:10}"),
+            ("ip",       "{:15}"),
+            ("chassis",  "{:8}"),
+            ("ucnt",     "{:4}"),  # usage count
+            ("state",    "{:16}"),
+            ("comment",  "{:8}"),
+            ("dist",     "{:3}"),
+            ("release",  "{:3}"),
+            ("ver",      "{:10}"),
+            ("arch",     "{:10}"),
+            ("pool",     "{:4}"),
+            ("cons",     "{:5}"), # console port
+            ("flavor",   "{:8}")
+        ])
+        format_str = " ".join(schema.values())
+
+        logging.info(format_str.format(*schema.keys()))
+        for node in jroot:
+            logging.info(format_str.format(*node[0:14]))
+
     def reboot_node(self, node):
         """Reboot a node
 
@@ -354,13 +391,15 @@ if __name__ == "__main__":
             help="Commit/tag/branch to checkout")
     parser.add_argument("--ci-pr", metavar="PR",
             help="Pull request ID to check out (systemd-centos-ci repository)")
+    parser.add_argument("--flavor", default=None,
+            help="VM flavor (not applicable to all supported architectures)")
     parser.add_argument("--free-all-nodes", action="store_const", const=True,
             help="Free all currently provisioned nodes")
     parser.add_argument("--free-session", metavar="SESSION_ID",
             help="Return nodes from a session back to the pool")
     parser.add_argument("--keep", action="store_const", const=True,
             help="Do not kill provisioned build host")
-    parser.add_argument("--list-nodes", action="store_const", const=True,
+    parser.add_argument("--list-nodes", choices=["owned", "all"], nargs="?", type=str, const="owned",
             help="List currectly allocated nodes")
     parser.add_argument("--no-index", action="store_const", const=True,
             help="Don't generate the artifact HTML page")
@@ -390,7 +429,11 @@ if __name__ == "__main__":
         sys.exit(0)
 
     if args.list_nodes:
-        ac.allocated_nodes(verbose=True)
+        if args.list_nodes == "owned":
+            ac.allocated_nodes(verbose=True)
+        else:
+            ac.list_all_nodes()
+
         sys.exit(0)
 
     rc = 0
@@ -399,7 +442,7 @@ if __name__ == "__main__":
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGHUP, handle_signal)
 
-        node, ssid = ac.allocate_node(args.version, args.arch)
+        node, ssid = ac.allocate_node(args.version, args.arch, args.flavor)
 
         if node is None or ssid is None:
             logging.critical("Can't continue without a valid node")
