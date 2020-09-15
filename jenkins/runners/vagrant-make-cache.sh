@@ -35,11 +35,11 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # Generate a new image with '-new' suffix
-./agent-control.py --version 8 --vagrant-sync "${ARGS:+${ARGS[@]}}"
+./agent-control.py --version 8 --vagrant-sync ${ARGS:+"${ARGS[@]}"}
 # Check if it doesn't break anything
-./agent-control.py --version 8 --no-index --vagrant arch-new "${ARGS:+${ARGS[@]}}"
-./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang-new "${ARGS:+${ARGS[@]}}"
-./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc-new "${ARGS:+${ARGS[@]}}"
+./agent-control.py --version 8 --no-index --vagrant arch-new ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang-new ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc-new ${ARGS:+"${ARGS[@]}"}
 # Overwrite the production image with the just tested one. Since the CentOS CI
 # artifact server supports only rsync protocol, use a single-purpose script
 # to do that

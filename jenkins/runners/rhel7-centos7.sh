@@ -24,4 +24,4 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --rhel 7 "${ARGS:+${ARGS[@]}}"
+./agent-control.py --rhel 7 ${ARGS:+"${ARGS[@]}"}
