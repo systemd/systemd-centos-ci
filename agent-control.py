@@ -13,7 +13,6 @@ import requests
 import signal
 
 API_BASE = "http://admin.ci.centos.org:8080"
-DUFFY_KEY_FILE = "/home/systemd/duffy.key"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
 
