@@ -400,7 +400,7 @@ if __name__ == "__main__":
     parser.add_argument("--keep", action="store_const", const=True,
             help="Do not kill provisioned build host")
     parser.add_argument("--list-nodes", choices=["owned", "all"], nargs="?", type=str, const="owned",
-            help="List currectly allocated nodes")
+            help="List currently allocated nodes (owned) or all nodes in the inventory (all)")
     parser.add_argument("--no-index", action="store_const", const=True,
             help="Don't generate the artifact HTML page")
     parser.add_argument("--pr",
