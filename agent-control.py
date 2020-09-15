@@ -60,7 +60,7 @@ class AgentControl(object):
 
         return r.text
 
-    def allocate_node(self, version, architecture):
+    def allocate_node(self, version, architecture, flavor=None):
         """Allocate a node with specified CentOS version and architecture
 
         Params:
@@ -68,7 +68,9 @@ class AgentControl(object):
         version : str/int
             CentOS version (e.g. 7)
         architecture: string
-            Desired node architecture (e.g. x86_64)
+            Desired node architecture (e.g. x86_64, ppc64le, ...)
+        flavor: string (Default: None)
+            OpenNebula VM flavor, if requesting a VM (e.g. tiny, medium, ...)
 
         Returns:
         --------
@@ -80,7 +82,11 @@ class AgentControl(object):
             "arch" : architecture
         }
 
-        logging.info("Attempting to allocate a node ({} {})".format(version, architecture))
+        if flavor:
+            payload["flavor"] = flavor
+
+        logging.info("Attempting to allocate a node (version: {}, arch: {}, flavor: {})".format(
+                     version, architecture, flavor if flavor else "n/a"))
 
         # When the machine pool runs out of pre-installed machines, Duffy returns
         # an error (Insufficient Nodes in READY State) which is not a valid
@@ -353,6 +359,8 @@ if __name__ == "__main__":
             help="Commit/tag/branch to checkout")
     parser.add_argument("--ci-pr", metavar="PR",
             help="Pull request ID to check out (systemd-centos-ci repository)")
+    parser.add_argument("--flavor", default=None,
+            help="VM flavor (not applicable to all supported architectures)")
     parser.add_argument("--free-all-nodes", action="store_const", const=True,
             help="Free all currently provisioned nodes")
     parser.add_argument("--free-session", metavar="SESSION_ID",
@@ -398,7 +406,7 @@ if __name__ == "__main__":
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGHUP, handle_signal)
 
-        node, ssid = ac.allocate_node(args.version, args.arch)
+        node, ssid = ac.allocate_node(args.version, args.arch, args.flavor)
 
         if node is None or ssid is None:
             logging.critical("Can't continue without a valid node")
