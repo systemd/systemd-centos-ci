@@ -387,6 +387,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--arch", default="x86_64",
             help="Architecture")
+    parser.add_argument("--bootstrap-args", metavar="ARGUMENTS", type=str, default="",
+            help="Additional optional arguments passed to the --bootstrap-script")
+    parser.add_argument("--bootstrap-script", metavar="SCRIPT", type=str, default="bootstrap.sh",
+            help="Script which prepares the baremetal machine")
     parser.add_argument("--branch",
             help="Commit/tag/branch to checkout")
     parser.add_argument("--ci-pr", metavar="PR",
@@ -405,10 +409,8 @@ if __name__ == "__main__":
             help="Don't generate the artifact HTML page")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
-    parser.add_argument("--rhel", metavar="VERSION", type=int,
-            help="Use RHEL downstream systemd repo")
-    parser.add_argument("--rhel-bootstrap-args", metavar="ARGS", type=str,
-            help="Pass optional arguments to the RHEL bootstrap script")
+    parser.add_argument("--testsuite-script", metavar="SCRIPT", type=str, default="testsuite.sh",
+            help="Script which runs tests on the bootstrapped machine")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", action="store_const", const=True,
@@ -496,19 +498,13 @@ if __name__ == "__main__":
         else:
             # Run tests directly on the provisioned machine
             logging.info("PHASE 2: Bootstrap (ref: {})".format(remote_ref))
-            if args.rhel is not None:
-                command = "{}/agent/bootstrap-rhel{}.sh -r '{}' {}".format(GITHUB_CI_REPO, args.rhel, remote_ref, args.rhel_bootstrap_args)
-            else:
-                command = "{}/agent/bootstrap.sh {}".format(GITHUB_CI_REPO, remote_ref)
+            command = "{}/agent/{} -r '{}' {}".format(GITHUB_CI_REPO, args.bootstrap_script, remote_ref, args.bootstrap_args)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
             ac.reboot_node(node)
 
             logging.info("PHASE 3: Upstream testsuite")
-            if args.rhel is not None:
-                command = "{}/agent/testsuite-rhel{}.sh".format(GITHUB_CI_REPO, args.rhel)
-            else:
-                command = "{}/agent/testsuite.sh".format(GITHUB_CI_REPO)
+            command = "{}/agent/{}".format(GITHUB_CI_REPO, args.testsuite_script)
             ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
 
     except SignalException:
