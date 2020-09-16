@@ -40,11 +40,19 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # RHEL 8 job with legacy cgroup hierarchy
-./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h legacy" ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --no-index --version 8 \
+                   --bootstrap-script="bootstrap-rhel8.sh" \
+                   --bootstrap-args="-h legacy" \
+                   --testsuite-script="testsuite-rhel8.sh" \
+                   ${ARGS:+"${ARGS[@]}"}
 
 # RHEL 8 supports unified cgroups since RHEL 8.2, so ignore RHEL 8.0 and
 # RHEL 8.1 branches
 if [[ "$TARGET_BRANCH" != "rhel-8.0.0" && "$TARGET_BRANCH" != "rhel-8.1.0" ]]; then
     # RHEL 8 job with unified cgroup hierarchy
-    ./agent-control.py --no-index --version 8 --rhel 8 --rhel-bootstrap-args="-h unified" ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --no-index --version 8 \
+                       --bootstrap-script="bootstrap-rhel8.sh" \
+                       --bootstrap-args="-h unified" \
+                       --testsuite-script="testsuite-rhel8.sh" \
+                       ${ARGS:+"${ARGS[@]}"}
 fi
