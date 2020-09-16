@@ -409,6 +409,8 @@ if __name__ == "__main__":
             help="Don't generate the artifact HTML page")
     parser.add_argument("--pr",
             help="Pull request ID to check out (systemd repository)")
+    parser.add_argument("--skip-reboot", action="store_const", const=True,
+            help="Skip reboot between bootstrap and test phases (on baremetal machines)")
     parser.add_argument("--testsuite-script", metavar="SCRIPT", type=str, default="testsuite.sh",
             help="Script which runs tests on the bootstrapped machine")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
@@ -501,7 +503,8 @@ if __name__ == "__main__":
             command = "{}/agent/{} -r '{}' {}".format(GITHUB_CI_REPO, args.bootstrap_script, remote_ref, args.bootstrap_args)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
-            ac.reboot_node(node)
+            if not args.skip_reboot:
+                ac.reboot_node(node)
 
             logging.info("PHASE 3: Upstream testsuite")
             command = "{}/agent/{}".format(GITHUB_CI_REPO, args.testsuite_script)
