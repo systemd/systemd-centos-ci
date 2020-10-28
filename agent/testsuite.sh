@@ -48,6 +48,7 @@ if ! git diff --quiet master HEAD && ! git diff $(git merge-base master HEAD) --
     exit $FAILED
 fi
 
+if false; then
 ## Integration test suite ##
 SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
@@ -141,15 +142,16 @@ for t in test/TEST-??-*; do
     # Clean the no longer necessary test artifacts
     make -C "$t" clean-again > /dev/null
 done
+fi
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
+    #"test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
+    timeout -k 60s 60m ./$t
 done
 
 # Collect coredumps using the coredumpctl utility, if any
