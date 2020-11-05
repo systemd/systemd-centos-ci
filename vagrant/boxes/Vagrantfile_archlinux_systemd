@@ -58,16 +58,7 @@ Vagrant.configure("2") do |config|
     pacman-key --populate archlinux
     pacman --noconfirm -S archlinux-keyring
     # Upgrade the system
-    #pacman --noconfirm -Syu
-
-    # TEMPORARY WORKAROUND #
-    # Pin all repositories to a snapshot from 2020-08-14 to stick with a system
-    # with kernel 5.7.12
-    # See https://bugs.archlinux.org/task/67649 for more details
-    # Uncomment the pacman line above when dropping this workaround
-    echo 'Server=https://archive.archlinux.org/repos/2020/08/14/$repo/os/$arch' > /etc/pacman.d/mirrorlist
-    pacman --noconfirm -Syyuu
-
+    pacman --noconfirm -Syu
     # Install build dependencies
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel acl audit bash-completion clang compiler-rt docbook-xsl ethtool \
