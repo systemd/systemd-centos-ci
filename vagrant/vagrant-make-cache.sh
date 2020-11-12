@@ -21,6 +21,26 @@ DUFFY_KEY_FILE="/duffy.key"
 VAGRANT_ROOT="$(dirname $(readlink -f $0))"
 VAGRANTFILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
 
+if [[ ! -f "$VAGRANTFILE" ]]; then
+    echo >&2 "Couldn't find Vagrantfile '$VAGRANTFILE'"
+    exit 1
+fi
+
+# The URL for Fedora Rawhide Vagrant box changes over time, so let's attempt
+# to get the latest one
+if [[ "${VAGRANTFILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
+    echo "Fetching Vagrant name URL for Fedora Rawhide"
+
+    if ! BOX_NAME="$(curl -s https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/ | grep -Po -m1 '(?<=")Fedora.*?vagrant-libvirt.box(?=")')"; then
+        echo >&2 "Failed to fetch the box name for Fedora Rawhide (got: $BOX_NAME)"
+        exit 1
+    fi
+
+    echo "Using '$BOX_NAME' as the Fedora Rawhide box name"
+
+    sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANTFILE"
+fi
+
 # Disable SELinux on the test hosts and avoid false positives.
 sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 
