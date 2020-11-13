@@ -71,8 +71,7 @@ if setenforce 0; then
 fi
 
 # Compile systemd
-#   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
-#     installed above
+#   - slow-tests=true: enable slow tests
 #   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (

@@ -108,8 +108,8 @@ fi
 systemctl disable firewalld
 
 # Compile systemd
-#   - slow-tests=true: enable slow tests => enables fuzzy tests using libasan
-#     installed above
+#   - slow-tests=true: enables slow tests
+#   - fuzz-tests=true: enables fuzzy tests using libasan installed above
 #   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
@@ -121,6 +121,7 @@ systemctl disable firewalld
                 --werror \
                 -Dhomed=false \
                 -Dslow-tests=true \
+                -Dfuzz-tests=true \
                 -Dtests=unsafe \
                 -Dinstall-tests=true \
                 -Ddbuspolicydir=/etc/dbus-1/system.d \
