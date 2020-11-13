@@ -37,6 +37,7 @@ meson "$BUILD_DIR" \
       -Ddebug=true \
       --optimization=g \
       -Dslow-tests=true \
+      -Dfuzz-tests=true \
       -Dtests=unsafe \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
