@@ -75,6 +75,14 @@ for t in test/TEST-??-*; do
         continue
     fi
 
+    # FIXME
+    # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
+    # QEMU without KVM, so let's just run the nspawn part of the test until
+    # the nested KVM issue is resolved
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        export TEST_NO_QEMU=1
+    fi
+
     ## Configure test environment
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
