@@ -80,8 +80,8 @@ for t in test/TEST-??-*; do
     # can run them in parallel
     export TEST_PARALLELIZE=1
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=900
-    export NSPAWN_TIMEOUT=900
+    export QEMU_TIMEOUT=1500
+    export NSPAWN_TIMEOUT=1500
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -113,8 +113,8 @@ SERIALIZED_TASKS=(
 for t in "${SERIALIZED_TASKS[@]}"; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
+    export QEMU_TIMEOUT=1500
+    export NSPAWN_TIMEOUT=1500
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)

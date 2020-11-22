@@ -15,7 +15,11 @@ command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
 # fine with running tests without nested KVM
-if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_intel|kvm_amd)')"; then
+#
+# FIXME: temporarily disable nested KVM on AMD hosts
+#   - nested KVM on AMD CPUs seems to be broken in kernel 5.8.x and 5.9.x
+#   - https://bugzilla.kernel.org/show_bug.cgi?id=209867
+if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo 'kvm_intel')"; then
     echo "[vagrant-setup] Detected KVM module: $KVM_MODULE_NAME"
     # Attempt to reload the detected KVM module with nested=1 parameter
     if modprobe -v -r $KVM_MODULE_NAME && modprobe -v $KVM_MODULE_NAME nested=1; then
