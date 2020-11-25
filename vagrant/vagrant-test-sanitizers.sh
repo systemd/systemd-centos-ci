@@ -99,6 +99,7 @@ export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
 # Enforce nested KVM
 export TEST_NESTED_KVM=yes
+export KERNEL_APPEND=debug
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then
@@ -134,9 +135,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     ## be somewhat sure the 'base' systemd components work).
     INTEGRATION_TESTS=(
-        test/TEST-04-JOURNAL        # systemd-journald
-        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
-        test/TEST-46-HOMED          # systemd-homed & friends
+#        test/TEST-04-JOURNAL        # systemd-journald
+#        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+#        test/TEST-46-HOMED          # systemd-homed & friends
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
@@ -176,11 +177,11 @@ systemctl reload dbus.service
 systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
-exectask "systemd-networkd_sanitizers" \
-            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+#exectask "systemd-networkd_sanitizers" \
+#            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
-exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
-exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
+#exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+#exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
