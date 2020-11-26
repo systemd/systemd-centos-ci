@@ -67,6 +67,7 @@ SKIP_LIST=(
     "test/TEST-10-ISSUE-2467"       # Serialized below
     "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
     "test/TEST-25-IMPORT"           # Serialized below
+    "test/TEST-56-OOMD"             # FIXME
 )
 
 for t in test/TEST-??-*; do
@@ -75,13 +76,21 @@ for t in test/TEST-??-*; do
         continue
     fi
 
+    # FIXME
+    # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
+    # QEMU without KVM, so let's just run the nspawn part of the test until
+    # the nested KVM issue is resolved
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        export TEST_NO_QEMU=1
+    fi
+
     ## Configure test environment
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
     export TEST_PARALLELIZE=1
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=900
-    export NSPAWN_TIMEOUT=900
+    export QEMU_TIMEOUT=1500
+    export NSPAWN_TIMEOUT=1500
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -113,8 +122,8 @@ SERIALIZED_TASKS=(
 for t in "${SERIALIZED_TASKS[@]}"; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
+    export QEMU_TIMEOUT=1500
+    export NSPAWN_TIMEOUT=1500
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)

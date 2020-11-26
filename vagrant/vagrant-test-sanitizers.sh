@@ -90,8 +90,8 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-export QEMU_TIMEOUT=1200
-export NSPAWN_TIMEOUT=1200
+export QEMU_TIMEOUT=1500
+export NSPAWN_TIMEOUT=1500
 # Set QEMU_SMP to speed things up
 export QEMU_SMP=$(nproc)
 # Arch Linux requires booting with initrd, as all commonly used filesystems
@@ -142,6 +142,14 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+
+        # FIXME
+        # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
+        # QEMU without KVM, so let's just run the nspawn part of the test until
+        # the nested KVM issue is resolved
+        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+            export TEST_NO_QEMU=1
+        fi
 
         rm -fr "$TESTDIR"
         mkdir -p "$TESTDIR"
