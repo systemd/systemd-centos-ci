@@ -73,7 +73,6 @@ SKIP_LIST=(
     "test/TEST-10-ISSUE-2467"       # Serialized below
     "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
     "test/TEST-25-IMPORT"           # Serialized below
-    "test/TEST-56-OOMD"             # FIXME
 )
 is_nested_kvm_enabled && NESTED_KVM_ENABLED=y || NESTED_KVM_ENABLED=n
 
