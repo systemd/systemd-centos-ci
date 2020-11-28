@@ -19,7 +19,7 @@ EC=0
 # authenticate against the CentOS CI rsync server
 DUFFY_KEY_FILE="/duffy.key"
 VAGRANT_ROOT="$(dirname $(readlink -f $0))"
-VAGRANTFILE="$VAGRANT_ROOT/boxes/Vagrantfile_archlinux_systemd"
+VAGRANTFILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
 
 # Disable SELinux on the test hosts and avoid false positives.
 sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0

@@ -35,7 +35,7 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # Generate a new image with '-new' suffix
-./agent-control.py --version 8 --vagrant-sync ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --version 8 --vagrant-sync Vagrantfile_archlinux_systemd ${ARGS:+"${ARGS[@]}"}
 # Check if it doesn't break anything
 ./agent-control.py --version 8 --no-index --vagrant arch-new ${ARGS:+"${ARGS[@]}"}
 ./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang-new ${ARGS:+"${ARGS[@]}"}

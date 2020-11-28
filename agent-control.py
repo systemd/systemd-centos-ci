@@ -413,7 +413,7 @@ if __name__ == "__main__":
             help="Script which runs tests on the bootstrapped machine")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
-    parser.add_argument("--vagrant-sync", action="store_const", const=True,
+    parser.add_argument("--vagrant-sync", metavar="VAGRANTFILE", type=str, default="",
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
     # 'version' must be a string, as we want to support "8-stream" as well
     parser.add_argument("--version", default="7",
@@ -488,7 +488,7 @@ if __name__ == "__main__":
             ac.upload_file(node, key_file.name, "/duffy.key")
             key_file.close()
 
-            command = "{}/vagrant/vagrant-make-cache.sh".format(GITHUB_CI_REPO)
+            command = "{}/vagrant/vagrant-make-cache.sh '{}'".format(GITHUB_CI_REPO, args.vagrant_sync)
             ac.execute_remote_command(node, command)
         elif args.vagrant:
             # Setup Vagrant and run the tests inside VM
