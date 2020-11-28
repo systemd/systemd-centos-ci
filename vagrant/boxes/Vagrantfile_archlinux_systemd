@@ -62,7 +62,7 @@ Vagrant.configure("2") do |config|
     # Install build dependencies
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel acl audit bash-completion clang compiler-rt docbook-xsl ethtool \
-        git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libgcrypt libidn2 \
+        git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libfido2 libgcrypt libidn2 \
         libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lz4 meson ninja \
         p11-kit pam pcre2 python-lxml quota-tools xz
     # Install test dependencies
