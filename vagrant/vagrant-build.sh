@@ -29,6 +29,7 @@ set -o pipefail
 VAGRANT_ROOT="$(dirname $(readlink -f $0))"
 VAGRANT_FILES="$VAGRANT_ROOT/vagrantfiles"
 VAGRANT_BOOTSTRAP_SCRIPTS="$VAGRANT_ROOT/bootstrap_scripts"
+VAGRANT_TEST_SCRIPTS="$VAGRANT_ROOT/test_scripts"
 USING_SANITIZERS=false
 DISTRO_STRING="${1,,}"
 # Takes the first part of the hyphen-delimited distro string as a distro name
@@ -60,6 +61,8 @@ VAGRANT_FILE="$VAGRANT_FILES/Vagrantfile_$DISTRO"
 # different scripts instead of having multiple Vagrantfiles with inlined
 # scripts
 BOOTSTRAP_SCRIPT="${VAGRANT_BOOTSTRAP_SCRIPT:-$VAGRANT_BOOTSTRAP_SCRIPTS/$DISTRO_STRING.sh}"
+# Pick the respective test script for given distro string
+TEST_SCRIPT="${VAGRANT_TEST_SCRIPT:-$VAGRANT_TEST_SCRIPTS/test-$DISTRO_STRING.sh}"
 
 if [[ ! -f $VAGRANT_FILE ]]; then
     echo >&2 "No Vagrantfile found for distro '$DISTRO'"
@@ -68,6 +71,11 @@ fi
 
 if [[ ! -f $BOOTSTRAP_SCRIPT ]]; then
     echo >&2 "Bootstrap script '$BOOTSTRAP_SCRIPT' not found"
+    exit 1
+fi
+
+if [[ ! -f $TEST_SCRIPT ]]; then
+    echo >&2 "Test script '$TEST_SCRIPT' not found"
     exit 1
 fi
 
@@ -98,8 +106,10 @@ cp "$VAGRANT_FILE" "$TEST_DIR/Vagrantfile"
 cp "$VAGRANT_ROOT/../common/task-control.sh" "$TEST_DIR/task-control.sh"
 cp "$VAGRANT_ROOT/../common/utils.sh" "$TEST_DIR/utils.sh"
 pushd "$TEST_DIR" || { echo >&2 "Can't pushd to $TEST_DIR"; exit 1; }
-# Copy the test scripts to the test dir
-cp $VAGRANT_ROOT/vagrant-test*.sh "$TEST_DIR/"
+# Copy the test script to the test dir
+# Note: -L is necessary, since some test script may be symlinks, to avoid
+#       code duplication
+cp -L "$TEST_SCRIPT" "$TEST_DIR/"
 
 # Provision the machine
 vagrant up --no-tty --provider=libvirt
@@ -110,7 +120,7 @@ if $USING_SANITIZERS; then
     # Skip the reboot/reload when running with sanitizers, as it in most cases
     # causes boot to timeout or die completely
     # Run tests with sanitizers
-    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test-sanitizers.sh $DISTRO_STRING"
+    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
     SSH_EC=$?
 else
     # Reboot the VM to "apply" the new systemd
@@ -128,7 +138,7 @@ else
             ;;
     esac
     # Run tests
-    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/vagrant-test.sh $DISTRO_STRING"
+    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
     SSH_EC=$?
 fi
 
