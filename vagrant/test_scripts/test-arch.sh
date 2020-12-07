@@ -75,6 +75,7 @@ SKIP_LIST=(
     "test/TEST-25-IMPORT"           # Serialized below
     "test/TEST-56-OOMD"             # FIXME
 )
+is_nested_kvm_enabled && NESTED_KVM_ENABLED=y || NESTED_KVM_ENABLED=n
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
@@ -83,10 +84,10 @@ for t in test/TEST-??-*; do
     fi
 
     # FIXME
-    # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
-    # QEMU without KVM, so let's just run the nspawn part of the test until
-    # the nested KVM issue is resolved
-    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+    # TEST-02-UNITTESTS and TEST-13-NSPAWN-SMOKE cause spurious CPU soft lockups
+    # when run under  QEMU without KVM. Let's skip the QEMU part of these tests
+    # on affected systems to make the CI less flaky
+    if [[ "$NESTED_KVM_ENABLED" == "n" && "$t" =~ ^test/(TEST-02-UNITTESTS|TEST-13-NSPAWN-SMOKE)$ ]]; then
         export TEST_NO_QEMU=1
     fi
 

@@ -297,3 +297,26 @@ print_cgroup_hierarchy() {
         echo "unknown"
     fi
 }
+
+is_nested_kvm_enabled() {
+    local KVM_MODULE_NAME KVM_MODULE_NESTED
+
+    if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_amd|kvm_intel)')"; then
+        _log "Detected KVM module: $KVM_MODULE_NAME"
+
+        KVM_MODULE_NESTED="$(< "/sys/module/$KVM_MODULE_NAME/parameters/nested")" || :
+        _log "/sys/module/$KVM_MODULE_NAME/parameters/nested: $KVM_MODULE_NESTED"
+
+        if [[ "$KVM_MODULE_NESTED" =~ (1|Y) ]]; then
+            _log "Nested KVM is enabled"
+            return 0
+        else
+            _log "Nested KVM is disabled"
+            return 1
+        fi
+    else
+        _log "No KVM module detected"
+    fi
+
+    return 1
+}
