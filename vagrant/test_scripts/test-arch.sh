@@ -86,6 +86,7 @@ for t in test/TEST-??-*; do
     # TEST-02-UNITTESTS and TEST-13-NSPAWN-SMOKE cause spurious CPU soft lockups
     # when run under  QEMU without KVM. Let's skip the QEMU part of these tests
     # on affected systems to make the CI less flaky
+    unset TEST_NO_QEMU
     if [[ "$NESTED_KVM_ENABLED" == "n" && "$t" =~ ^test/(TEST-02-UNITTESTS|TEST-13-NSPAWN-SMOKE)$ ]]; then
         export TEST_NO_QEMU=1
     fi
