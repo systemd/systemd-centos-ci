@@ -83,6 +83,25 @@ fi
     popd
     rm -fr "$BUILD_DIR"
 )
+# Same as above, but for libssh
+# FIXME: in the time of writing this workaround the latest libssh SRPM wasn't
+#        present in the source repos, thus the specific version
+(
+    BUILD_DIR="$(mktemp -d)"
+    pushd "$BUILD_DIR"
+    $PKG_MAN download --source libssh-0.9.0-4.el8
+    $PKG_MAN -y --enablerepo powertools builddep libssh*.src.rpm
+    rpm2cpio libssh-*.src.rpm | cpio -imdV
+    tar xf libssh-*.tar.xz
+    cd "$(find . -maxdepth 1 -name "libssh-*" -type d)"
+    mkdir build
+    cd build
+    cmake .. -DOPENSSL_ROOT_DIR=/opt/vagrant/embedded/ -DCMAKE_PREFIX_PATH=/opt/vagrant/embedded/
+    make -j $(($(nproc) * 2))
+    cp -a lib/libssh* /opt/vagrant/embedded/lib64/
+    popd
+    rm -fr "$BUILD_DIR"
+)
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
