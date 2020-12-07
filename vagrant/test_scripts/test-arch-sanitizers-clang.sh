@@ -126,6 +126,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
         # QEMU without KVM, so let's just run the nspawn part of the test
         # on the affected systems
+        unset TEST_NO_QEMU
         if [[ "$NESTED_KVM_ENABLED" == "n" && "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
             export TEST_NO_QEMU=1
         fi
