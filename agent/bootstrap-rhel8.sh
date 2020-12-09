@@ -54,7 +54,7 @@ dnf config-manager --enable epel
 # Upgrade the machine to get the most recent environment
 dnf -y upgrade
 # Install systemd's build dependencies
-dnf -y --enablerepo "PowerTools" builddep systemd
+dnf -y --enablerepo "powertools" builddep systemd
 
 # Fetch the systemd repo
 test -e systemd && rm -rf systemd
