@@ -182,6 +182,12 @@ fi
     rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
+# The new systemd binary boots, so let's issue a daemon-reexec to use it.
+# This is necessary, since at least once we got into a situation where
+# the old systemd binary was incompatible with the unit files on disk and
+# prevented the system from reboot
+SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
