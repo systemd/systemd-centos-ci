@@ -164,6 +164,12 @@ ninja-build -C build install
     rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
+# The new systemd binary boots, so let's issue a daemon-reexec to use it.
+# This is necessary, since at least once we got into a situation where
+# the old systemd binary was incompatible with the unit files on disk and
+# prevented the system from reboot
+SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+
 # Readahead is dead in systemd upstream
 rm -f /usr/lib/systemd/system/systemd-readahead-done.service
 popd
