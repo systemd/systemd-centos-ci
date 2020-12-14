@@ -187,6 +187,7 @@ fi
 # the old systemd binary was incompatible with the unit files on disk and
 # prevented the system from reboot
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
