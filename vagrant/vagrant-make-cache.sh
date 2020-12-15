@@ -45,7 +45,7 @@ fi
 sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 
 # Install vagrant if not already installed
-$VAGRANT_ROOT/vagrant-setup.sh
+"$VAGRANT_ROOT"/vagrant-setup.sh
 
 # Stop firewalld
 systemctl stop firewalld
@@ -62,6 +62,7 @@ export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 cp "$VAGRANTFILE" Vagrantfile
 vagrant up --no-tty --provider=libvirt
 # Register a cleanup handler
+# shellcheck disable=SC2064
 trap "cd $PWD && vagrant destroy -f && cd / && rm -fr $TEMP_DIR" EXIT
 
 timeout 5m vagrant reload
@@ -95,7 +96,7 @@ export LIBGUESTFS_BACKEND=direct
 # which contains the box name, but all slashes are replaced by
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANTFILE")"
-vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}/*/libvirt/Vagrantfile
+vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
 
 # Check if we can build a usable VM from the just packaged box
 (

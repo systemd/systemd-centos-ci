@@ -22,10 +22,10 @@ command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
 if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo 'kvm_intel')"; then
     echo "[vagrant-setup] Detected KVM module: $KVM_MODULE_NAME"
     # Attempt to reload the detected KVM module with nested=1 parameter
-    if modprobe -v -r $KVM_MODULE_NAME && modprobe -v $KVM_MODULE_NAME nested=1; then
+    if modprobe -v -r "$KVM_MODULE_NAME" && modprobe -v "$KVM_MODULE_NAME" nested=1; then
         # The reload was successful, check if the module's 'nested' parameter
         # confirms that nested KVM is indeed enabled
-        KVM_MODULE_NESTED="$(< /sys/module/$KVM_MODULE_NAME/parameters/nested)" || :
+        KVM_MODULE_NESTED="$(< "/sys/module/$KVM_MODULE_NAME/parameters/nested")" || :
         echo "[vagrant-setup] /sys/module/$KVM_MODULE_NAME/parameters/nested: $KVM_MODULE_NESTED"
 
         if [[ "$KVM_MODULE_NESTED" =~ (1|Y) ]]; then
