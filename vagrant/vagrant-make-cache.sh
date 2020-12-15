@@ -19,16 +19,16 @@ EC=0
 # authenticate against the CentOS CI rsync server
 DUFFY_KEY_FILE="/duffy.key"
 VAGRANT_ROOT="$(dirname $(readlink -f $0))"
-VAGRANTFILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
+VAGRANT_FILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
 
-if [[ ! -f "$VAGRANTFILE" ]]; then
-    echo >&2 "Couldn't find Vagrantfile '$VAGRANTFILE'"
+if [[ ! -f "$VAGRANT_FILE" ]]; then
+    echo >&2 "Couldn't find Vagrantfile '$VAGRANT_FILE'"
     exit 1
 fi
 
 # The URL for Fedora Rawhide Vagrant box changes over time, so let's attempt
 # to get the latest one
-if [[ "${VAGRANTFILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
+if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Fetching Vagrant name URL for Fedora Rawhide"
 
     if ! BOX_NAME="$(curl -s https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/ | grep -Po -m1 '(?<=")Fedora.*?vagrant-libvirt.box(?=")')"; then
@@ -38,7 +38,7 @@ if [[ "${VAGRANTFILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
 
     echo "Using '$BOX_NAME' as the Fedora Rawhide box name"
 
-    sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANTFILE"
+    sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANT_FILE"
 fi
 
 # Disable SELinux on the test hosts and avoid false positives.
@@ -59,7 +59,7 @@ export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
 export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 
-cp "$VAGRANTFILE" Vagrantfile
+cp "$VAGRANT_FILE" Vagrantfile
 vagrant up --no-tty --provider=libvirt
 # Register a cleanup handler
 # shellcheck disable=SC2064
@@ -84,7 +84,7 @@ vagrant halt
 # with '-new' to avoid using it immediately in "production".
 # Output file example:
 #   boxes/Vagrantfile_archlinux_systemd => archlinux_systemd-new
-BOX_NAME="${VAGRANTFILE##*/Vagrantfile_}-new"
+BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
 # Workaround for `virt-sysprep` - work with the image via qemu directly
 # instead of using libvirt
 export LIBGUESTFS_BACKEND=direct
@@ -95,7 +95,7 @@ export LIBGUESTFS_BACKEND=direct
 # beautiful awk below), and then transform it to a path to the Vagrantfile,
 # which contains the box name, but all slashes are replaced by
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
-ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANTFILE")"
+ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANT_FILE")"
 vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
 
 # Check if we can build a usable VM from the just packaged box
