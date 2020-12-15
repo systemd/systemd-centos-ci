@@ -51,7 +51,8 @@ set +e
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that
     utils/artifacts-copy-file.sh vagrant_boxes/archlinux_systemd-new vagrant_boxes/archlinux_systemd
-) || EC=$((EC + 1))
+)
+[[ $? -ne 0 ]] && EC=$((EC + 1))
 
 (
     set -e
@@ -63,6 +64,7 @@ set +e
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that
     utils/artifacts-copy-file.sh vagrant_boxes/rawhide_selinux-new vagrant_boxes/rawhide_selinux
-) || EC=$((EC + 1))
+)
+[[ $? -ne 0 ]] && EC=$((EC + 1))
 
 exit $EC
