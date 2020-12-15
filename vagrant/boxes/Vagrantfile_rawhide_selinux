@@ -1,0 +1,48 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
+Vagrant.configure("2") do |config|
+  config.vm.define :rawhide_selinux
+  config.vm.box = "fedora-rawhide-cloud"
+  config.vm.box_url = "https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/BOX-NAME-PLACEHOLDER"
+  # Don't replace the original Vagrant's insecure key
+  config.ssh.insert_key = false
+
+  # Note: CentOS CI infra specific overrides - you may want to change them
+  #       to run the VM locally
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
+
+    # Pass through /dev/random from the host to the VM
+    libvirt.random :model => 'random'
+  end
+
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    set -e
+
+    # Upgrade the system
+    dnf clean all
+    dnf upgrade --refresh -y
+
+    # Install build & test dependencies
+    dnf install -y git rpm-build rpmdevtools fedpkg
+    dnf builddep -y systemd
+
+    # Configure NTP (chronyd)
+    dnf install -y chrony
+    systemctl enable --now chronyd
+    systemctl status chronyd
+
+    # Disable 'quiet' mode on the kernel command line and forward everything
+    # to ttyS0 instead of just tty0, so we can collect it using QEMU's
+    # -serial file:xxx feature
+    sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/ { s/quiet//; s/"$/ console=ttyS0"/ }' /etc/default/grub
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+  SHELL
+end

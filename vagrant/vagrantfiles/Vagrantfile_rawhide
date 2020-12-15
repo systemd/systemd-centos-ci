@@ -1,0 +1,59 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+#
+@ui = Vagrant::UI::Colored.new
+
+Vagrant.configure("2") do |config|
+  config.vm.define :rawhide_selinux_ci
+
+  # Every Vagrant development environment requires a box. You can search for
+  # boxes at https://vagrantcloud.com/search.
+  # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
+  if ENV["VAGRANT_TEST_IMAGE"] then
+    config.vm.box = "rawhide_selinux-new"
+    config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/rawhide_selinux-new"
+  else
+    config.vm.box = "rawhide_selinux"
+    config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/rawhide_selinux"
+  end
+
+  # NFSv4 supports TCP only and requires 'no_root_squash' (instead of the default
+  # 'all_squash') in /etc/exports
+  config.vm.synced_folder ENV["SYSTEMD_ROOT"], "/build",
+    type: "nfs",
+    nfs_version: 4.0,
+    nfs_udp: false,
+    linux__nfs_options: ["rw", "no_subtree_check", "no_root_squash", "async"],
+    mount_options: ["rw", "async", "fsc", "rsize=32768", "wsize=32768",
+                    "hard", "noatime", "actimeo=2"]
+
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
+
+    # Collect output from a serial console into a file to make debugging easier
+    # The -nographic option allows us to collect BIOS messages as well
+    libvirt.qemuargs :value => "-nographic"
+    libvirt.qemuargs :value => "-serial"
+    # This file needs to be collected later by vagrant-ci-wrapper.sh
+    libvirt.qemuargs :value => "file:/tmp/vagrant-rawhide-serial-console.log"
+
+    # Pass through /dev/random from the host to the VM
+    libvirt.random :model => 'random'
+
+    # Enable nested KVM
+    libvirt.nested = true
+    libvirt.cpu_mode = "host-model"
+  end
+
+  # Use an external bootstrap script if set
+  if ENV["VAGRANT_BOOTSTRAP_SCRIPT"] then
+    @ui.info("Using a custom bootstrap script: " + ENV["VAGRANT_BOOTSTRAP_SCRIPT"])
+    config.vm.provision "shell",
+      privileged: true,
+      path: ENV["VAGRANT_BOOTSTRAP_SCRIPT"]
+  else
+    @ui.info("No bootstrap script given (use VAGRANT_BOOTSTRAP_SCRIPT env variable to fix this)")
+  end
+end
