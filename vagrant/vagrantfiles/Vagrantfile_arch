@@ -69,9 +69,9 @@ Vagrant.configure("2") do |config|
   # Note: CentOS CI infra specific overrides - you may want to change them
   #       to run the VM locally
   config.vm.provider :libvirt do |libvirt|
-    libvirt.driver = if ENV["VAGRANT_DRIVER"] then ENV["VAGRANT_DRIVER"] else "kvm" end
-    libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
-    libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
+    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
 
     # Collect output from a serial console into a file to make debugging easier
     # The -nographic option allows us to collect BIOS messages as well
