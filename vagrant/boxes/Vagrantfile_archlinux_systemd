@@ -1,27 +1,12 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# All Vagrant configuration is done below. The "2" in Vagrant.configure
-# configures the configuration version (we support older styles for
-# backwards compatibility). Please don't change it unless you know what
-# you're doing.
 Vagrant.configure("2") do |config|
-  # The most common configuration options are documented and commented below.
-  # For a complete reference, please see the online documentation at
-  # https://docs.vagrantup.com.
   config.vm.define :archlinux_systemd
-
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
-  # Possible FIXME: archlinux/archlinux image is for some reason failing
-  # in the CentOS CI infrastructure due to unwritable keyring
-  # config.vm.box = "archlinux/archlinux"
   config.vm.box = "generic/arch"
   # Don't replace the original Vagrant's insecure key
   config.ssh.insert_key = false
 
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
   # Note: CentOS CI infra specific overrides - you may want to change them
   #       to run the VM locally
   config.vm.provider :libvirt do |libvirt|
@@ -33,12 +18,6 @@ Vagrant.configure("2") do |config|
     libvirt.random :model => 'random'
   end
 
-  # View the documentation for the provider you are using for more
-  # information on available options.
-
-  # Enable provisioning with a shell script. Additional provisioners such as
-  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
-  # documentation for more information about their specific syntax and use.
   config.vm.provision "shell", privileged: true, inline: <<-SHELL
     set -e
 
