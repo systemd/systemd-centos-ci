@@ -6,8 +6,6 @@
 Vagrant.configure("2") do |config|
   config.vm.define :rawhide_selinux_ci
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
   # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
   if ENV["VAGRANT_TEST_IMAGE"] then
     config.vm.box = "rawhide_selinux-new"

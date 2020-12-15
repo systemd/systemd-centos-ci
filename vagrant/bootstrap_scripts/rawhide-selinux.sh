@@ -25,9 +25,14 @@ pushd /build
 # Dump list of installed packages
 rpm -qa > vagrant-rawhide-installed-pkgs.txt
 # Dump additional OS info
-cat <(echo "# CPUINFO") /proc/cpuinfo >> vagrant-rawhide-osinfo.txt
-cat <(echo "# MEMINFO") /proc/meminfo >> vagrant-rawhide-osinfo.txt
-cat <(echo "# VERSION") /proc/version >> vagrant-rawhide-osinfo.txt
+{
+    echo "### CPUINFO ###"
+    cat /proc/cpuinfo
+    echo "### MEMINFO ###"
+    cat /proc/meminfo
+    echo "### VERSION ###"
+    cat /proc/version
+} > vagrant-rawhide-osinfo.txt
 
 rm -fr "$BUILD_DIR"
 # Build phase

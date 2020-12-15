@@ -3,18 +3,9 @@
 
 @ui = Vagrant::UI::Colored.new
 
-# All Vagrant configuration is done below. The "2" in Vagrant.configure
-# configures the configuration version (we support older styles for
-# backwards compatibility). Please don't change it unless you know what
-# you're doing.
 Vagrant.configure("2") do |config|
-  # The most common configuration options are documented and commented below.
-  # For a complete reference, please see the online documentation at
-  # https://docs.vagrantup.com.
   config.vm.define :archlinux_systemd_ci
 
-  # Every Vagrant development environment requires a box. You can search for
-  # boxes at https://vagrantcloud.com/search.
   # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
   if ENV["VAGRANT_TEST_IMAGE"] then
     config.vm.box = "archlinux_systemd-new"
@@ -24,36 +15,6 @@ Vagrant.configure("2") do |config|
     config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd"
   end
 
-  # Disable automatic box update checking. If you disable this, then
-  # boxes will only be checked for updates when the user runs
-  # `vagrant box outdated`. This is not recommended.
-  # config.vm.box_check_update = false
-
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine. In the example below,
-  # accessing "localhost:8080" will access port 80 on the guest machine.
-  # NOTE: This will enable public access to the opened port
-  # config.vm.network "forwarded_port", guest: 80, host: 8080
-
-  # Create a forwarded port mapping which allows access to a specific port
-  # within the machine from a port on the host machine and only allow access
-  # via 127.0.0.1 to disable public access
-  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
-
-  # Create a private network, which allows host-only access to the machine
-  # using a specific IP.
-  # config.vm.network "private_network", ip: "192.168.33.10"
-
-  # Create a public network, which generally matched to bridged network.
-  # Bridged networks make the machine appear as another physical device on
-  # your network.
-  # config.vm.network "public_network"
-
-  # Share an additional folder to the guest VM. The first argument is
-  # the path on the host to the actual folder. The second argument is
-  # the path on the guest to mount the folder. And the optional third
-  # argument is a set of non-required options.
-  #
   # NFSv4 supports TCP only and requires 'no_root_squash' (instead of the default
   # 'all_squash') in /etc/exports
   config.vm.synced_folder ENV["SYSTEMD_ROOT"], "/build",
@@ -64,14 +25,12 @@ Vagrant.configure("2") do |config|
     mount_options: ["rw", "async", "fsc", "rsize=32768", "wsize=32768",
                     "hard", "noatime", "actimeo=2"]
 
-  # Provider-specific configuration so you can fine-tune various
-  # backing providers for Vagrant. These expose provider-specific options.
   # Note: CentOS CI infra specific overrides - you may want to change them
   #       to run the VM locally
   config.vm.provider :libvirt do |libvirt|
-    libvirt.driver = if ENV["VAGRANT_DRIVER"] then ENV["VAGRANT_DRIVER"] else "kvm" end
-    libvirt.memory = if ENV["VAGRANT_MEMORY"] then ENV["VAGRANT_MEMORY"] else  "8192" end
-    libvirt.cpus = if ENV["VAGRANT_CPUS"] then ENV["VAGRANT_CPUS"] else 8 end
+    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
 
     # Collect output from a serial console into a file to make debugging easier
     # The -nographic option allows us to collect BIOS messages as well

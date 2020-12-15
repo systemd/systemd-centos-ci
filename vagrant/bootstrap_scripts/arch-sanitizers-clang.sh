@@ -23,9 +23,14 @@ pushd /build
 # Dump list of installed packages
 pacman -Q > vagrant-arch-sanitizers-clang-installed-pkgs.txt
 # Dump additional OS info
-cat <(echo "# CPUINFO") /proc/cpuinfo >> vagrant-arch-sanitizers-clang-osinfo.txt
-cat <(echo "# MEMINFO") /proc/meminfo >> vagrant-arch-sanitizers-clang-osinfo.txt
-cat <(echo "# VERSION") /proc/version >> vagrant-arch-sanitizers-clang-osinfo.txt
+{
+    echo "### CPUINFO ###"
+    cat /proc/cpuinfo
+    echo "### MEMINFO ###"
+    cat /proc/meminfo
+    echo "### VERSION ###"
+    cat /proc/version
+} > vagrant-arch-sanitizers-clang-osinfo.txt
 
 rm -fr "$BUILD_DIR"
 # Build phase
