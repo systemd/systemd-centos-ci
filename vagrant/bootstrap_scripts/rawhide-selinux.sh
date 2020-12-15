@@ -53,3 +53,8 @@ dnf -y builddep selinux-policy.spec
 fedpkg local
 dnf install -y noarch/selinux-policy-*
 popd
+
+# Switch SELinux to permissive mode after reboot, so we catch all possible
+# AVCs, not just the first one
+sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
+cat /etc/selinux/config
