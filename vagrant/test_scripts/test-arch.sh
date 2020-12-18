@@ -40,12 +40,6 @@ exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-mult
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
-## FIXME: temporarily bump TEST-52-HONORFIRSTSHUTDOWN's nspawn timeout
-# Without nested KVM the test quite frequently runs into the hardcoded
-# 20 seconds timeout. As, so far, I'm not sure if the cause is indeed the
-# short timeout, let's make the change ad-hoc until the culprit is confirmed.
-sed -i 's/NSPAWN_TIMEOUT=20/NSPAWN_TIMEOUT=40/' test/TEST-52-HONORFIRSTSHUTDOWN/test.sh
-
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
 # This is necessary, as the default mkinitcpio config includes only the udev module,
