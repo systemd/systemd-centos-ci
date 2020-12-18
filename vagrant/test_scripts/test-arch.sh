@@ -82,7 +82,6 @@ for t in test/TEST-??-*; do
         continue
     fi
 
-    # FIXME
     # TEST-02-UNITTESTS and TEST-13-NSPAWN-SMOKE cause spurious CPU soft lockups
     # when run under  QEMU without KVM. Let's skip the QEMU part of these tests
     # on affected systems to make the CI less flaky

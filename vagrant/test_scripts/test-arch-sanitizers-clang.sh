@@ -122,7 +122,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
-        # FIXME
         # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
         # QEMU without KVM, so let's just run the nspawn part of the test
         # on the affected systems
