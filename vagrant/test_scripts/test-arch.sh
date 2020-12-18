@@ -40,12 +40,6 @@ exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-mult
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
-## FIXME: temporarily bump TEST-52-HONORFIRSTSHUTDOWN's nspawn timeout
-# Without nested KVM the test quite frequently runs into the hardcoded
-# 20 seconds timeout. As, so far, I'm not sure if the cause is indeed the
-# short timeout, let's make the change ad-hoc until the culprit is confirmed.
-sed -i 's/NSPAWN_TIMEOUT=20/NSPAWN_TIMEOUT=40/' test/TEST-52-HONORFIRSTSHUTDOWN/test.sh
-
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
 # This is necessary, as the default mkinitcpio config includes only the udev module,
@@ -82,7 +76,6 @@ for t in test/TEST-??-*; do
         continue
     fi
 
-    # FIXME
     # TEST-02-UNITTESTS and TEST-13-NSPAWN-SMOKE cause spurious CPU soft lockups
     # when run under  QEMU without KVM. Let's skip the QEMU part of these tests
     # on affected systems to make the CI less flaky
@@ -96,8 +89,8 @@ for t in test/TEST-??-*; do
     # can run them in parallel
     export TEST_PARALLELIZE=1
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=1500
-    export NSPAWN_TIMEOUT=1500
+    export QEMU_TIMEOUT=900
+    export NSPAWN_TIMEOUT=900
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -129,8 +122,8 @@ SERIALIZED_TASKS=(
 for t in "${SERIALIZED_TASKS[@]}"; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=1500
-    export NSPAWN_TIMEOUT=1500
+    export QEMU_TIMEOUT=600
+    export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
