@@ -116,19 +116,10 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-46-HOMED          # systemd-homed & friends
     )
-    is_nested_kvm_enabled && NESTED_KVM_ENABLED=y || NESTED_KVM_ENABLED=n
 
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-
-        # TEST-13-NSPAWN-SMOKE causes spurious CPU soft lockups when run under
-        # QEMU without KVM, so let's just run the nspawn part of the test
-        # on the affected systems
-        unset TEST_NO_QEMU
-        if [[ "$NESTED_KVM_ENABLED" == "n" && "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
-            export TEST_NO_QEMU=1
-        fi
 
         rm -fr "$TESTDIR"
         mkdir -p "$TESTDIR"

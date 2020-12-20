@@ -68,20 +68,11 @@ SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
     "test/TEST-25-IMPORT"           # Serialized below
 )
-is_nested_kvm_enabled && NESTED_KVM_ENABLED=y || NESTED_KVM_ENABLED=n
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
-    fi
-
-    # TEST-02-UNITTESTS and TEST-13-NSPAWN-SMOKE cause spurious CPU soft lockups
-    # when run under  QEMU without KVM. Let's skip the QEMU part of these tests
-    # on affected systems to make the CI less flaky
-    unset TEST_NO_QEMU
-    if [[ "$NESTED_KVM_ENABLED" == "n" && "$t" =~ ^test/(TEST-02-UNITTESTS|TEST-13-NSPAWN-SMOKE)$ ]]; then
-        export TEST_NO_QEMU=1
     fi
 
     ## Configure test environment
