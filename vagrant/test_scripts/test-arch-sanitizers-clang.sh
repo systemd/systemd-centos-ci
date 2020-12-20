@@ -41,6 +41,12 @@ if [[ -n "$_clang_asan_rt_name" ]]; then
     ldconfig
 fi
 
+## DEBUG-ONLY ##
+#pushd "$BUILD_DIR"
+#/build/test/sys-script.py .
+#/build/test/udev-test.pl
+#popd
+
 ## Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
@@ -54,8 +60,10 @@ echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=10"
+exectask "check-meson-log-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog.txt | check_for_sanitizer_errors"
 
+if false; then
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).
 # This is necessary, as the default mkinitcpio config includes only the udev module,
@@ -166,6 +174,7 @@ exectask "systemd-networkd_sanitizers" \
             "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+fi
 exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"

@@ -17,6 +17,7 @@ uname -a
 #       buildir in combination with PrivateTmp=true
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
+pacman --noconfirm -S tpm2-pkcs11
 # Use systemd repo path specified by SYSTEMD_ROOT
 pushd /build
 
@@ -60,6 +61,8 @@ meson "$BUILD_DIR" \
       -Ddebug=true \
       --optimization=g \
       -Dtests=unsafe \
+      -Dfexecve=true \
+      -Dslow-tests=true \
       -Dfuzz-tests=true \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
