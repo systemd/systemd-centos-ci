@@ -121,6 +121,14 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
+        # TEST-13-NSPAWN-SMOKE causes intermittent CPU soft lockups during
+        # the QEMU run, causing timeouts & unexpected fails. Let's run only
+        # the systemd-nspawn part of this test to make the CI more stable.
+        unset TEST_NO_QEMU
+        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+            export TEST_NO_QEMU=1
+        fi
+
         rm -fr "$TESTDIR"
         mkdir -p "$TESTDIR"
 
