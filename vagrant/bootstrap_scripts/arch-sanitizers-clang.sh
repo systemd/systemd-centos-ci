@@ -59,6 +59,7 @@ meson "$BUILD_DIR" \
       -Dc_args='-Og -fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
       --optimization=g \
+      -Dfexecve=true \
       -Dtests=unsafe \
       -Dfuzz-tests=true \
       -Dinstall-tests=true \

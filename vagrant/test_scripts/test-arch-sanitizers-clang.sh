@@ -55,6 +55,7 @@ sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test
 
 # Run the internal unit tests (make check)
 exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog.txt | check_for_sanitizer_errors"
 
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).

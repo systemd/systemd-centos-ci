@@ -56,6 +56,7 @@ meson "$BUILD_DIR" \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
       --optimization=g \
+      -Dfexecve=true \
       -Dtests=unsafe \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
