@@ -83,8 +83,20 @@ cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/
 # The udevadm -> systemd-udevd symlink is created in the install phase which
 # we don't execute in sanitizer runs, so let's create it manually where
 # we need it
-if [[ -x "$BUILD_DIR/udevadm" && ! -x "$BUILD_DIR/systemd-udevd" ]]; then
-    ln -frsv "$BUILD_DIR/udevadm" "$BUILD_DIR/systemd-udevd"
+# FIXME
+#   systemd/systemd#18038 splits the meson configs into smaller units, changing
+#   location of certain binaries - switch completely to the new paths once
+#   the PR is merged
+if [[ -f "$BUILD_DIR/src/udev/udevadm" ]]; then
+    UDEVADM_BIN="$BUILD_DIR/src/udev/udevadm"
+    UDEVD_BIN="$BUILD_DIR/src/udev/systemd-udevd"
+else
+    UDEVADM_BIN="$BUILD_DIR/udevadm"
+    UDEVD_BIN="$BUILD_DIR/systemd-udevd"
+fi
+
+if [[ -x "$UDEVADM_BIN" && ! -x "$UDEVD_BIN" ]]; then
+    ln -frsv "$UDEVADM_BIN" "$UDEVD_BIN"
 fi
 
 popd

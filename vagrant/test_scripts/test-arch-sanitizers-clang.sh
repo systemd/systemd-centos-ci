@@ -22,6 +22,19 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
+# FIXME
+#   systemd/systemd#18038 splits the meson configs into smaller units, changing
+#   location of certain binaries - switch completely to the new paths once
+#   the PR is merged
+if [[ -f "$BUILD_DIR/src/core/systemd" ]]; then
+    COREDUMPCTL_BIN="$BUILD_DIR/src/coredump/coredumpctl"
+    JOURNALCTL_BIN="$BUILD_DIR/src/journal/journalctl"
+    SYSTEMD_BIN="$BUILD_DIR/src/core/systemd"
+else
+    COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
+    JOURNALCTL_BIN="$BUILD_DIR/journalctl"
+    SYSTEMD_BIN="$BUILD_DIR/systemd"
+fi
 ## To be able to run integration tests under sanitizers we have to use the dynamic
 ## versions of sanitizer libraries, especially when it comes to ASAn. With gcc
 ## it's quite easy as ASan is compiled dynamically by default there and all necessary
@@ -29,7 +42,7 @@ export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 ## With clang things get a little bit complicated as we need to explicitly tell clang
 ## to use the dynamic ASan library and then instruct the rest of the system
 ## to where it can find it, as it is in a non-standard library location.
-_clang_asan_rt_name="$(ldd "$BUILD_DIR/systemd" | awk '/libclang_rt.asan/ {print $1; exit}')"
+_clang_asan_rt_name="$(ldd "$SYSTEMD_BIN" | awk '/libclang_rt.asan/ {print $1; exit}')"
 
 if [[ -n "$_clang_asan_rt_name" ]]; then
     # We are compiled with clang & -shared-libasan, let's tweak the runtime library
@@ -140,9 +153,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
             # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+            exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$COREDUMPCTL_BIN' coredumpctl_collect '$testdir/'"
             # Check for sanitizer errors in test journals
-            exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
+            exectask "${t##*/}_sanitizer_errors" "$JOURNALCTL_BIN --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
             if [[ ! -f "$testdir/pass" ]]; then
                 rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
