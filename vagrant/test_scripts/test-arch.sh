@@ -25,12 +25,22 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
+## DEBUG ONLY
+sed -i 's/local _size=500/local _size=1500/' test/test-functions
+sed -i '/Storage=journal/a\    echo "SystemMaxUse=50%" >> \$initdir/etc/systemd/journald.conf' test/test-functions
+
 # Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
-echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
+#echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+
+for _ in {0..1000}; do
+    if ! strace -s 500 -f -o strace.log $BUILD_DIR/test-journal-flush; then
+        cat strace.log
+    fi
+done
 
 ## FIXME: systemd-networkd testsuite: skip test_macsec
 # Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
@@ -103,6 +113,7 @@ done
 # Wait for remaining running tasks
 exectask_p_finish
 
+if false; then
 # Serialized tasks (i.e. tasks which have issues when run on a system under
 # heavy load)
 SERIALIZED_TASKS=(
@@ -132,6 +143,7 @@ for t in "${SERIALIZED_TASKS[@]}"; do
 
     exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
+fi
 
 COREDUMPCTL_SKIP=(
     # This test intentionally kills several processes using SIGABRT, thus generating
@@ -157,6 +169,7 @@ for t in test/TEST-??-*; do
     make -C "$t" clean-again > /dev/null
 done
 
+if false; then
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
@@ -176,6 +189,7 @@ systemctl status dhcpcd@eth0.service
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
+fi
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"

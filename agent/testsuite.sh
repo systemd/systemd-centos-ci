@@ -35,8 +35,12 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
+## DEBUG ONLY
+sed -i 's/local _size=500/local _size=1500/' test/test-functions
+sed -i '/Storage=journal/a\    echo "SystemMaxUse=50%" >> \$initdir/etc/systemd/journald.conf' test/test-functions
+
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+#exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
 [[ -d "build/meson-logs" ]] && rsync -aq "build/meson-logs" "$LOGDIR"
 
@@ -81,38 +85,42 @@ if ! initialize_integration_tests "$PWD"; then
     exit 1
 fi
 
-for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "[SKIP] Skipping test $t\n"
-        continue
-    fi
+for _ in {0..10}; do
+    for t in test/TEST-??-*; do
+        if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
+            echo -e "[SKIP] Skipping test $t\n"
+            continue
+        fi
 
-    ## Configure test environment
-    # Tell the test framework to copy the base image for each test, so we
-    # can run them in parallel
-    export TEST_PARALLELIZE=1
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$OPTIMAL_QEMU_SMP
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+        ## Configure test environment
+        # Tell the test framework to copy the base image for each test, so we
+        # can run them in parallel
+        export TEST_PARALLELIZE=1
+        # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+        # See $INITRD above
+        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+        # Explicitly enable user namespaces
+        export KERNEL_APPEND="user_namespace.enable=1"
+        # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+        export QEMU_TIMEOUT=600
+        export NSPAWN_TIMEOUT=600
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$OPTIMAL_QEMU_SMP
+        # Use a "unique" name for each nspawn container to prevent scope clash
+        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
-    # otherwise the `touch` command would fail
-    mkdir -p "$TESTDIR"
-    rm -f "$TESTDIR/pass"
+        # Skipped test don't create the $TESTDIR automatically, so do it explicitly
+        # otherwise the `touch` command would fail
+        mkdir -p "$TESTDIR"
+        rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+        exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    done
+
+    [[ $FAILED -ne 0 ]] && break
 done
 
 # Wait for remaining running tasks
@@ -142,6 +150,7 @@ for t in test/TEST-??-*; do
     make -C "$t" clean-again > /dev/null
 done
 
+if false; then
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
@@ -151,6 +160,7 @@ TEST_LIST=(
 for t in "${TEST_LIST[@]}"; do
     exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
+fi
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
