@@ -25,12 +25,19 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# Disable certain flaky tests
-# test-journal-flush: unstable on nested KVM
-echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
-
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+
+# FIXME: test-journal-flush
+# A particularly ugly workaround for the flaky test-journal-flush. As the issue
+# presented so far only in the QEMU TEST-02, let's skip it just there, instead
+# of disabling it completely (even in the `meson test`). As the TEST-02 simply
+# makes a list of all test- prefixed files in the build directory, let's just
+# remove the offending test case, since we already executed it via `meson test`
+# above.
+#
+# See: systemd/systemd#17963
+rm -fv "$BUILD_DIR/test-journal-flush"
 
 ## FIXME: systemd-networkd testsuite: skip test_macsec
 # Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
