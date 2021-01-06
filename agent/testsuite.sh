@@ -51,13 +51,10 @@ fi
 # FIXME: test-journal-flush
 # A particularly ugly workaround for the flaky test-journal-flush. As the issue
 # presented so far only in the QEMU TEST-02, let's skip it just there, instead
-# of disabling it completely (even in the `meson test`). As the TEST-02 simply
-# makes a list of all test- prefixed files in the build directory, let's just
-# remove the offending test case, since we already executed it via `meson test`
-# above.
+# of disabling it completely (even in the `meson test`).
 #
 # See: systemd/systemd#17963
-rm -fv build/test-journal-flush
+sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
 ## Integration test suite ##
 SKIP_LIST=(
