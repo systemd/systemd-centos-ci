@@ -35,6 +35,14 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
+# FIXME: test-journal-flush
+# A particularly ugly workaround for the flaky test-journal-flush. As the issue
+# presented so far only in the QEMU TEST-02, let's skip it just there, instead
+# of disabling it completely (even in the `meson test`).
+#
+# See: systemd/systemd#17963
+sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
@@ -47,14 +55,6 @@ if ! git diff --quiet master HEAD && ! git diff $(git merge-base master HEAD) --
     echo "Detected man-only PR, skipping integration tests"
     exit $FAILED
 fi
-
-# FIXME: test-journal-flush
-# A particularly ugly workaround for the flaky test-journal-flush. As the issue
-# presented so far only in the QEMU TEST-02, let's skip it just there, instead
-# of disabling it completely (even in the `meson test`).
-#
-# See: systemd/systemd#17963
-sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
 ## Integration test suite ##
 SKIP_LIST=(

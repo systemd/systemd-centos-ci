@@ -25,9 +25,6 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
-
 # FIXME: test-journal-flush
 # A particularly ugly workaround for the flaky test-journal-flush. As the issue
 # presented so far only in the QEMU TEST-02, let's skip it just there, instead
@@ -43,6 +40,9 @@ sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\
 # no longer block the CI image updates.
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
+
+# Run the internal unit tests (make check)
+exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
