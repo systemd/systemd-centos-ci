@@ -41,6 +41,7 @@ sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
+if false; then
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 
@@ -160,12 +161,15 @@ for t in test/TEST-??-*; do
     # Clean the no longer necessary test artifacts
     make -C "$t" clean-again > /dev/null
 done
+fi
 
 ## Other integration tests ##
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
+#    "test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"
 )
+
+curl -o test/test-network/systemd-networkd-tests.py "https://gist.githubusercontent.com/mrc0mmand/71b8dad79c40d3ee39ecaf1d00a53073/raw/399034f6a638e6ded049cedb6edbfd003f89b9cf/systemd-networkd-tests.py"
 
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
@@ -178,7 +182,10 @@ systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
+    for i in {0..100}; do
+        echo "Try #$i"
+        timeout -k 60s 60m ./$t > /dev/null
+    done
 done
 
 # Collect coredumps using the coredumpctl utility, if any
