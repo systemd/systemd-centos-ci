@@ -22,6 +22,10 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
+sed -i '/^DEFAULT_ENVIRONMENT=/d' test/test-functions
+#sed -i '/^DEFAULT_UBSAN_OPTIONS=/aDEFAULT_ENVIRONMENT="ASAN_OPTIONS=detect_leaks=0:\\\$DEFAULT_ASAN_OPTIONS UBSAN_OPTIONS=\\\$DEFAULT_UBSAN_OPTIONS LSAN_OPTIONS=verbosity=1:log_threads=1"' test/test-functions
+sed -i '/^DEFAULT_UBSAN_OPTIONS=/amkdir -p /etc/systemd/system/dbus.service.d; printf "[Service]\\nEnvironment=ASAN_OPTIONS=verify_asan_link_order=0:detect_leaks=0\\nUnsetEnvironment=LD_PRELOAD\\n" >/etc/systemd/system/dbus.service.d/env.conf' test/test-functions
+
 ## To be able to run integration tests under sanitizers we have to use the dynamic
 ## versions of sanitizer libraries, especially when it comes to ASAn. With gcc
 ## it's quite easy as ASan is compiled dynamically by default there and all necessary
@@ -54,8 +58,8 @@ echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
-exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog.txt | check_for_sanitizer_errors"
+#exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+#exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog.txt | check_for_sanitizer_errors"
 
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -69,8 +73,8 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-export QEMU_TIMEOUT=1200
-export NSPAWN_TIMEOUT=1200
+export QEMU_TIMEOUT=1000
+export NSPAWN_TIMEOUT=1000
 # Set QEMU_SMP to speed things up
 export QEMU_SMP=$(nproc)
 # Arch Linux requires booting with initrd, as all commonly used filesystems
@@ -95,78 +99,26 @@ fi
 ## If the sanity check passes we can be at least somewhat sure the systemd
 ## 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
-export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
+export TEST_NO_NSPAWN=1
+export TESTDIR="/var/tmp/systemd-test-TEST-01-BASIC_sanitizers-qemu"
 rm -fr "$TESTDIR"
-exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
-NSPAWN_EC=$?
-# Each integration test dumps the system journal when something breaks
-rsync -amq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/" &>/dev/null || :
+exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
-if [[ $NSPAWN_EC -eq 0 ]]; then
-    # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
-    #    (under QEMU) and possibly other selected tests
-    export TESTDIR="/var/tmp/systemd-test-TEST-01-BASIC_sanitizers-qemu"
-    rm -fr "$TESTDIR"
-    exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
-
-    ## Run certain other integration tests under sanitizers to cover bigger
-    ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
-    ## be somewhat sure the 'base' systemd components work).
-    INTEGRATION_TESTS=(
-        test/TEST-04-JOURNAL        # systemd-journald
-        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
-        test/TEST-46-HOMED          # systemd-homed & friends
-    )
-
-    for t in "${INTEGRATION_TESTS[@]}"; do
-        # Set the test dir to something predictable so we can refer to it later
-        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-
-        # TEST-13-NSPAWN-SMOKE causes intermittent CPU soft lockups during
-        # the QEMU run, causing timeouts & unexpected fails. Let's run only
-        # the systemd-nspawn part of this test to make the CI more stable.
-        unset TEST_NO_QEMU
-        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
-            export TEST_NO_QEMU=1
+# Save journals created by integration tests
+for t in "TEST-01-BASIC_sanitizers-qemu"; do
+    testdir="/var/tmp/systemd-test-${t##*/}"
+    if [[ -f "$testdir/system.journal" ]]; then
+        # Attempt to collect coredumps from test-specific journals as well
+        exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+        # Check for sanitizer errors in test journals
+        exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
+        # Keep the journal files only if the associated test case failed
+        if [[ ! -f "$testdir/pass" ]]; then
+            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
         fi
+    fi
+done
 
-        rm -fr "$TESTDIR"
-        mkdir -p "$TESTDIR"
-
-        exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
-    done
-
-    # Save journals created by integration tests
-    for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
-        testdir="/var/tmp/systemd-test-${t##*/}"
-        if [[ -f "$testdir/system.journal" ]]; then
-            # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
-            # Check for sanitizer errors in test journals
-            exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
-            # Keep the journal files only if the associated test case failed
-            if [[ ! -f "$testdir/pass" ]]; then
-                rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
-            fi
-        fi
-    done
-fi
-
-## systemd-networkd testsuite
-# Prepare environment for the systemd-networkd testsuite
-systemctl disable --now dhcpcd dnsmasq
-systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
-
-exectask "systemd-networkd_sanitizers" \
-            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
-
-exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
