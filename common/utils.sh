@@ -49,17 +49,20 @@ in_set() {
 #   3) if the script is called without arguments, the default (possibly master)
 #      branch is used
 git_checkout_pr() {
+    local MASTER_BRANCH
+
     _log "Arguments: $*"
     (
         set -e -u
         case $1 in
             pr:*)
+                git branch | grep -E '\bmaster\b' && MASTER_BRANCH="master" || MASTER_BRANCH="main"
                 # Draft and already merged pull requests don't have the 'merge'
                 # ref anymore, so fall back to the *standard* 'head' ref in
                 # such cases and rebase it against the master branch
                 if ! git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"; then
                     git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
-                    git rebase master pr
+                    git rebase "$MASTER_BRANCH" pr
                 fi
 
                 git checkout pr

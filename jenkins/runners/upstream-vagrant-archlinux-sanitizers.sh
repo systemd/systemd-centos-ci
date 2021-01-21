@@ -34,13 +34,13 @@ ARGS=()
 if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
     ARGS+=(--pr "$ghprbPullId")
 
-    # We're not testing the master branch, so let's see if the PR scope
+    # We're not testing the main branch, so let's see if the PR scope
     # is something we should indeed test
     git clone https://github.com/systemd/systemd systemd-tmp && cd systemd-tmp
     git fetch -fu origin "refs/pull/$ghprbPullId/head:pr"
     git checkout pr
     SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d|rules|src|test|units))'
-    if ! git diff "$(git merge-base master pr)" --name-only | grep -E "$SCOPE_RX" ; then
+    if ! git diff "$(git merge-base main pr)" --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
