@@ -56,15 +56,8 @@ if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystem
     exit 1
 fi
 
-# The current revision of the integration test suite uses a set of base images
-# to reduce the overhead of building the same image over and over again.
-# However, this isn't compatible with parallelization & concurrent access.
-# To mitigate this, we need to run all tests with TEST_PARALLELIZE=1 (set below)
-# and to initialize the set of base images beforehand.
-if ! initialize_integration_tests "$PWD"; then
-    echo >&2 "Failed to initialize integration tests, can't continue..."
-    exit 1
-fi
+# Initialize the 'base' image (default.img) on which the other images are based
+exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
 # Parallelized tasks
 SKIP_LIST=(
