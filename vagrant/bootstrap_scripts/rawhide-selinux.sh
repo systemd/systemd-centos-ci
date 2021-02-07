@@ -40,7 +40,9 @@ meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
-      --optimization=g
+      --optimization=g \
+      -Dtests=true \
+      -Dinstall-tests=true
 ninja -C "$BUILD_DIR" install
 
 popd
