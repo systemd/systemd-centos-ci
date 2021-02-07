@@ -11,6 +11,18 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
+
+# systemd SELinux sanity test
+export QEMU_SMP="$(nproc)"
+export QEMU_TIMEOUT=600
+export TEST_NESTED_KVM=1
+export TESTDIR="/var/tmp/TEST-06-SELINUX"
+rm -fr "$TESTDIR"
+if ! exectask "TEST-06-SELINUX" "make -C test/TEST-06-SELINUX clean setup run"; then
+    [[ -f "$TESTDIR/system.journal" ]] && rsync -aq "$TESTDIR/system.journal" "$LOGDIR/TEST-06-SELINUX/"
+fi
+
 exectask "selinux-status" "sestatus -v -b"
 
 exectask "avc-check" "! ausearch -m avc -i --start boot"
