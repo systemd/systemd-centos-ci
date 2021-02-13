@@ -160,6 +160,59 @@ exectask() {
     return $EC
 }
 
+# Execute given task "silently" and retry it n-times in case the task fails:
+#   - redirect stdout/stderr to a given log file
+#   - show a simple progress "bar"
+#   - dump the log on error
+#   - retry the task up to n times in case it fails
+# Esentially the same function as exectask(), but for flaky tests.
+#
+# Arguments
+#   $1 - task name
+#   $2 - task command
+#   $3 - # of retries (default: 3) [optional]
+exectask_retry() {
+    if [[ $# -lt 2 ]]; then
+        _err "Missing arguments"
+        return 1
+    fi
+
+    local RETRIES="${3:-3}"
+    local EC=0
+
+    for ((i = 1; i <= RETRIES; i++)); do
+        local logfile="$LOGDIR/${1}_${i}.log"
+        local pid
+
+        touch "$logfile"
+
+        echo "[TASK] $1 (try $i/$RETRIES)"
+        echo "[TASK START] $(date)" >> "$logfile"
+
+        # shellcheck disable=SC2086
+        eval $2 &>> "$logfile" &
+        pid=$!
+        waitforpid $pid
+        EC=$?
+        echo "[TASK END] $(date)" >> "$logfile"
+
+        if [[ $EC -eq 0 ]]; then
+            # Task passed => report the result & bail out early
+            printresult $EC "$logfile" "$1" 0
+            echo
+            break
+        else
+            # Task failed => check if we still have retries left. If so, report
+            # the result as "ignored" and continue to the next retry. Otherwise,
+            # report the result as failed.
+            printresult $EC "$logfile" "$1" $((i < RETRIES))
+            echo
+        fi
+    done
+
+    return $EC
+}
+
 # Execute given task in parallel fashion:
 #   - redirect stdout/stderr to a given log file
 #   - return after inserting the task into the queue (or wait until there's
