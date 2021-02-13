@@ -60,11 +60,15 @@ fi
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
 # Parallelized tasks
-SKIP_LIST=(
-    "test/TEST-10-ISSUE-2467"       # Serialized below
-    "test/TEST-16-EXTEND-TIMEOUT"   # flaky test
-    "test/TEST-25-IMPORT"           # Serialized below
+FLAKE_LIST=(
+    "test/TEST-10-ISSUE-2467"     # flaky test
+    "test/TEST-16-EXTEND-TIMEOUT" # flaky test
+    "test/TEST-25-IMPORT"         # flaky when paralellized (systemd/systemd#13973)
+    "test/TEST-50-DISSECT"        # flaky test (systemd/systemd#17469)
+    "test/TEST-56-OOMD"           # flaky test (systemd/systemd#18469)
+    "test/TEST-58-PORTABLE"       # flaky test (systemd/systemd#17469)
 )
+SKIP_LIST=("${FLAKE_LIST[@]}")
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
@@ -100,14 +104,7 @@ done
 # Wait for remaining running tasks
 exectask_p_finish
 
-# Serialized tasks (i.e. tasks which have issues when run on a system under
-# heavy load)
-SERIALIZED_TASKS=(
-    # "test/TEST-10-ISSUE-2467" # Temporarily disabled...
-    "test/TEST-25-IMPORT"
-)
-
-for t in "${SERIALIZED_TASKS[@]}"; do
+for t in "${FLAKE_LIST[@]}"; do
     ## Configure test environment
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
@@ -127,7 +124,7 @@ for t in "${SERIALIZED_TASKS[@]}"; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    exectask_retry "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
 done
 
 COREDUMPCTL_SKIP=(
