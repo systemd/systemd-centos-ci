@@ -66,6 +66,7 @@ meson "$BUILD_DIR" \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
       -Db_sanitize=address,undefined \
+      -Db_lto_threads=-1 `# See https://github.com/mesonbuild/meson/issues/8347` \
       -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
 ninja -C "$BUILD_DIR"
 
