@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     dnf upgrade --refresh -y
 
     # Install build & test dependencies
-    dnf install -y git busybox fedpkg nc qemu-kvm rpm-build rpmdevtools socat strace tpm2-tss-devel
+    dnf install -y attr busybox fedpkg git nc qemu-kvm rpm-build rpmdevtools socat strace tpm2-tss-devel
     dnf builddep -y systemd
 
     # Configure NTP (chronyd)
