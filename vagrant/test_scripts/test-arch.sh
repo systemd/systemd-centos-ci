@@ -60,6 +60,7 @@ fi
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
 # Parallelized tasks
+EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-10-ISSUE-2467"     # flaky test
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
@@ -99,6 +100,7 @@ for t in test/TEST-??-*; do
     rm -f "$TESTDIR/pass"
 
     exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    EXECUTED_LIST+=("$t")
 done
 
 # Wait for remaining running tasks
@@ -119,12 +121,15 @@ for t in "${FLAKE_LIST[@]}"; do
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
-    # otherwise the `touch` command would fail
-    mkdir -p "$TESTDIR"
-    rm -f "$TESTDIR/pass"
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    export MANGLE_TESTDIR=1
+    exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
 
-    exectask_retry "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
+    # array accordingly to correctly find the respective journals
+    for i in {1..3}; do
+        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+    done
 done
 
 COREDUMPCTL_SKIP=(
@@ -134,7 +139,7 @@ COREDUMPCTL_SKIP=(
 )
 
 # Save journals created by integration tests
-for t in test/TEST-??-*; do
+for t in "${EXECUTED_LIST[@]}"; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -f "$testdir/system.journal" ]]; then
         if ! in_set "$t" "${COREDUMPCTL_SKIP[@]}"; then
@@ -148,7 +153,7 @@ for t in test/TEST-??-*; do
     fi
 
     # Clean the no longer necessary test artifacts
-    make -C "$t" clean-again > /dev/null
+    [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
 done
 
 ## Other integration tests ##

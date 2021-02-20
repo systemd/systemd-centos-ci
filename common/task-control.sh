@@ -179,6 +179,7 @@ exectask_retry() {
 
     local RETRIES="${3:-3}"
     local EC=0
+    local ORIG_TESTDIR
 
     for ((i = 1; i <= RETRIES; i++)); do
         local logfile="$LOGDIR/${1}_${i}.log"
@@ -188,6 +189,14 @@ exectask_retry() {
 
         echo "[TASK] $1 (try $i/$RETRIES)"
         echo "[TASK START] $(date)" >> "$logfile"
+
+        # Suffix the $TESTDIR for each retry by its index if requested
+        if [[ -v MANGLE_TESTDIR && "$MANGLE_TESTDIR" -ne 0 ]]; then
+            ORIG_TESTDIR="${ORIG_TESTDIR:-$TESTDIR}"
+            export TESTDIR="${ORIG_TESTDIR}_${i}"
+            mkdir -p "$TESTDIR"
+            rm -f "$TESTDIR/pass"
+        fi
 
         # shellcheck disable=SC2086
         eval $2 &>> "$logfile" &
