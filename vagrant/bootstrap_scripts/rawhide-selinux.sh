@@ -10,6 +10,8 @@ uname -a
 # Do a system upgrade
 dnf upgrade --refresh -y
 
+journalctl -b --no-pager
+
 # Let's make the $BUILD_DIR for meson reside outside of the NFS volume mounted
 # under /build to avoid certain race conditions, like:
 # /usr/bin/ld: error: /build/build/src/udev/libudev.so.1: file too short
@@ -60,3 +62,6 @@ popd
 # AVCs, not just the first one
 sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
 cat /etc/selinux/config
+
+! command -v grubby && dnf -y install grubby
+grubby --args='systemd.log_level=debug systemd.log_target=console' --update-kernel=ALL
