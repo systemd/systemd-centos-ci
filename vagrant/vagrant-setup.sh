@@ -4,10 +4,18 @@
 # vagrant-libvirt module to support "proper" virtualization (kvm/qemu) instead
 # of default containers.
 
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.rpm"
-
 set -o pipefail
 set -e -u
+
+# Vagrant RPM taken from:
+#   https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.rpm
+BASE_DIR="$(dirname "$0")"
+VAGRANT_RPM="${BASE_DIR}/vagrant_2.2.14_x86_64.rpm"
+
+if [[ ! -f "$VAGRANT_RPM" ]]; then
+    echo >&2 "[vagrant-setup] Couldn't find Vagrant RPM at $VAGRANT_RPM"
+    exit 1
+fi
 
 # Use dnf if present, otherwise fall back to yum
 command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
@@ -47,7 +55,7 @@ systemctl status chronyd
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    $PKG_MAN -y install "$VAGRANT_PKG_URL"
+    $PKG_MAN -y install "$VAGRANT_RPM"
 fi
 
 # Workaround for current Vagrant's DSO hell
