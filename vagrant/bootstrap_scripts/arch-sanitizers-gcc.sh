@@ -37,7 +37,7 @@ rm -fr "$BUILD_DIR"
 # Compile systemd with the Address Sanitizer (ASan) and Undefined Behavior
 # Sanitizer (UBSan)
 
-# FIXME
+# FIXME (--as-needed)
 # Since version 10, both gcc and clang started to ignore certain linker errors
 # when compiling with -fsanitize=address. This eventually leads up to -lcrypt
 # not being correctly propagated, but the fact is masked by the aforementioned
@@ -49,11 +49,12 @@ rm -fr "$BUILD_DIR"
 # See:
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
-export LDFLAGS="-Wl,--no-as-needed"
 
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+      -Dcpp_args='-fno-omit-frame-pointer -ftrapv' \
+      -Db_asneeded=false `# See the FIXME (--as-needed) above` \
       -Ddebug=true \
       --optimization=g \
       -Dfexecve=true \
