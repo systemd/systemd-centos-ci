@@ -46,7 +46,16 @@ done
 set -e -u
 set -o pipefail
 
-ADDITIONAL_DEPS=(libasan libubsan make net-tools qemu-kvm strace)
+ADDITIONAL_DEPS=(
+    libasan
+    libubsan
+    make
+    net-tools
+    perl-IPC-SysV
+    perl-Time-HiRes
+    qemu-kvm
+    strace
+)
 
 # Install and enable EPEL
 dnf -y install epel-release "${ADDITIONAL_DEPS[@]}"
