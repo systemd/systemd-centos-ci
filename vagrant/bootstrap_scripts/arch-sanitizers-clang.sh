@@ -38,9 +38,7 @@ rm -fr "$BUILD_DIR"
 # Sanitizer (UBSan) using llvm/clang
 export CC=clang
 export CXX=clang++
-export CFLAGS="-shared-libasan"
-export CXXFLAGS="-shared-libasan"
-# FIXME
+# FIXME (--as-needed)
 # Since version 10, both gcc and clang started to ignore certain linker errors
 # when compiling with -fsanitize=address. This eventually leads up to -lcrypt
 # not being correctly propagated, but the fact is masked by the aforementioned
@@ -52,11 +50,14 @@ export CXXFLAGS="-shared-libasan"
 # See:
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
-export LDFLAGS="-Wl,--no-as-needed"
 
 meson "$BUILD_DIR" \
       --werror \
-      -Dc_args='-Og -fno-omit-frame-pointer -ftrapv' \
+      -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
+      -Dc_link_args="-shared-libasan" \
+      -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
+      -Dcpp_link_args="-shared-libasan" \
+      -Db_asneeded=false `# See the FIXME (--as-needed) above` \
       -Ddebug=true \
       --optimization=g \
       -Dfexecve=true \
