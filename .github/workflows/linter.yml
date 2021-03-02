@@ -1,0 +1,24 @@
+---
+# https://github.com/marketplace/actions/super-linter
+name: Lint Code Base
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    name: Lint Code Base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          # We need a full git history
+          fetch-depth: 0
+      - name: Lint Code Base
+        uses: github/super-linter@v3
+        env:
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN:   ${{ secrets.GITHUB_TOKEN }}
+          # Check only new/edited files
+          VALIDATE_ALL_CODEBASE: false
