@@ -1,9 +1,13 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
+LIB_ROOT="$(dirname "$0")/../common"
 # The common/utils.sh include needs to come first, as it includes definition
 # of print_cgroup_hierarchy()
-. "$(dirname "$0")/../common/utils.sh" || exit 1
-. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-$(print_cgroup_hierarchy)-rhel8" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
+# shellcheck source=common/task-control.sh
+. "$LIB_ROOT/task-control.sh" "testsuite-logs-$(print_cgroup_hierarchy)-rhel8" || exit 1
 
 # EXIT signal handler
 at_exit() {

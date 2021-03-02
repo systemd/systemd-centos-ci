@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 # This file contains useful functions shared among scripts from this repository
 
 __COREDUMPCTL_TS=""

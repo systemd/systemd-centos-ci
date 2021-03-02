@@ -26,7 +26,7 @@ fi
 set -e -u
 set -o pipefail
 
-VAGRANT_ROOT="$(dirname $(readlink -f $0))"
+VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"
 VAGRANT_FILES="$VAGRANT_ROOT/vagrantfiles"
 VAGRANT_BOOTSTRAP_SCRIPTS="$VAGRANT_ROOT/bootstrap_scripts"
 VAGRANT_TEST_SCRIPTS="$VAGRANT_ROOT/test_scripts"

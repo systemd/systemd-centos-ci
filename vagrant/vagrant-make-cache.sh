@@ -18,7 +18,7 @@ EC=0
 # CentOS CI specific thing - a part of the duffy key is necessary to
 # authenticate against the CentOS CI rsync server
 DUFFY_KEY_FILE="/duffy.key"
-VAGRANT_ROOT="$(dirname $(readlink -f $0))"
+VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"
 VAGRANT_FILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
 
 if [[ ! -f "$VAGRANT_FILE" ]]; then

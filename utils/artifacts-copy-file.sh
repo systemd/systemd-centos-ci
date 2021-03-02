@@ -16,6 +16,7 @@ DEST="${2:?Missing argument: destination}"
 [[ "$DEST" == */* ]] && DEST_DIR="${DEST%/*}" || DEST_DIR="."
 TEMP_DIR="$(mktemp -d "$PWD/.sync-dirXXX")"
 
+# shellcheck disable=SC2064
 trap "cd && rm -fr '$TEMP_DIR' '$PASSWORD_FILE'" EXIT
 
 echo "${CICO_API_KEY:0:13}" > "$PASSWORD_FILE"

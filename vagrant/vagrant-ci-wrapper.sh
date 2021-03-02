@@ -9,8 +9,10 @@
 #       and distro tag
 
 LIB_ROOT="$(dirname "$0")/../common"
-. "$LIB_ROOT/utils.sh" || exit 1
+# shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "vagrant-logs" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 at_exit() {
     set +e

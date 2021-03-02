@@ -1,14 +1,17 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
 DISTRO="${1:-unspecified}"
-SCRIPT_DIR="$(dirname $0)"
+SCRIPT_DIR="$(dirname "$0")"
 # This variable is automagically consumed by the "framework" for integration tests
 # See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
 # Following scripts are copied from the systemd-centos-ci/common directory
 # by vagrant-build.sh
+# shellcheck source=common/task-control.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+# shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }

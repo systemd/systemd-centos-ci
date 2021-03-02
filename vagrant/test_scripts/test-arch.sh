@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 # This script is part of the systemd Vagrant test suite for CentOS CI and
 # it's expected to be executed in a Vagrant VM configured by vagrant-build.sh
 # script.
@@ -7,14 +8,16 @@
 # for each distribution must be installed prior executing this script.
 
 DISTRO="${1:-unspecified}"
-SCRIPT_DIR="$(dirname $0)"
+SCRIPT_DIR="$(dirname "$0")"
 # This variable is automagically consumed by the "framework" for integration tests
 # See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
 # Following scripts are copied from the systemd-centos-ci/common directory
 # by vagrant-build.sh
+# shellcheck source=common/task-control.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+# shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
 # Enable systemd-coredump
@@ -31,6 +34,7 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 # of disabling it completely (even in the `meson test`).
 #
 # See: systemd/systemd#17963
+# shellcheck disable=SC2016
 sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
 ## FIXME: systemd-networkd testsuite: skip test_macsec
