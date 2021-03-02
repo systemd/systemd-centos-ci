@@ -1,8 +1,11 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
 LIB_ROOT="$(dirname "$0")/../common"
-. "$LIB_ROOT/utils.sh" || exit 1
+# shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel7" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 REMOTE_REF=""
 
@@ -76,7 +79,7 @@ fi
         --enable-lz4
     )
     ./configure "${CONFIGURE_OPTS[@]}"
-    make -j $(nproc)
+    make -j "$(nproc)"
     make install
 ) 2>&1 | tee "$LOGDIR/build.log"
 

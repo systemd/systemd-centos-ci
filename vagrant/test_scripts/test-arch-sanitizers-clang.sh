@@ -1,4 +1,5 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 # This script is part of the systemd Vagrant test suite for CentOS CI and
 # it's expected to be executed in a Vagrant VM configured by vagrant-build.sh
 # script.
@@ -7,13 +8,15 @@
 # for each distribution must be installed prior executing this script.
 
 DISTRO="${1:-unspecified}"
-SCRIPT_DIR="$(dirname $0)"
+SCRIPT_DIR="$(dirname "$0")"
 # This variable is automagically consumed by the "framework" for integration tests
 # See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 
 # Following scripts are copied from the systemd-centos-ci/common directory by vagrant-builder.sh
+# shellcheck source=common/task-control.sh
 . "$SCRIPT_DIR/task-control.sh" "vagrant-$DISTRO-testsuite" || exit 1
+# shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }

@@ -1,7 +1,11 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
-. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-rhel7" || exit 1
-. "$(dirname "$0")/../common/utils.sh" || exit 1
+LIB_ROOT="$(dirname "$0")/../common"
+# shellcheck source=common/task-control.sh
+. "$LIB_ROOT/task-control.sh" "testsuite-logs-rhel7" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 # EXIT signal handler
 at_exit() {

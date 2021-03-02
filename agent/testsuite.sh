@@ -1,7 +1,11 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
-. "$(dirname "$0")/../common/task-control.sh" "testsuite-logs-upstream" || exit 1
-. "$(dirname "$0")/../common/utils.sh" || exit 1
+LIB_ROOT="$(dirname "$0")/../common"
+# shellcheck source=common/task-control.sh
+. "$LIB_ROOT/task-control.sh" "testsuite-logs-upstream" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 # EXIT signal handler
 at_exit() {
@@ -41,6 +45,7 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 # of disabling it completely (even in the `meson test`).
 #
 # See: systemd/systemd#17963
+# shellcheck disable=SC2016
 sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
 # FIXME: test-seccomp
@@ -58,7 +63,7 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 # If we're not testing the main branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration
 # tests
-if ! git diff --quiet main HEAD && ! git diff $(git merge-base main HEAD) --name-only | grep -qvE "^man/"; then
+if ! git diff --quiet main HEAD && ! git diff "$(git merge-base main HEAD)" --name-only | grep -qvE "^man/"; then
     echo "Detected man-only PR, skipping integration tests"
     exit $FAILED
 fi

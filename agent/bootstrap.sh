@@ -1,8 +1,11 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
 LIB_ROOT="$(dirname "$0")/../common"
-. "$LIB_ROOT/utils.sh" || exit 1
+# shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-upstream" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 REMOTE_REF=""
@@ -85,7 +88,7 @@ ln -s "$(which python3.6)" /usr/bin/python3
     pushd dracut || { echo >&2 "Can't pushd to dracut"; exit 1; }
     git checkout 046
     ./configure --disable-documentation
-    make -j $(nproc)
+    make -j "$(nproc)"
     make install
     popd
 ) 2>&1 | tee "$LOGDIR/dracut-build.log"
@@ -114,6 +117,7 @@ systemctl disable firewalld
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
     # Make sure we copy over the meson logs even if the compilation fails
+    # shellcheck disable=SC2064
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     meson build -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
                 -Dcpp_args='-Og' \
@@ -201,9 +205,9 @@ dracut -f --regenerate-all --filesystems ext4 ${INSTALL_FILES[@]+"${INSTALL_FILE
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
-if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
+if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
     echo >&2 "Missing systemd module in the initramfs image, can't continue..."
-    lsinitrd /boot/initramfs-$(uname -r).img
+    lsinitrd "/boot/initramfs-$(uname -r).img"
     exit 1
 fi
 

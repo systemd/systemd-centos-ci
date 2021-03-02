@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2155
 # Vagrant provider for a standard systemd setup
 
 set -eu

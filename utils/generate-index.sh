@@ -37,7 +37,7 @@ cat > "$ADDITIONAL_INFO_FILE" << EOF
 <div>
 <strong>Build URL:</strong> <a href='$BUILD_URL'>$BUILD_URL</a><br/>
 <strong>Console log:</strong> <a href='$BUILD_URL/console'>$BUILD_URL/console</a><br/>
-<strong>PR title:</strong> $ghprbPullTitle</br>
+<strong>PR title:</strong> ${ghprbPullTitle:-N/A}</br>
 </div>
 EOF
 # 1) Add a newline after the </h1> tag, so we can use sed's patter matching
@@ -65,6 +65,7 @@ LANDING_URL="${BUILD_URL}artifact/${PWD##$WORKSPACE}/index.html"
 echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '_'; done
 echo -ne "\n< $LANDING_URL >\n"
 echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '-'; done
+# shellcheck disable=SC1004
 echo '
                        \                    ^    /^
                         \                  / \  // \

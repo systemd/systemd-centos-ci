@@ -1,8 +1,11 @@
 #!/usr/bin/bash
+# shellcheck disable=SC2155
 
 LIB_ROOT="$(dirname "$0")/../common"
-. "$LIB_ROOT/utils.sh" || exit 1
+# shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel8" || exit 1
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
 
 REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
 CGROUP_HIERARCHY="legacy"
@@ -85,6 +88,7 @@ fi
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
     # Make sure we copy over the meson logs even if the compilation fails
+    # shellcheck disable=SC2064
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     CONFIGURE_OPTS=(
             # RHEL8 options
@@ -204,9 +208,9 @@ dracut -f --regenerate-all --filesystems ext4
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
-if ! lsinitrd -m /boot/initramfs-$(uname -r).img | grep "^systemd$"; then
+if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
     echo >&2 "Missing systemd module in the initramfs image, can't continue..."
-    lsinitrd /boot/initramfs-$(uname -r).img
+    lsinitrd "/boot/initramfs-$(uname -r).img"
     exit 1
 fi
 
