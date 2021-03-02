@@ -152,11 +152,11 @@ for t in "${FLAKE_LIST[@]}"; do
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
     exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
-    for i in {1..3}; do
-        [[ ! -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && break
-        EXECUTED_LIST+=("${t}_${i}")
+    for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
+        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
     done
 done
 
