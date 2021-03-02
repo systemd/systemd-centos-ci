@@ -26,4 +26,6 @@ jobs:
           DEFAULT_BRANCH: master
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MULTI_STATUS: true
+          # Check only new/edited files
+          VALIDATE_ALL_CODEBASE: false
           VALIDATE_BASH: true

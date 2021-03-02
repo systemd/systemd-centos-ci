@@ -80,12 +80,14 @@ fi
     rm -fr "$BUILD_DIR"
 )
 # Same as above, but for libssh
-# FIXME: in the time of writing this workaround the latest libssh SRPM wasn't
-#        present in the source repos, thus the specific version
 (
     BUILD_DIR="$(mktemp -d)"
     pushd "$BUILD_DIR"
-    $PKG_MAN download --source libssh-0.9.0-4.el8
+    # In some cases the currently installed libssh version doesn't have its SRPM
+    # in the repositories. Keep a fallback SRPM version for such cases.
+    if ! $PKG_MAN download --source libssh; then
+        $PKG_MAN download --source "libssh-0.9.4-2.el8"
+    fi
     $PKG_MAN -y --enablerepo powertools builddep libssh*.src.rpm
     rpm2cpio libssh-*.src.rpm | cpio -imdV
     tar xf libssh-*.tar.xz
