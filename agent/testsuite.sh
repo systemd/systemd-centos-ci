@@ -72,8 +72,8 @@ fi
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
+    "test/TEST-29-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-58-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
 )
 SKIP_LIST=("${FLAKE_LIST[@]}")
 
@@ -168,7 +168,7 @@ done
 COREDUMPCTL_SKIP=(
     # This test intentionally kills several processes using SIGABRT, thus generating
     # cores which we're not interested in
-    "test/TEST-49-UDEV-EVENT-TIMEOUT"
+    "test/TEST-17-UDEV"
 )
 
 for t in "${EXECUTED_LIST[@]}"; do
