@@ -140,6 +140,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-17-UDEV           # systemd-udevd
         test/TEST-46-HOMED          # systemd-homed & friends
     )
 
@@ -157,8 +158,16 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
+            if [[ "$t" == "test/TEST-17-UDEV" ]]; then
+                # This test intentionally kills several processes using SIGABRT, thus
+                # generating cores which we're not interested in
+                export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
+            fi
             # Attempt to collect coredumps from test-specific journals as well
             exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+            # Make sure to not propagate the custom coredumpctl filter override
+            [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
+
             # Check for sanitizer errors in test journals
             exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
