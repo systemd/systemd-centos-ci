@@ -165,19 +165,19 @@ for t in "${FLAKE_LIST[@]}"; do
     done
 done
 
-COREDUMPCTL_SKIP=(
-    # This test intentionally kills several processes using SIGABRT, thus generating
-    # cores which we're not interested in
-    "test/TEST-17-UDEV"
-)
-
 for t in "${EXECUTED_LIST[@]}"; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -f "$testdir/system.journal" ]]; then
-        if ! in_set "$t" "${COREDUMPCTL_SKIP[@]}"; then
-            # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+        if [[ "$t" == "test/TEST-17-UDEV" ]]; then
+            # This test intentionally kills several processes using SIGABRT, thus
+            # generating cores which we're not interested in
+            export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
         fi
+        # Attempt to collect coredumps from test-specific journals as well
+        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+        # Make sure to not propagate the custom coredumpctl filter override
+        [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
+
         # Keep the journal files only if the associated test case failed
         if [[ ! -f "$testdir/pass" ]]; then
             rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
