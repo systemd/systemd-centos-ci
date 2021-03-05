@@ -236,15 +236,17 @@ coredumpctl_collect() {
         ARGS+=(-D "$JOURNALDIR")
     fi
 
-    # Collect executable paths of all coredumps and filter out the expected ones
-    # FILTER_RX:
+    # Collect executable paths of all coredumps and filter out the expected ones.
+    # The filter can be overridden using the $COREDUMPCTL_EXCLUDE_RX env variable.
+    # EXCLUDE_RX:
     #   test-execute - certain subtests die with SIGSEGV intentionally
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
     #            further investigation
     #   python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
     #               (since systemd/systemd#16675)
-    FILTER_RX="/(test-execute|dhcpcd|bin/python3.[0-9]+)$"
-    if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$FILTER_RX" > "$TEMPFILE"; then
+    local EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+)$}"
+    _log "Excluding coredumps matching '$EXCLUDE_RX'"
+    if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$EXCLUDE_RX" > "$TEMPFILE"; then
         _log "No relevant coredumps found"
         return 0
     fi
