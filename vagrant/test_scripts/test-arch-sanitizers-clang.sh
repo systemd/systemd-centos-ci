@@ -122,10 +122,10 @@ fi
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
-exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
+exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1 && touch $TESTDIR/pass"
 NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
-rsync -amq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/" &>/dev/null || :
+[[ ! -f "$TESTDIR/pass" ]] && rsync -aq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/"
 
 if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
@@ -140,20 +140,13 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-17-UDEV           # systemd-udevd
         test/TEST-46-HOMED          # systemd-homed & friends
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-
-        # TEST-13-NSPAWN-SMOKE causes intermittent CPU soft lockups during
-        # the QEMU run, causing timeouts & unexpected fails. Let's run only
-        # the systemd-nspawn part of this test to make the CI more stable.
-        unset TEST_NO_QEMU
-        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
-            export TEST_NO_QEMU=1
-        fi
 
         rm -fr "$TESTDIR"
         mkdir -p "$TESTDIR"
@@ -165,8 +158,16 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
+            if [[ "$t" == "test/TEST-17-UDEV" ]]; then
+                # This test intentionally kills several processes using SIGABRT, thus
+                # generating cores which we're not interested in
+                export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
+            fi
             # Attempt to collect coredumps from test-specific journals as well
             exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+            # Make sure to not propagate the custom coredumpctl filter override
+            [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
+
             # Check for sanitizer errors in test journals
             exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
