@@ -122,10 +122,10 @@ fi
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
-exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1"
+exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1 && touch $TESTDIR/pass"
 NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
-rsync -amq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/" &>/dev/null || :
+[[ ! -f "$TESTDIR/pass" ]] && rsync -aq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/"
 
 if [[ $NSPAWN_EC -eq 0 ]]; then
     # 2) The sanity check passed, let's run the other half of the TEST-01-BASIC
