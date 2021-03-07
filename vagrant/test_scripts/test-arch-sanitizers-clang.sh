@@ -138,8 +138,12 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
-        test/TEST-46-HOMED          # systemd-homed & friends
+        test/TEST-29-PORTABLE       # systemd-portabled
+        test/TEST-46-HOMED          # systemd-homed
+        test/TEST-50-DISSECT        # systemd-dissect
+        test/TEST-55-OOMD           # systemd-oomd
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
