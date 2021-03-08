@@ -110,15 +110,13 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-## As running integration tests with broken systemd can be quite time consuming
-## (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
-## $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
-## the basic integration test under systemd-nspawn (note that we don't install
-## built systemd during sanitizers run, so we use the stable systemd-nspawn
-## version provided by package manager).
-##
-## If the sanity check passes we can be at least somewhat sure the systemd
-## 'core' is stable and we can run the rest of the selected integration tests.
+# As running integration tests with broken systemd can be quite time consuming
+# (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
+# $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
+# the basic integration test under systemd-nspawn
+#
+# If the sanity check passes we can be at least somewhat sure the systemd
+# 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
@@ -134,9 +132,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
-    ## Run certain other integration tests under sanitizers to cover bigger
-    ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
-    ## be somewhat sure the 'base' systemd components work).
+    # Run certain other integration tests under sanitizers to cover bigger
+    # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
+    # be somewhat sure the 'base' systemd components work).
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
