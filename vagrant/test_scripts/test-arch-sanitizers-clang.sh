@@ -178,6 +178,20 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     done
 fi
 
+# Check the test logs for sanitizer errors as well, since some tests may
+# output the "interesting" information only to the console.
+_check_test_logs_for_sanitizer_errors() {
+    local EC=0
+
+    while read -r file; do
+        echo "*** Processing file $file ***"
+        check_for_sanitizer_errors < "$file" || EC=1
+    done < <(find "$LOGDIR" -maxdepth 1 -name "TEST-*.log" ! -name "*_sanitizer_*" ! -name "*_coredumpctl_*")
+
+    return $EC
+}
+exectask "test_logs_sanitizer_errors" "_check_test_logs_for_sanitizer_errors"
+
 ## systemd-networkd testsuite
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
