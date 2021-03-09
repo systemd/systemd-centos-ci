@@ -9,9 +9,6 @@ VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x8
 set -o pipefail
 set -e -u
 
-# Use dnf if present, otherwise fall back to yum
-command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
-
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
 # fine with running tests without nested KVM
@@ -38,7 +35,7 @@ fi
 
 # Configure NTP (chronyd)
 if ! rpm -q chrony; then
-    $PKG_MAN -y install chrony
+    dnf -y install chrony
 fi
 
 systemctl enable --now chronyd
@@ -47,7 +44,7 @@ systemctl status chronyd
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    $PKG_MAN -y install "$VAGRANT_PKG_URL"
+    dnf -y install "$VAGRANT_PKG_URL"
 fi
 
 # Workaround for current Vagrant's DSO hell
@@ -103,7 +100,7 @@ fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    $PKG_MAN -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
+    dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
@@ -123,7 +120,7 @@ vagrant --version
 vagrant plugin list
 
 # Configure NFS for Vagrant's shared folders
-rpm -q nfs-utils || $PKG_MAN -y install nfs-utils
+rpm -q nfs-utils || dnf -y install nfs-utils
 systemctl stop nfs-server
 systemctl start proc-fs-nfsd.mount
 lsmod | grep -E '^nfs$' || modprobe -v nfs
