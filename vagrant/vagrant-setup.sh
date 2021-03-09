@@ -5,12 +5,10 @@
 # of default containers.
 
 VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.rpm"
+WORKAROUNDS_DIR="$(dirname "$(readlink -f "$0")")/workarounds"
 
 set -o pipefail
 set -e -u
-
-# Use dnf if present, otherwise fall back to yum
-command -v dnf > /dev/null && PKG_MAN=dnf || PKG_MAN=yum
 
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
@@ -38,7 +36,7 @@ fi
 
 # Configure NTP (chronyd)
 if ! rpm -q chrony; then
-    $PKG_MAN -y install chrony
+    dnf -y install chrony
 fi
 
 systemctl enable --now chronyd
@@ -47,63 +45,20 @@ systemctl status chronyd
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    $PKG_MAN -y install "$VAGRANT_PKG_URL"
+    dnf -y install "$VAGRANT_PKG_URL"
 fi
 
-# Workaround for current Vagrant's DSO hell
-# ---
-# The krb5-libs RPM is compiled with --with-crypto-impl=openssl, which
-# includes symbols, that are not available in the Vagrant's embedded OpenSSL
-# library, causing errors like:
-#   /opt/vagrant/embedded/lib64/libk5crypto.so.3: undefined symbol: EVP_KDF_ctrl, version OPENSSL_1_1_1b
-
-# Workaround this by compiling a local version of the krb5-libs using the
-# builtin crypto implementation and copying the built libraries into
-# the embedded lib dir.
-#
-# See:
-#   https://github.com/hashicorp/vagrant/issues/11020
-#   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/1031
-#   https://github.com/vagrant-libvirt/vagrant-libvirt/issues/943
-(
-    BUILD_DIR="$(mktemp -d)"
-    pushd "$BUILD_DIR"
-    $PKG_MAN -y install gcc byacc tar make
-    $PKG_MAN download --source krb5
-    rpm2cpio krb5-*.src.rpm | cpio -imdV
-    tar xf krb5-*.tar.gz
-    cd krb5-*/src
-    ./configure --with-crypto-impl=builtin
-    make -j $(($(nproc) * 2))
-    cp -a lib/crypto/libk5crypto.* /opt/vagrant/embedded/lib64/
-    popd
-    rm -fr "$BUILD_DIR"
-)
-# Same as above, but for libssh
-(
-    BUILD_DIR="$(mktemp -d)"
-    pushd "$BUILD_DIR"
-    # In some cases the currently installed libssh version doesn't have its SRPM
-    # in the repositories. Keep a fallback SRPM version for such cases.
-    if ! $PKG_MAN download --source libssh; then
-        $PKG_MAN download --source "libssh-0.9.4-2.el8"
-    fi
-    $PKG_MAN -y --enablerepo powertools builddep libssh*.src.rpm
-    rpm2cpio libssh-*.src.rpm | cpio -imdV
-    tar xf libssh-*.tar.xz
-    cd "$(find . -maxdepth 1 -name "libssh-*" -type d)"
-    mkdir build
-    cd build
-    cmake .. -DOPENSSL_ROOT_DIR=/opt/vagrant/embedded/ -DCMAKE_PREFIX_PATH=/opt/vagrant/embedded/
-    make -j $(($(nproc) * 2))
-    cp -a lib/libssh* /opt/vagrant/embedded/lib64/
-    popd
-    rm -fr "$BUILD_DIR"
-)
+# To speed up Vagrant jobs, let's use a pre-compiled bundle with the necessary
+# shared libraries. See vagrant/workarounds/build-shared-libs.sh for more info.
+if [[ -e "$WORKAROUNDS_DIR/vagrant-shared-libs.tar.gz" ]]; then
+    echo "[vagrant-setup] Found pre-compiled shared libs, unpacking..."
+    command -v tar >/dev/null || dnf -q -y install tar
+    tar -xzvf "$WORKAROUNDS_DIR/vagrant-shared-libs.tar.gz" -C /opt/vagrant/embedded/lib64/
+fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    $PKG_MAN -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
+    dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
@@ -123,7 +78,7 @@ vagrant --version
 vagrant plugin list
 
 # Configure NFS for Vagrant's shared folders
-rpm -q nfs-utils || $PKG_MAN -y install nfs-utils
+rpm -q nfs-utils || dnf -y install nfs-utils
 systemctl stop nfs-server
 systemctl start proc-fs-nfsd.mount
 lsmod | grep -E '^nfs$' || modprobe -v nfs
