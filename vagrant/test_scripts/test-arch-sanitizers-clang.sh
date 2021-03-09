@@ -110,15 +110,13 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-## As running integration tests with broken systemd can be quite time consuming
-## (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
-## $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
-## the basic integration test under systemd-nspawn (note that we don't install
-## built systemd during sanitizers run, so we use the stable systemd-nspawn
-## version provided by package manager).
-##
-## If the sanity check passes we can be at least somewhat sure the systemd
-## 'core' is stable and we can run the rest of the selected integration tests.
+# As running integration tests with broken systemd can be quite time consuming
+# (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
+# $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
+# the basic integration test under systemd-nspawn
+#
+# If the sanity check passes we can be at least somewhat sure the systemd
+# 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
@@ -134,14 +132,18 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
-    ## Run certain other integration tests under sanitizers to cover bigger
-    ## systemd subcomponents (but only if TEST-01-BASIC passed, so we can
-    ## be somewhat sure the 'base' systemd components work).
+    # Run certain other integration tests under sanitizers to cover bigger
+    # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
+    # be somewhat sure the 'base' systemd components work).
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
-        test/TEST-46-HOMED          # systemd-homed & friends
+        test/TEST-29-PORTABLE       # systemd-portabled
+        test/TEST-46-HOMED          # systemd-homed
+        test/TEST-50-DISSECT        # systemd-dissect
+        test/TEST-55-OOMD           # systemd-oomd
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
@@ -177,6 +179,20 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         fi
     done
 fi
+
+# Check the test logs for sanitizer errors as well, since some tests may
+# output the "interesting" information only to the console.
+_check_test_logs_for_sanitizer_errors() {
+    local EC=0
+
+    while read -r file; do
+        echo "*** Processing file $file ***"
+        check_for_sanitizer_errors < "$file" || EC=1
+    done < <(find "$LOGDIR" -maxdepth 1 -name "TEST-*.log" ! -name "*_sanitizer_*" ! -name "*_coredumpctl_*")
+
+    return $EC
+}
+exectask "test_logs_sanitizer_errors" "_check_test_logs_for_sanitizer_errors"
 
 ## systemd-networkd testsuite
 # Prepare environment for the systemd-networkd testsuite
