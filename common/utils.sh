@@ -2,6 +2,9 @@
 # shellcheck disable=SC2155
 # This file contains useful functions shared among scripts from this repository
 
+set -o pipefail
+set -u
+
 __COREDUMPCTL_TS=""
 
 # Internal logging helpers which make use of the internal call stack to get
@@ -203,7 +206,7 @@ coredumpctl_set_ts() {
 # Returns:
 #   0 when no coredumps were found, 1 otherwise
 coredumpctl_collect() {
-    local ARGS=(--no-legend --no-pager)
+    local ARGS=(-q --no-legend --no-pager)
     # Allow overriding the coredumpctl binary for cases when we read coredumps
     # from a custom directory, which may contain journals with different features
     # than are supported by the local journalctl/coredumpctl versions
@@ -270,7 +273,7 @@ coredumpctl_collect() {
             # $BUILD_DIR is set and we found the binary in it, let's override
             # the gdb command
             EXE="$BUILD_DIR/${path##*/}"
-            GDB_CMD="file $EXE\nframe\nbt full\nquit"
+            GDB_CMD="file $EXE\nthread apply all bt\nbt full\nquit"
             _log "\$BUILD_DIR is set and '${path##*/}' was found in it"
             _log "Overriding the executable to '$EXE' and gdb command to '$GDB_CMD'"
         fi

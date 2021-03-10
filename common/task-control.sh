@@ -1,6 +1,7 @@
 #!/usr/bin/bash
 
 set -u
+set -o pipefail
 
 # Internal logging helpers which make use of the internal call stack to get
 # the function name of the caller
