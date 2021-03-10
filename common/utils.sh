@@ -2,6 +2,9 @@
 # shellcheck disable=SC2155
 # This file contains useful functions shared among scripts from this repository
 
+set -o pipefail
+set -u
+
 __COREDUMPCTL_TS=""
 
 # Internal logging helpers which make use of the internal call stack to get
