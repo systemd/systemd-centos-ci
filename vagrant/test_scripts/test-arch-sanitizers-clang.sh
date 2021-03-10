@@ -80,7 +80,7 @@ chmod +x "$ASAN_WRAPPER"
 
 # Run the internal unit tests (make check)
 exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
-exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog.txt | check_for_sanitizer_errors"
+exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).
