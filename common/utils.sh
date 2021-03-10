@@ -203,7 +203,7 @@ coredumpctl_set_ts() {
 # Returns:
 #   0 when no coredumps were found, 1 otherwise
 coredumpctl_collect() {
-    local ARGS=(--no-legend --no-pager)
+    local ARGS=(-q --no-legend --no-pager)
     # Allow overriding the coredumpctl binary for cases when we read coredumps
     # from a custom directory, which may contain journals with different features
     # than are supported by the local journalctl/coredumpctl versions
