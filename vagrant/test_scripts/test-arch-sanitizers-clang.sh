@@ -135,6 +135,8 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Run certain other integration tests under sanitizers to cover bigger
     # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     # be somewhat sure the 'base' systemd components work).
+    RETRY_COUNT=2
+    EXECUTED_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
@@ -150,17 +152,22 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
-        rm -fr "$TESTDIR"
-        mkdir -p "$TESTDIR"
+        # Suffix the $TESTDIR of each retry with an index to tell them apart
+        export MANGLE_TESTDIR=1
+        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass" "$RETRY_COUNT"
 
-        exectask "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+        # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
+        # array accordingly to correctly find the respective journals
+        for ((i = 1; i <= RETRY_COUNT; i++)); do
+            [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+        done
     done
 
     # Save journals created by integration tests
-    for t in "TEST-01-BASIC_sanitizers-qemu" "${INTEGRATION_TESTS[@]}"; do
+    for t in "TEST-01-BASIC_sanitizers-qemu" "${EXECUTED_LIST[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
-            if [[ "$t" == "test/TEST-17-UDEV" ]]; then
+            if [[ "$t" == test/TEST-17-UDEV_* ]]; then
                 # This test intentionally kills several processes using SIGABRT, thus
                 # generating cores which we're not interested in
                 export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
