@@ -68,7 +68,7 @@ fi
 yum -y install epel-release yum-utils gdb
 yum-config-manager --enable epel
 yum -y update
-yum -y install attr busybox dnsmasq e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools \
+yum -y install attr busybox dnsmasq dosfstools e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools \
                ninja-build openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat squashfs-tools strace \
                systemd-ci-environment veritysetup
 
