@@ -30,6 +30,11 @@ Vagrant.configure("2") do |config|
     dnf install -y attr busybox fedpkg git nc qemu-kvm rpm-build rpmdevtools socat strace tpm2-tss-devel
     dnf builddep -y systemd
 
+    # Unlock root account and set its password to 'vagrant' to allow root login
+    # via ssh
+    echo -e 'vagrant\nvagrant' | passwd
+    passwd -S root
+
     # Configure NTP (chronyd)
     dnf install -y chrony
     systemctl enable --now chronyd
