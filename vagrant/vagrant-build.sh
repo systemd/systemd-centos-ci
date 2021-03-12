@@ -120,7 +120,7 @@ if $USING_SANITIZERS; then
     # Skip the reboot/reload when running with sanitizers, as it in most cases
     # causes boot to timeout or die completely
     # Run tests with sanitizers
-    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
+    vagrant ssh -c "cd /build && $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
     SSH_EC=$?
 else
     # Reboot the VM to "apply" the new systemd
@@ -138,7 +138,7 @@ else
             ;;
     esac
     # Run tests
-    vagrant ssh -c "cd /build && sudo $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
+    vagrant ssh -c "cd /build && $RELATIVE_TEST_DIR/${TEST_SCRIPT##*/} $DISTRO_STRING"
     SSH_EC=$?
 fi
 
