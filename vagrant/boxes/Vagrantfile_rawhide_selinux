@@ -34,6 +34,9 @@ Vagrant.configure("2") do |config|
     # via ssh
     echo -e 'vagrant\nvagrant' | passwd
     passwd -S root
+    # Fedora's default for PermitRootLogin= is 'prohibit-password' which breaks
+    # Vagrant 'insert_key' feature
+    echo "PermitRootLogin yes" >>/etc/ssh/sshd_config
 
     # Configure NTP (chronyd)
     dnf install -y chrony
