@@ -107,6 +107,10 @@ vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"
     vagrant box add --name testbox "$BOX_NAME"
     pushd "$TEST_DIR"
     vagrant init testbox
+    # Test root login via SSH, since that's what we use in tests
+    sed -i '/^Vagrant.configure/a\  config.ssh.username = "root"' Vagrantfile
+    sed -i '/^Vagrant.configure/a\  config.ssh.password = "vagrant"' Vagrantfile
+    sed -i '/^Vagrant.configure/a\  config.ssh.insert_key = "true"' Vagrantfile
     vagrant up --no-tty --provider=libvirt
     vagrant ssh -c "uname -a" || INNER_EC=1
 
