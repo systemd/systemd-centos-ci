@@ -60,3 +60,11 @@ popd
 # AVCs, not just the first one
 sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
 cat /etc/selinux/config
+
+# Dump debug logs to serial console for easier debugging when something goes awry
+journalctl -e --no-pager
+systemd-analyze set-log-level debug
+systemd-analyze set-log-target console
+systemctl daemon-reexec
+systemctl --user daemon-reexec
+dracut -f --regenerate-all
