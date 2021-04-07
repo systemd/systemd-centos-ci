@@ -45,53 +45,52 @@ done
 set -e -u
 set -o pipefail
 
-COPR_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
-COPR_REPO_PATH="/etc/yum.repos.d/${COPR_REPO##*/}"
+ADDITIONAL_DEPS=(
+    attr
+    device-mapper-event
+    dnsmasq
+    dosfstools
+    e2fsprogs
+    elfutils
+    elfutils-devel
+    gcc-c++
+    iproute-tc
+    kernel-modules-extra
+    libasan
+    libfdisk-devel
+    libpwquality-devel
+    libzstd-devel
+    make
+    net-tools
+    nmap-ncat
+    openssl-devel
+    pcre2-devel
+    qemu-kvm
+    qrencode-devel
+    quota
+    socat
+    squashfs-tools
+    strace
+    tpm2-tss-devel
+    veritysetup
+    wget
+)
 
-# Enable necessary repositories and install required packages
-#   - enable custom Copr repo with newer versions of certain packages (necessary
-#     to successfully compile upstream systemd on CentOS)
-#   - enable EPEL repo for additional dependencies
-#   - update current system
-#   - install python 3.6 (required by meson) and install meson + other build deps
-curl "$COPR_REPO" -o "$COPR_REPO_PATH"
-# Add a copr repo mirror
-# Note: if a URL starts on a new line, it MUST begin with leading spaces,
-#       otherwise it will be ignored
-sed -i '/baseurl=/a\    http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci/' "$COPR_REPO_PATH"
-sed -i '/gpgkey=/d' "$COPR_REPO_PATH"
-sed -i 's/skip_if_unavailable=True/skip_if_unavailable=False/' "$COPR_REPO_PATH"
-# As the gpgkey directive doesn't support mirrors, let's install the GPG key manually
-if ! rpm --import https://copr-be.cloud.fedoraproject.org/results/mrc0mmand/systemd-centos-ci/pubkey.gpg; then
-    rpm --import http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci/pubkey.gpg
+dnf -y install epel-release dnf-plugins-core gdb
+dnf -y config-manager --enable epel --enable powertools
+dnf -y copr enable mrc0mmand/systemd-centos-ci-centos8
+dnf -y update
+dnf -y builddep systemd
+dnf -y install "${ADDITIONAL_DEPS[@]}"
+# As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
+# using a different way. Needed by TEST-13-NSPAWN-SMOKE
+wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
+# Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
+# with the OpenBSD version present on CentOS 8
+if alternatives --display nmap; then
+    alternatives --set nmap /usr/bin/ncat
+    alternatives --display nmap
 fi
-yum -y install epel-release yum-utils gdb
-yum-config-manager --enable epel
-yum -y update
-yum -y install attr busybox dnsmasq dosfstools e2fsprogs gcc-c++ libasan libbpf-devel libfdisk-devel nc net-tools \
-               ninja-build openssl-devel pcre2-devel python36 python-lxml qemu-kvm quota socat squashfs-tools strace \
-               systemd-ci-environment veritysetup
-
-# Since systemd/systemd#13842 the minimal meson version was bumped to 0.52.1,
-# which is no longer available in the CentOS 7 repos
-python3.6 -m ensurepip
-python3.6 -m pip install meson==0.52.1
-
-# python36 package doesn't create the python3 symlink
-rm -f /usr/bin/python3
-ln -s "$(which python3.6)" /usr/bin/python3
-
-# Build and install dracut from upstream
-(
-    test -e dracut && rm -rf dracut
-    git clone git://git.kernel.org/pub/scm/boot/dracut/dracut.git
-    pushd dracut || { echo >&2 "Can't pushd to dracut"; exit 1; }
-    git checkout 046
-    ./configure --disable-documentation
-    make -j "$(nproc)"
-    make install
-    popd
-) 2>&1 | tee "$LOGDIR/dracut-build.log"
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -109,6 +108,16 @@ fi
 
 # Disable firewalld (needed for systemd-networkd tests)
 systemctl disable firewalld
+
+# Compile & install libbpf-next
+(
+    git clone --depth=1 https://github.com/libbpf/libbpf libbpf
+    pushd libbpf/src
+    LD_FLAGS="-Wl,--no-as-needed" NO_PKG_CONFIG=1 make
+    make install
+    popd
+    rm -fr libbpf
+)
 
 # Compile systemd
 #   - slow-tests=true: enables slow tests
@@ -173,10 +182,7 @@ ninja-build -C build install
 # the old systemd binary was incompatible with the unit files on disk and
 # prevented the system from reboot
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
-
-# Readahead is dead in systemd upstream
-rm -f /usr/lib/systemd/system/systemd-readahead-done.service
-popd
+SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
@@ -232,8 +238,8 @@ GRUBBY_ARGS=(
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
-    if ! grep -q "$arg" /boot/grub2/grub.cfg; then
-        echo >&2 "Kernel parameter '$arg' was not found in /boot/grub2/grub.cfg"
+    if ! grep -q -r "$arg" /boot/loader/entries/; then
+        echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
         exit 1
     fi
 done

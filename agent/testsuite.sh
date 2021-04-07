@@ -17,7 +17,8 @@ trap at_exit EXIT
 
 ### SETUP PHASE ###
 # Exit on error in the setup phase
-set -e -u
+set -eu
+set -o pipefail
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then
@@ -47,13 +48,6 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 # See: systemd/systemd#17963
 # shellcheck disable=SC2016
 sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
-
-# FIXME: test-seccomp
-# This test became flaky once again, so disable it temporarily until the reason
-# is found out.
-#
-# See: systemd/systemd#17078
-echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
 
 # FIXME: test-loop-block
 # This test is flaky due to uevent mess, and requires a kernel change.
