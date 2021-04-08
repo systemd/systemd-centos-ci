@@ -57,6 +57,13 @@ sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\
 #   systemd/systemd#18166
 echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 
+# FIXME: test-seccomp
+# This test became flaky once again, so disable it temporarily until the reason
+# is found out.
+#
+# See: systemd/systemd#17078
+echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
