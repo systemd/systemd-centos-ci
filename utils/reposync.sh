@@ -1,8 +1,8 @@
 #!/bin/bash
 
-ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/repo/epel-7/mrc0mmand-systemd-centos-ci-epel-7.repo"
-ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci"
-LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci"
+ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/repo/epel-8/mrc0mmand-systemd-centos-ci-centos8-epel-8.repo"
+ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos8"
+LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos8"
 DOWNLOAD_LOCATION="${1:-.}"
 
 if [[ ! -v CICO_API_KEY ]]; then
@@ -53,18 +53,28 @@ wget -O repo-config.repo "$ORIGINAL_REPO"
 # If so, parse it and download it
 GPG_KEY_URL="$(awk -F= '/^gpgkey=/ { print $2 }' repo-config.repo)"
 if [[ -n $GPG_KEY_URL ]]; then
-    GPG_KEY_URL_NAME="${GPG_KEY_URL##*/}"
-    wget -O "$GPG_KEY_URL_NAME" "$GPG_KEY_URL"
+    GPG_KEY_NAME="${GPG_KEY_URL##*/}"
+    wget -O "$GPG_KEY_NAME" "$GPG_KEY_URL"
 fi
 
 # Make a local copy of the original repository packages
 reposync -q --norepopath --plugins --config="repo-config.repo" --repoid="$ORIGINAL_REPO_ID" --download_path="$DOWNLOAD_LOCATION/$LOCAL_REPO_ID"
 # Create necessary repo metadata, so the local repository can act as a mirror
 createrepo_c --update -q "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID"
+# Create a repo file
+cat > "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/systemd-centos-ci-centos8.repo" << EOF
+[systemd-centos-ci-centos8]
+name=Mirror of mrc0mmand/systemd-centos-ci-centos8 Copr repo
+baseurl=http://artifacts.ci.centos.org/systemd/$LOCAL_REPO_ID/
+skip_if_unavailable=False
+enabled=1
+EOF
 # Copy over the downloaded GPG key, if any
-if [[ -n $GPG_KEY_URL ]]; then
-    mv "$GPG_KEY_URL_NAME" "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$GPG_KEY_URL_NAME"
+if [[ -f "$GPG_KEY_NAME" ]]; then
+    mv "$GPG_KEY_NAME" "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$GPG_KEY_NAME"
+    echo "gpgkey=http://artifacts.ci.centos.org/systemd/$LOCAL_REPO_ID/$GPG_KEY_NAME" >> "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/systemd-centos-ci-centos8.repo"
 fi
+
 
 # CentOS CI rsync password is the first 13 characters of the duffy key
 PASSWORD_FILE="$(mktemp .rsync-passwd.XXX)"
