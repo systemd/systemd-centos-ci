@@ -22,10 +22,6 @@ at_exit() {
 trap at_exit EXIT
 
 # Parse optional script arguments
-# Note: in RHEL7 version of the bootstrap script this is kind of pointless
-#       (since it's parsing only a single option), but it allows us to have
-#       a single interface in agent-control.py for all RHEL versions without
-#       additional hassle
 while getopts "r:" opt; do
     case "$opt" in
         r)
@@ -133,6 +129,7 @@ systemctl disable firewalld
                 -Dcpp_args='-Og' \
                 -Ddebug=true \
                 --werror \
+                -Dlog-trace=true \
                 -Dhomed=false \
                 -Dslow-tests=true \
                 -Dfuzz-tests=true \

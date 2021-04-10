@@ -57,6 +57,7 @@ meson "$BUILD_DIR" \
       -Db_asneeded=false `# See the FIXME (--as-needed) above` \
       -Ddebug=true \
       --optimization=g \
+      -Dlog-trace=true \
       -Dfexecve=true \
       -Dtests=unsafe \
       -Dslow-tests=true \

@@ -42,6 +42,7 @@ meson "$BUILD_DIR" \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
       --optimization=g \
+      -Dlog-trace=true \
       -Dfexecve=true \
       -Dslow-tests=true \
       -Dfuzz-tests=true \
