@@ -106,6 +106,12 @@ fi
 # Disable firewalld (needed for systemd-networkd tests)
 systemctl disable firewalld
 
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
+
 # Compile & install libbpf-next
 (
     git clone --depth=1 https://github.com/libbpf/libbpf libbpf
@@ -241,6 +247,10 @@ for arg in "${GRUBBY_ARGS[@]}"; do
         exit 1
     fi
 done
+
+# coredumpctl_collect takes an optional argument, which upsets shellcheck
+# shellcheck disable=SC2119
+coredumpctl_collect
 
 # Let's leave this here for a while for debugging purposes
 echo "Current date:         $(date)"

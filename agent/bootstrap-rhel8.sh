@@ -99,6 +99,12 @@ if setenforce 0; then
     echo SELINUX=disabled >/etc/selinux/config
 fi
 
+# Enable systemd-coredump
+if ! coredumpctl_init; then
+    echo >&2 "Failed to configure systemd-coredump/coredumpctl"
+    exit 1
+fi
+
 # Compile systemd
 #   - slow-tests=true: enable slow tests
 #   - tests=unsafe: enable unsafe tests, which might change the environment
@@ -240,6 +246,10 @@ grubby --args="user_namespace.enable=1 $CGROUP_KERNEL_ARGS" --update-kernel="$(g
 grep -r "user_namespace.enable=1" /boot/loader/entries/
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+# coredumpctl_collect takes an optional argument, which upsets shellcheck
+# shellcheck disable=SC2119
+coredumpctl_collect
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
