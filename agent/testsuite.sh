@@ -83,6 +83,7 @@ FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
     "test/TEST-29-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
+    "test/TEST-56-EXIT-TYPE"      # flaky test, see below (systemd/systemd#19345)
 )
 SKIP_LIST=("${FLAKE_LIST[@]}")
 

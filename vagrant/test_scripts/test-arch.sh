@@ -80,6 +80,7 @@ FLAKE_LIST=(
     "test/TEST-29-PORTABLE"       # flaky test (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test (systemd/systemd#17469)
     "test/TEST-55-OOMD"           # flaky test (systemd/systemd#18469)
+    "test/TEST-56-EXIT-TYPE"      # flaky test, see below (systemd/systemd#19345)
 )
 SKIP_LIST=("${FLAKE_LIST[@]}")
 
