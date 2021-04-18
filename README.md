@@ -5,7 +5,7 @@ on test machines provisioned from a pool provided by the [CentOS CI](https://wik
 using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
 As of right now these scripts provide CI for [upstream](https://github.com/systemd/systemd)
-on CentOS 7 and Arch Linux, and for [RHEL downstream](https://github.com/systemd-rhel)
+on CentOS 8 and Arch Linux, and for [RHEL downstream](https://github.com/systemd-rhel)
 on both CentOS 7 and CentOS 8.
 
 # Structure
@@ -40,7 +40,7 @@ The CI scripts are scattered among several directories:
 
 set -e
 
-curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/upstream-centos7.sh
+curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/upstream-centos8.sh
 chmod +x runner.sh
 ./runner.sh
 ```
@@ -65,7 +65,7 @@ agent-control.py +-> agent/bootstrap.sh +-> reboot +-> agent/testsuite.sh
 ```
 
 To test compatibility of the upstream systemd with older kernels, this job builds, installs, and
-tests an upstream PR on a CentOS 7 baremetal machine.
+tests an upstream PR on a CentOS 8 baremetal machine.
 
 To achieve this, `agent-control.py` runs `agent/bootstrap.sh` script to fetch, build, and install
 the respective PR (along with other necessary dependencies), reboots the machine, and executes
@@ -106,13 +106,17 @@ but to not slow down the CI pipeline.
 The templates for each VM used in the CI can be found in `vagrant/vagrantfiles/`.
 As the majority of the current (single) Vagrantfile remains identical across several
 instances of the VMs except for the bootstrap phase, the bootstrap scripts were
-separated into their own directory - `vagrant/bootstrap_script/` and the Vagrantfile
+separated into their own directory - `vagrant/bootstrap_scripts/` and the Vagrantfile
 itself is now parametrized, to avoid code duplication.
+
+The test scripts are in the `vagrant/test_scripts/` directory, and follow the
+same naming convention as the bootstrap scripts above, except for being prefixed
+with `test-`.
 
 ### Pipeline
 
 ```
-agent-control.py +-> vagrant/vagrant-ci-wrapper.sh +-> vagrant/vagrant-build.sh +-> reboot +-> vagrant/vagrant-test.sh
+agent-control.py +-> vagrant/vagrant-ci-wrapper.sh +-> vagrant/vagrant-build.sh +-> [reboot] +-> vagrant/test_scripts/test-<distro>-<type>.sh
                         +               ^                +                 ^
                         |               |                |                 |
                         v               +                v                 +
@@ -146,17 +150,15 @@ The pipeline consists of several steps (scripts):
     and makes other necessary changes to the VM itself.
 
     After this step the VM is rebooted (*reloaded* in the Vagrant terms) and the
-    test runner script (`vagrant/vagrant-test.sh`) is executed inside.
+    test runner script (`vagrant/test_scripts/*.sh`) is executed inside.
 
 ## Upstream on Arch Linux with sanitizers using Vagrant (upstream-vagrant-archlinux-sanitizers)
 
 To tackle the question of security a little bit, this job does *almost* the same thing
 as the one above, but here systemd is compiled with [Address Sanitizer](https://github.com/google/sanitizers/wiki/AddressSanitizer)
 and [Undefined Behavior Sanitizer](https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html). In this
-case we skip the *reboot* step of the pipeline and replace the `vagrant/vagrant-test.sh` script
-with `vagrant/vagrant-test-sanitizer.sh` one, as running the test suite under
-sanitizers is a little bit trickier and limited. See the respective scripts for more
-information.
+case we skip the *reboot* step of the pipeline, since we don't install the compiled
+systemd revision anyway.
 
 ## (Auxiliary) Rebuild the Vagrant images (vagrant-make-cache)
 
@@ -175,10 +177,9 @@ used by the respective Vagrantfile.
 utils/reposync.sh
 ```
 
-As CentOS 7 is quite old, upstream systemd won't work/compile there without further help.
-To amend this, we have a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci/)
-with necessary (newer) build/runtime dependencies (specfiles for these packages
-can be found in their [dedicated repository](https://github.com/systemd/systemd-centos-ci-specs)).
+We need a couple of newer dependencies for systemd on CentOS 8 to cover the most
+recent features. For this wehave a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/)
+with necessary packages.
 
 However, we found out that the infrastructure Copr is running in is quite unreliable
 so a fair share of our jobs was failing just because they couldn't install dependencies.
