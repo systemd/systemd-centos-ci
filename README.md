@@ -89,7 +89,7 @@ agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhe
 
 ## Upstream on Arch Linux using Vagrant (upstream-vagrant-archlinux)
 
-To achieve the exact opposite of the testing on CentOS 7, this pipeline check the compatibility
+To achieve the exact opposite of the testing on CentOS 8, this pipeline check the compatibility
 of systemd with the latest versions of kernel and other components. As the CentOS CI
 pool provides only CentOS machines, this pipeline introduces an intermediary in form of
 a [Vagrant](https://www.vagrantup.com) VM along with [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt)
@@ -178,7 +178,7 @@ utils/reposync.sh
 ```
 
 We need a couple of newer dependencies for systemd on CentOS 8 to cover the most
-recent features. For this wehave a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/)
+recent features. For this we have a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/)
 with necessary packages.
 
 However, we found out that the infrastructure Copr is running in is quite unreliable
