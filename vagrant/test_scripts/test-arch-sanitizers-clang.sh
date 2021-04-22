@@ -143,7 +143,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Run certain other integration tests under sanitizers to cover bigger
     # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     # be somewhat sure the 'base' systemd components work).
-    RETRY_COUNT=2
     EXECUTED_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
@@ -163,11 +162,11 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
         export MANGLE_TESTDIR=1
-        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass" "$RETRY_COUNT"
+        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
 
         # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
         # array accordingly to correctly find the respective journals
-        for ((i = 1; i <= RETRY_COUNT; i++)); do
+        for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
             [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
         done
     done
