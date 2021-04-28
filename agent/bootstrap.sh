@@ -75,7 +75,7 @@ ADDITIONAL_DEPS=(
 dnf -y install epel-release dnf-plugins-core gdb
 dnf -y config-manager --enable epel --enable powertools
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/mrc0mmand-systemd-centos-ci-centos8/systemd-centos-ci-centos8.repo"
+dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
 dnf -y update
 dnf -y builddep systemd
 dnf -y install "${ADDITIONAL_DEPS[@]}"
