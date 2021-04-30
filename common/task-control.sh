@@ -138,26 +138,23 @@ printresult() {
 #   $3 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local LOGFILE="$LOGDIR/$1.log"
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMAMND="${2:?Missing task command}"
     local IGNORE_EC="${3:-0}"
+    local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
-    echo "[TASK] $1"
-    echo "[TASK START] $(date)" >> "$LOGFILE"
+    echo "[TASK] $TASK_NAME ($TASK_COMAMND)"
+    echo "[TASK START] $(date)" >>"$LOGFILE"
 
     # shellcheck disable=SC2086
-    eval $2 &>> "$LOGFILE" &
+    eval $TASK_COMAMND &>>"$LOGFILE" &
     local PID=$!
     waitforpid $PID
     local EC=$?
-    echo "[TASK END] $(date)" >> "$LOGFILE"
+    echo "[TASK END] $(date)" >>"$LOGFILE"
 
-    printresult $EC "$LOGFILE" "$1" "$IGNORE_EC"
+    printresult $EC "$LOGFILE" "$TASK_NAME" "$IGNORE_EC"
     echo
 
     return $EC
@@ -175,23 +172,20 @@ exectask() {
 #   $2 - task command
 #   $3 - # of retries (default: 3) [optional]
 exectask_retry() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMMAND="${2:?Missing task command}"
     local RETRIES="${3:-$EXECTASK_RETRY_DEFAULT}"
     local EC=0
     local ORIG_TESTDIR
 
     for ((i = 1; i <= RETRIES; i++)); do
-        local logfile="$LOGDIR/${1}_${i}.log"
+        local logfile="$LOGDIR/${TASK_NAME}_${i}.log"
         local pid
 
         touch "$logfile"
 
-        echo "[TASK] $1 (try $i/$RETRIES)"
-        echo "[TASK START] $(date)" >> "$logfile"
+        echo "[TASK] $TASK_NAME ($TASK_COMMAND) [try $i/$RETRIES]"
+        echo "[TASK START] $(date)" >>"$logfile"
 
         # Suffix the $TESTDIR for each retry by its index if requested
         if [[ -v MANGLE_TESTDIR && "$MANGLE_TESTDIR" -ne 0 ]]; then
@@ -202,22 +196,22 @@ exectask_retry() {
         fi
 
         # shellcheck disable=SC2086
-        eval $2 &>> "$logfile" &
+        eval $TASK_COMMAND &>>"$logfile" &
         pid=$!
         waitforpid $pid
         EC=$?
-        echo "[TASK END] $(date)" >> "$logfile"
+        echo "[TASK END] $(date)" >>"$logfile"
 
         if [[ $EC -eq 0 ]]; then
             # Task passed => report the result & bail out early
-            printresult $EC "$logfile" "$1" 0
+            printresult $EC "$logfile" "$TASK_NAME" 0
             echo
             break
         else
             # Task failed => check if we still have retries left. If so, report
             # the result as "ignored" and continue to the next retry. Otherwise,
             # report the result as failed.
-            printresult $EC "$logfile" "$1" $((i < RETRIES))
+            printresult $EC "$logfile" "$TASK_NAME" $((i < RETRIES))
             echo
         fi
     done
@@ -234,18 +228,13 @@ exectask_retry() {
 #   $1 - task name
 #   $2 - task command
 exectask_p() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local TASK_NAME="$1"
-    local TASK_COMMAND="$2"
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMAMND="${2:?Missing task command}"
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
     echo "[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
-    echo "[TASK START] $(date)" >> "$LOGFILE"
+    echo "[TASK START] $(date)" >>"$LOGFILE"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
@@ -254,7 +243,7 @@ exectask_p() {
                 wait "${TASK_QUEUE[$key]}"
                 ec=$?
                 logfile="$LOGDIR/$key.log"
-                echo "[TASK END] $(date)" >> "$logfile"
+                echo "[TASK END] $(date)" >>"$logfile"
                 printresult $ec "$logfile" "$key"
                 echo
                 unset "TASK_QUEUE[$key]"
@@ -269,7 +258,7 @@ exectask_p() {
     done
 
     # shellcheck disable=SC2086
-    eval $TASK_COMMAND &>> "$LOGFILE" &
+    eval $TASK_COMMAND &>>"$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
     return 0
