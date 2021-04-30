@@ -47,27 +47,23 @@ echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
 # Arguments
 #   - PID (must be a child of current shell)
 waitforpid() {
-    if [[ $# -lt 1 ]]; then
-        _err "Missing argument: PID"
-        return 1
-    fi
-
+    local PID="${1:?Missing PID}"
     local EC
     SECONDS=0
 
-    echo "Waiting for PID $1 to finish"
-    while kill -0 "$1" 2>/dev/null; do
+    echo "Waiting for PID $PID to finish"
+    while kill -0 "$PID" 2>/dev/null; do
         if ((SECONDS % 10 == 0)); then
             echo -n "."
         fi
         sleep 1
     done
 
-    wait "$1"
+    wait "$PID"
     EC=$?
 
     echo
-    echo "PID $1 finished with EC $EC in ${SECONDS}s"
+    echo "PID $PID finished with EC $EC in ${SECONDS}s"
 
     return $EC
 }
@@ -84,14 +80,9 @@ waitforpid() {
 #   $4 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 printresult() {
-    if [[ $# -lt 3 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local TASK_EC="$1"
-    local TASK_LOGFILE="$2"
-    local TASK_NAME="$3"
+    local TASK_EC="${1:?Missing task exit code}"
+    local TASK_LOGFILE="${2:?Missing task log file}"
+    local TASK_NAME="${3:?Missing task name}"
     local IGNORE_EC="${4:-0}"
     # Let's rename the target log file according to the test result (PASS/FAIL)
     local LOGFILE_BASE="${TASK_LOGFILE%.*}" # Log file path without the extension
@@ -138,26 +129,23 @@ printresult() {
 #   $3 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local LOGFILE="$LOGDIR/$1.log"
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMAMND="${2:?Missing task command}"
     local IGNORE_EC="${3:-0}"
+    local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
-    echo "[TASK] $1"
-    echo "[TASK START] $(date)" >> "$LOGFILE"
+    echo "[TASK] $TASK_NAME ($TASK_COMAMND)"
+    echo "[TASK START] $(date)" >>"$LOGFILE"
 
     # shellcheck disable=SC2086
-    eval $2 &>> "$LOGFILE" &
+    eval $TASK_COMAMND &>>"$LOGFILE" &
     local PID=$!
     waitforpid $PID
     local EC=$?
-    echo "[TASK END] $(date)" >> "$LOGFILE"
+    echo "[TASK END] $(date)" >>"$LOGFILE"
 
-    printresult $EC "$LOGFILE" "$1" "$IGNORE_EC"
+    printresult $EC "$LOGFILE" "$TASK_NAME" "$IGNORE_EC"
     echo
 
     return $EC
@@ -175,23 +163,20 @@ exectask() {
 #   $2 - task command
 #   $3 - # of retries (default: 3) [optional]
 exectask_retry() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMMAND="${2:?Missing task command}"
     local RETRIES="${3:-$EXECTASK_RETRY_DEFAULT}"
     local EC=0
     local ORIG_TESTDIR
 
     for ((i = 1; i <= RETRIES; i++)); do
-        local logfile="$LOGDIR/${1}_${i}.log"
+        local logfile="$LOGDIR/${TASK_NAME}_${i}.log"
         local pid
 
         touch "$logfile"
 
-        echo "[TASK] $1 (try $i/$RETRIES)"
-        echo "[TASK START] $(date)" >> "$logfile"
+        echo "[TASK] $TASK_NAME ($TASK_COMMAND) [try $i/$RETRIES]"
+        echo "[TASK START] $(date)" >>"$logfile"
 
         # Suffix the $TESTDIR for each retry by its index if requested
         if [[ -v MANGLE_TESTDIR && "$MANGLE_TESTDIR" -ne 0 ]]; then
@@ -202,22 +187,22 @@ exectask_retry() {
         fi
 
         # shellcheck disable=SC2086
-        eval $2 &>> "$logfile" &
+        eval $TASK_COMMAND &>>"$logfile" &
         pid=$!
         waitforpid $pid
         EC=$?
-        echo "[TASK END] $(date)" >> "$logfile"
+        echo "[TASK END] $(date)" >>"$logfile"
 
         if [[ $EC -eq 0 ]]; then
             # Task passed => report the result & bail out early
-            printresult $EC "$logfile" "$1" 0
+            printresult $EC "$logfile" "$TASK_NAME" 0
             echo
             break
         else
             # Task failed => check if we still have retries left. If so, report
             # the result as "ignored" and continue to the next retry. Otherwise,
             # report the result as failed.
-            printresult $EC "$logfile" "$1" $((i < RETRIES))
+            printresult $EC "$logfile" "$TASK_NAME" $((i < RETRIES))
             echo
         fi
     done
@@ -234,18 +219,13 @@ exectask_retry() {
 #   $1 - task name
 #   $2 - task command
 exectask_p() {
-    if [[ $# -lt 2 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local TASK_NAME="$1"
-    local TASK_COMMAND="$2"
+    local TASK_NAME="${1:?Missing task name}"
+    local TASK_COMMAND="${2:?Missing task command}"
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
     echo "[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
-    echo "[TASK START] $(date)" >> "$LOGFILE"
+    echo "[TASK START] $(date)" >>"$LOGFILE"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
@@ -254,7 +234,7 @@ exectask_p() {
                 wait "${TASK_QUEUE[$key]}"
                 ec=$?
                 logfile="$LOGDIR/$key.log"
-                echo "[TASK END] $(date)" >> "$logfile"
+                echo "[TASK END] $(date)" >>"$logfile"
                 printresult $ec "$logfile" "$key"
                 echo
                 unset "TASK_QUEUE[$key]"
@@ -269,7 +249,7 @@ exectask_p() {
     done
 
     # shellcheck disable=SC2086
-    eval $TASK_COMMAND &>> "$LOGFILE" &
+    eval $TASK_COMMAND &>>"$LOGFILE" &
     TASK_QUEUE[$TASK_NAME]=$!
 
     return 0
@@ -286,82 +266,4 @@ exectask_p_finish() {
         printresult $ec "$logfile" "$key"
         unset "TASK_QUEUE[$key]"
     done
-}
-
-# Initialize all specific images used by integration tests in one go so
-# the tests could be run in parallel if needed.
-#
-# Arguments:
-#   $1 - path to the local copy of system git repository
-initialize_integration_tests() {
-    # Breakdown:
-    #  - grep all IMAGE_NAME= variable definitions from each test's setup script
-    #    (TEST-*/test.sh) - this yields following output for each such file:
-    #       test/TEST-14-MACHINE-ID/test.sh:IMAGE_NAME="badid"
-    #  - sort the result by the second column separated by colon and show only
-    #    lines with unique IMAGE_NAME= definitions (to initialize each image only
-    #    once)
-    #  - split the line into file and image name using comma as the delimiter
-    #  - run the clean and setup phases for the respective test ($file minus
-    #    the /test.sh part)
-    #
-    # Also, to make things more fast (and more complicated at the same time)
-    # attempt to run the setup tasks in parallel. Since the current, ehm,
-    # implementation of the parallel queue doesn't support nesting, this
-    # function should not be executed when other tasks use it. That is not
-    # an issue (as of right now), since the initialization runs before
-    # integration tests which are currently the only users of the parallelization.
-    if [[ $# -ne 1 ]]; then
-        _err "Function takes exactly one argument: path to systemd git repository"
-        return 1
-    fi
-
-    local EC=0
-    local OLD_FAILED=$FAILED
-
-    pushd "$1" || { _err "pushd failed"; return 1; }
-
-    while read -r line; do
-        file="${line%%:*}"
-        image="${line#*:}"
-        testdir="${file%/*}"
-        testname="${testdir##*/}"
-
-        if [[ ! -d "$testdir" ]]; then
-            _err "Parsed path '$testdir' from '$file' is not a directory"
-            EC=1
-            break
-        fi
-
-        # Set the $TESTDIR to something predictable, as it's going to be reused
-        # for test results as well, since we don't clean up the state directory
-        # after setup. The same $TESTDIR format is then used in each test suite
-        # script.
-        export TESTDIR="/var/tmp/systemd-test-$testname"
-        # Avoid creating symlinks to the base images
-        export TEST_PARALLELIZE=1
-
-        _log "Running setup for '$image' from '$file'"
-        exectask_p "setup-$testname" "make -C '$testdir' clean setup"
-    done < <(grep IMAGE_NAME= test/TEST-*/test.sh | sort -k 2 -t : -u)
-
-    # Wait for remaining parallel tasks to complete
-    exectask_p_finish
-
-    # Compare the previously saved number of failed tasks in the parallel queue
-    # with the current state to check if any of the setup tasks failed. As we
-    # should be the only users of the parallel queue right now (see the comment
-    # at the beginning of this function) it should reflect the correct state.
-    if [[ $OLD_FAILED -ne $FAILED ]]; then
-        _err "Some setup tasks failed:"
-        for task in "${FAILED_LIST[@]}"; do
-            echo "$task"
-        done
-
-        EC=1
-    fi
-
-    popd || { _err "popd failed"; return 1; }
-
-    return $EC
 }
