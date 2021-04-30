@@ -17,6 +17,8 @@ API_BASE = "http://admin.ci.centos.org:8080"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
 
+DEBUG_KEEP_MACHINE = False
+
 
 class AgentControl(object):
     def __init__(self, artifacts_storage=None):
@@ -217,6 +219,7 @@ class AgentControl(object):
             "-l", "root",
             node, command
         ]
+        global DEBUG_KEEP_MACHINE
 
         logging.info("Executing a REMOTE command on node'{}': {}".format(node, command))
         rc = self.execute_local_command(command_wrapper)
@@ -228,6 +231,10 @@ class AgentControl(object):
                 logging.warn("Fetching artifacts failed")
 
         if not ignore_rc and rc != expected_rc:
+            if rc == 255:
+                logging.warn("SSH exited with EC 255, keeping the machine")
+                DEBUG_KEEP_MACHINE = True
+
             raise Exception("Remote command exited with an unexpected return code "
                             "(got: {}, expected: {}), bailing out".format(rc, expected_rc))
         return rc
@@ -518,7 +525,7 @@ if __name__ == "__main__":
 
     finally:
         # Return the loaned node back to the pool if not requested otherwise
-        if not args.keep:
+        if not args.keep and not DEBUG_KEEP_MACHINE:
             # Ugly workaround for current Jenkin's behavior, where the signal
             # is sent several times under certain conditions. This is already
             # filed upstream, but the fix is still incomplete. Let's just
