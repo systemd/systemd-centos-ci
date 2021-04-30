@@ -47,27 +47,23 @@ echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
 # Arguments
 #   - PID (must be a child of current shell)
 waitforpid() {
-    if [[ $# -lt 1 ]]; then
-        _err "Missing argument: PID"
-        return 1
-    fi
-
+    local PID="${1:?Missing PID}"
     local EC
     SECONDS=0
 
-    echo "Waiting for PID $1 to finish"
-    while kill -0 "$1" 2>/dev/null; do
+    echo "Waiting for PID $PID to finish"
+    while kill -0 "$PID" 2>/dev/null; do
         if ((SECONDS % 10 == 0)); then
             echo -n "."
         fi
         sleep 1
     done
 
-    wait "$1"
+    wait "$PID"
     EC=$?
 
     echo
-    echo "PID $1 finished with EC $EC in ${SECONDS}s"
+    echo "PID $PID finished with EC $EC in ${SECONDS}s"
 
     return $EC
 }
@@ -84,14 +80,9 @@ waitforpid() {
 #   $4 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 printresult() {
-    if [[ $# -lt 3 ]]; then
-        _err "Missing arguments"
-        return 1
-    fi
-
-    local TASK_EC="$1"
-    local TASK_LOGFILE="$2"
-    local TASK_NAME="$3"
+    local TASK_EC="${1:?Missing task exit code}"
+    local TASK_LOGFILE="${2:?Missing task log file}"
+    local TASK_NAME="${3:?Missing task name}"
     local IGNORE_EC="${4:-0}"
     # Let's rename the target log file according to the test result (PASS/FAIL)
     local LOGFILE_BASE="${TASK_LOGFILE%.*}" # Log file path without the extension
@@ -229,7 +220,7 @@ exectask_retry() {
 #   $2 - task command
 exectask_p() {
     local TASK_NAME="${1:?Missing task name}"
-    local TASK_COMAMND="${2:?Missing task command}"
+    local TASK_COMMAND="${2:?Missing task command}"
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
