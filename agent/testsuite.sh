@@ -110,6 +110,12 @@ cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
 dracut -o multipath --rebuild "$INITRD"
 
+dmesg -w &
+trap "kill $!" EXIT
+
+export OPTIMAL_QEMU_SMP=2
+export MAX_QUEUE_SIZE=$((NPROC/OPTIMAL_QEMU_SMP))
+
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
@@ -202,16 +208,6 @@ for t in "${EXECUTED_LIST[@]}"; do
 
     # Clean the no longer necessary test artifacts
     [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
-done
-
-## Other integration tests ##
-TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
-)
-
-for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any

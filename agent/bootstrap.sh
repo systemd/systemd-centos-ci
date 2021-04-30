@@ -157,35 +157,6 @@ fi
 # Install the compiled systemd
 ninja-build -C build install
 
-# Let's check if the new systemd at least boots before rebooting the system
-# As the CentOS' systemd-nspawn version is too old, we have to use QEMU
-(
-    # Ensure the initrd contains the same systemd version as the one we're
-    # trying to test
-    # Also, rebuild the original initrd without the multipath module, see
-    # comments in `testsuite.sh` for the explanation
-    export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
-    cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
-
-    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-
-    ## Configure test environment
-    # Explicitly set paths to initramfs (see above) and kernel images
-    # (for QEMU tests)
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
-    # Set timeout for QEMU tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    # Disable nspawn version of the test
-    export TEST_NO_NSPAWN=1
-
-    make -C test/TEST-01-BASIC clean setup run clean-again
-
-    rm -fv "$INITRD"
-) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
-
 # The new systemd binary boots, so let's issue a daemon-reexec to use it.
 # This is necessary, since at least once we got into a situation where
 # the old systemd binary was incompatible with the unit files on disk and
@@ -224,7 +195,7 @@ GRUBBY_ARGS=(
     # interfere with running tests
     "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
 )
-grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
+grubby --args="${GRUBBY_ARGS[*]} debug" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
     if ! grep -q -r "$arg" /boot/loader/entries/; then
@@ -244,6 +215,16 @@ echo "/usr mtime:           $(date -r /usr)"
 echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
 
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+# Configure a custom kernel
+# RHEL 8.0 (kernel-4.18.0-80.el8)
+dnf -y config-manager --add-repo http://vault.centos.org/8.0.1905/BaseOS/x86_64/os
+dnf -y install kernel-4.18.0-80.11.2.el8_0
+grubby --set-default /boot/vmlinuz-4.18.0-80.11.2.el8_0.x86_64
+# RHEL 8.1 (kernel-4.18.0-147.el8)
+#dnf -y config-manager --add-repo https://vault.centos.org/8.1.1911/BaseOS/x86_64/os
+#dnf -y install kernel-0:4.18.0-147.8.1.el8_1
+#grubby --set-default /boot/vmlinuz-4.18.0-147.8.1.el8_1.x86_64
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
