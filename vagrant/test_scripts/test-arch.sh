@@ -35,7 +35,7 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 #
 # See: systemd/systemd#17963
 # shellcheck disable=SC2016
-sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
+sed -i '/mapfile -t TEST_LIST/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
 # FIXME: test-loop-block
 # This test is flaky due to uevent mess, and requires a kernel change.
