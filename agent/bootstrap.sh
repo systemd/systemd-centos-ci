@@ -139,7 +139,6 @@ fi
                 -Ddebug=true \
                 --werror \
                 -Dlog-trace=true \
-                -Dhomed=false \
                 -Dslow-tests=true \
                 -Dfuzz-tests=true \
                 -Dtests=unsafe \
