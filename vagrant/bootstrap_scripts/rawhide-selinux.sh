@@ -34,6 +34,13 @@ rpm -qa > vagrant-rawhide-installed-pkgs.txt
     cat /proc/version
 } > vagrant-rawhide-osinfo.txt
 
+# FIXME (LoadCredential= assert)
+# The patch for systemd/systemd#19178 is not yet in Rawhide, so let's temporarily
+# revert the revert of the original mainline workaround to make the job pass again.
+git config user.email "systemd@ci.centos.org"
+git config user.name "systemd CentOS CI"
+git revert --no-ed d4d7127d94c13cd1b88232fb0c138c619e1bae16
+
 rm -fr "$BUILD_DIR"
 # Build phase
 meson "$BUILD_DIR" \
