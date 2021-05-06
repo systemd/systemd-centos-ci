@@ -66,4 +66,6 @@ popd
 # Switch SELinux to permissive mode after reboot, so we catch all possible
 # AVCs, not just the first one
 sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
+sed -ri 's/^SELINUXTYPE=\w+$/SELINUXTYPE=mls/' /etc/selinux/config
 cat /etc/selinux/config
+echo "-F" >/.autorelabel
