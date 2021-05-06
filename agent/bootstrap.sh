@@ -43,6 +43,8 @@ set -o pipefail
 
 ADDITIONAL_DEPS=(
     attr
+    bpftool
+    clang
     device-mapper-event
     dnsmasq
     dosfstools
@@ -56,6 +58,7 @@ ADDITIONAL_DEPS=(
     libfdisk-devel
     libpwquality-devel
     libzstd-devel
+    llvm
     make
     net-tools
     nmap-ncat
@@ -136,7 +139,6 @@ fi
                 -Ddebug=true \
                 --werror \
                 -Dlog-trace=true \
-                -Dhomed=false \
                 -Dslow-tests=true \
                 -Dfuzz-tests=true \
                 -Dtests=unsafe \
