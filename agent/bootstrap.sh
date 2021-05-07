@@ -93,6 +93,28 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
+# Kernel build
+dnf -y builddep kernel
+git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git upstream-kernel
+pushd upstream-kernel
+git checkout v4.18
+make defconfig
+cp "/boot/config-$(uname -r)" .config-local
+# Get the SB cert (CONFIG_MODULE_SIG_KEY=certs/rhel.pem)
+dnf download --source kernel
+rpm -i kernel*.src.rpm
+cp -v /root/rpmbuild/SOURCES/centos.pem certs/rhel.pem
+sed -i 's/CONFIG_IOSCHED_BFQ=y/CONFIG_IOSCHED_BFQ=n/' .config-local
+./scripts/kconfig/merge_config.sh .config .config-local
+make -j16
+make modules_install
+cp -v arch/x86_64/boot/bzImage /boot/vmlinuz-4.18.0
+chmod +x /boot/vmlinuz-4.18.0
+cp -v System.map /boot/System.map-4.18.0
+dracut /boot/initramfs-4.18.0.img
+grubby --make-default --copy-default --add-kernel=/boot/vmlinuz-4.18.0 --initrd=/boot/initramfs-4.18.0.img --title="Upstream 4.18.0"
+popd
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -218,9 +240,9 @@ echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 # Configure a custom kernel
 # RHEL 8.0 (kernel-4.18.0-80.el8)
-dnf -y config-manager --add-repo http://vault.centos.org/8.0.1905/BaseOS/x86_64/os
-dnf -y install kernel-4.18.0-80.11.2.el8_0
-grubby --set-default /boot/vmlinuz-4.18.0-80.11.2.el8_0.x86_64
+#dnf -y config-manager --add-repo http://vault.centos.org/8.0.1905/BaseOS/x86_64/os
+#dnf -y install kernel-4.18.0-80.11.2.el8_0
+#grubby --set-default /boot/vmlinuz-4.18.0-80.11.2.el8_0.x86_64
 # RHEL 8.1 (kernel-4.18.0-147.el8)
 #dnf -y config-manager --add-repo https://vault.centos.org/8.1.1911/BaseOS/x86_64/os
 #dnf -y install kernel-0:4.18.0-147.8.1.el8_1
