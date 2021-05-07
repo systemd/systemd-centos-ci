@@ -34,6 +34,8 @@ if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     exit 1
 fi
 
+systemctl status kdump
+
 set +e
 
 ### TEST PHASE ###
@@ -116,98 +118,107 @@ trap "kill $!" EXIT
 export OPTIMAL_QEMU_SMP=2
 export MAX_QUEUE_SIZE=$((NPROC/OPTIMAL_QEMU_SMP))
 
-# Initialize the 'base' image (default.img) on which the other images are based
-exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
+# Since rebulding kernel is very expensive, let's loop the whole "reproducer" thing
+# couple of times - we don't care about test results but if the machine survives.
+for _ in {0..15}; do
+    EXECUTED_LIST=()
+    # Initialize the 'base' image (default.img) on which the other images are based
+    exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
-for t in test/TEST-??-*; do
-    if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
-        echo -e "[SKIP] Skipping test $t\n"
-        continue
-    fi
+    for t in test/TEST-??-*; do
+        if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
+            echo -e "[SKIP] Skipping test $t\n"
+            continue
+        fi
 
-    ## Configure test environment
-    # Tell the test framework to copy the base image for each test, so we
-    # can run them in parallel
-    export TEST_PARALLELIZE=1
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces and default SELinux to permissive
-    # for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
-    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$OPTIMAL_QEMU_SMP
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+        ## Configure test environment
+        # Tell the test framework to copy the base image for each test, so we
+        # can run them in parallel
+        export TEST_PARALLELIZE=1
+        # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+        # See $INITRD above
+        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+        # Explicitly enable user namespaces
+        export KERNEL_APPEND="user_namespace.enable=1"
+        # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+        export QEMU_TIMEOUT=600
+        export NSPAWN_TIMEOUT=600
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$OPTIMAL_QEMU_SMP
+        # Use a "unique" name for each nspawn container to prevent scope clash
+        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
-    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
-    # otherwise the `touch` command would fail
-    mkdir -p "$TESTDIR"
-    rm -f "$TESTDIR/pass"
+        # Skipped test don't create the $TESTDIR automatically, so do it explicitly
+        # otherwise the `touch` command would fail
+        mkdir -p "$TESTDIR"
+        rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
-    EXECUTED_LIST+=("$t")
-done
-
-# Wait for remaining running tasks
-exectask_p_finish
-
-for t in "${FLAKE_LIST[@]}"; do
-    ## Configure test environment
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$(nproc)
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
-
-    # Suffix the $TESTDIR of each retry with an index to tell them apart
-    export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
-
-    # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
-    # array accordingly to correctly find the respective journals
-    for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
-        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+        exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+        EXECUTED_LIST+=("$t")
     done
-done
 
-for t in "${EXECUTED_LIST[@]}"; do
-    testdir="/var/tmp/systemd-test-${t##*/}"
-    if [[ -f "$testdir/system.journal" ]]; then
-        # Filter out test-specific coredumps which are usually intentional
-        # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
-        if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$t]" ]]; then
-            export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$t]}"
+    # Wait for remaining running tasks
+    exectask_p_finish
+
+    for t in "${FLAKE_LIST[@]}"; do
+        ## Configure test environment
+        # Explicitly set paths to initramfs and kernel images (for QEMU tests)
+        # See $INITRD above
+        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+        # Explicitly enable user namespaces
+        export KERNEL_APPEND="user_namespace.enable=1"
+        # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+        export QEMU_TIMEOUT=600
+        export NSPAWN_TIMEOUT=600
+        # Set the test dir to something predictable so we can refer to it later
+        export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$(nproc)
+        # Use a "unique" name for each nspawn container to prevent scope clash
+        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+
+        # Suffix the $TESTDIR of each retry with an index to tell them apart
+        export MANGLE_TESTDIR=1
+        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+
+        # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
+        # array accordingly to correctly find the respective journals
+        for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
+            [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+        done
+    done
+
+    for t in "${EXECUTED_LIST[@]}"; do
+        testdir="/var/tmp/systemd-test-${t##*/}"
+        if [[ -f "$testdir/system.journal" ]]; then
+            if [[ "$t" == "test/TEST-17-UDEV" ]]; then
+                # This test intentionally kills several processes using SIGABRT, thus
+                # generating cores which we're not interested in
+                export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
+            fi
+            # Attempt to collect coredumps from test-specific journals as well
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+            # Make sure to not propagate the custom coredumpctl filter override
+            [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
+
+            # Keep the journal files only if the associated test case failed
+            if [[ ! -f "$testdir/pass" ]]; then
+                rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
+            fi
         fi
-        # Attempt to collect coredumps from test-specific journals as well
-        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
-        # Make sure to not propagate the custom coredumpctl filter override
-        [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
 
-        # Keep the journal files only if the associated test case failed
-        if [[ ! -f "$testdir/pass" ]]; then
-            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
-        fi
-    fi
+        # Clean the no longer necessary test artifacts
+        [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
+    done
 
-    # Clean the no longer necessary test artifacts
-    [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
+    # Reset all counters, as we don't care about test results
+    FAILED_LIST=()
+    FAILED=0
+    PASSED=0
 done
 
 # Collect coredumps using the coredumpctl utility, if any

@@ -93,28 +93,39 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
-# Kernel build
-dnf -y builddep kernel
-git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git upstream-kernel
-pushd upstream-kernel
-git checkout v4.18
-make defconfig
-cp "/boot/config-$(uname -r)" .config-local
-# Get the SB cert (CONFIG_MODULE_SIG_KEY=certs/rhel.pem)
-dnf download --source kernel
-rpm -i kernel*.src.rpm
-cp -v /root/rpmbuild/SOURCES/centos.pem certs/rhel.pem
-sed -i 's/CONFIG_IOSCHED_BFQ=y/CONFIG_IOSCHED_BFQ=n/' .config-local
-./scripts/kconfig/merge_config.sh .config .config-local
-make -j16
-make modules_install
-cp -v arch/x86_64/boot/bzImage /boot/vmlinuz-4.18.0
-chmod +x /boot/vmlinuz-4.18.0
-cp -v System.map /boot/System.map-4.18.0
-dracut /boot/initramfs-4.18.0.img
-grubby --make-default --copy-default --add-kernel=/boot/vmlinuz-4.18.0 --initrd=/boot/initramfs-4.18.0.img --title="Upstream 4.18.0"
-popd
+#dnf -y builddep kernel
+## Downgrade gcc
+#dnf -y copr enable mrc0mmand/centos8-kernel-debug
+#dnf -y --allowerasing install gcc-4.9.2
+## Kernel build
+#KERNEL_VER="3.10"
+#git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git upstream-kernel
+#pushd upstream-kernel
+#git checkout "v$KERNEL_VER"
+##git cherry-pick --no-edit cb984d101b30eb7478d32df56a0023e4603cba7f
+#make defconfig
+#cp "/boot/config-$(uname -r)" .config-local
+## Get the SB cert (CONFIG_MODULE_SIG_KEY=certs/rhel.pem)
+#dnf download --source kernel
+#rpm -i kernel*.src.rpm
+#[[ ! -d certs ]] && mkdir certs
+#cp -v /root/rpmbuild/SOURCES/centos.pem certs/rhel.pem
+#sed -i 's/CONFIG_IOSCHED_BFQ=y/CONFIG_IOSCHED_BFQ=n/' .config-local
+#./scripts/kconfig/merge_config.sh .config .config-local
+#make -j16
+#make modules_install
+#cp -v arch/x86_64/boot/bzImage /boot/vmlinuz-"$KERNEL_VER"
+#chmod +x /boot/vmlinuz-"$KERNEL_VER"
+#cp -v System.map /boot/System.map-"$KERNEL_VER"
+#dracut --kver "$(file /boot/vmlinuz-"$KERNEL_VER" | sed -r 's/^.+version ([^ ]+) .+$/\1/')" -f /boot/initramfs-"$KERNEL_VER".img
+#sed -i 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=30/' /etc/default/grub
+#grub2-mkconfig -o /boot/grub2/grub.cfg
+#grubby --make-default --copy-default --add-kernel=/boot/vmlinuz-"$KERNEL_VER" --initrd=/boot/initramfs-"$KERNEL_VER".img --title="Upstream $KERNEL_VER"
+#popd
 
+
+dnf -y upgrade gcc
+dnf -y builddep systemd
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -162,7 +173,6 @@ fi
     meson build -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
                 -Dcpp_args='-Og' \
                 -Ddebug=true \
-                --werror \
                 -Dlog-trace=true \
                 -Dslow-tests=true \
                 -Dfuzz-tests=true \
@@ -171,8 +181,9 @@ fi
                 -Ddbuspolicydir=/etc/dbus-1/system.d \
                 -Dnobody-user=nfsnobody \
                 -Dnobody-group=nfsnobody \
-                -Dman=true \
-                -Dhtml=true
+                -Dman=false \
+                -Dhtml=false \
+                -Ddefault-hierarchy=legacy
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
@@ -216,6 +227,7 @@ GRUBBY_ARGS=(
     # persist across reboots without this kludge and can (actually it does)
     # interfere with running tests
     "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+    #"crashkernel=192M"
 )
 grubby --args="${GRUBBY_ARGS[*]} debug" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
@@ -237,6 +249,12 @@ echo "/usr mtime:           $(date -r /usr)"
 echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
 
 echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+# Reboot the machine on kernel panic
+echo 'kernel.panic = 3' >/etc/sysctl.d/99-reboot-on-panic.conf
+sysctl --system
+sysctl kernel.panic
+systemctl enable kdump
 
 # Configure a custom kernel
 # RHEL 8.0 (kernel-4.18.0-80.el8)
