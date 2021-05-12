@@ -36,6 +36,8 @@ while getopts "r:" opt; do
     esac
 done
 
+REMOTE_REF="pr:19322"
+
 # All commands from this script are fundamental, ensure they all pass
 # before continuing (or die trying)
 set -e -u
@@ -187,8 +189,12 @@ ninja-build -C build install
 # This is necessary, since at least once we got into a situation where
 # the old systemd binary was incompatible with the unit files on disk and
 # prevented the system from reboot
+dmesg -w &
+systemd-analyze set-log-level debug
+systemd-analyze set-log-target console
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
+while systemctl daemon-reload; do :; done
 
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
