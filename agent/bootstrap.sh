@@ -67,6 +67,7 @@ ADDITIONAL_DEPS=(
     qemu-kvm
     qrencode-devel
     quota
+    rust
     socat
     squashfs-tools
     strace
