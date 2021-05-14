@@ -194,12 +194,7 @@ SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
-# Also, install the new udev rules introduced in systemd/systemd#7594 explicitly
-# until dracut's udev module is updated
-dracut -f --regenerate-all --filesystems ext4 \
-       --install /usr/lib/udev/rules.d/53-storage-hardware.rules \
-       --install /usr/lib/udev/rules.d/56-fallback-scsi_id.rules \
-       --install /usr/lib/udev/rules.d/59-storage-content.rules
+dracut -f --regenerate-all --filesystems ext4
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
