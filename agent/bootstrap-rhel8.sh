@@ -113,6 +113,7 @@ fi
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
+    # shellcheck disable=SC2191
     CONFIGURE_OPTS=(
             # RHEL8 options
             -Dsysvinit-path=/etc/rc.d/init.d

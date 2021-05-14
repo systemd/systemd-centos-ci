@@ -72,7 +72,7 @@ SKIP_LIST=(
 
 if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     # This test explicitly requires unified cgroup hierarchy
-    SKIP_LIST=("test/TEST-19-DELEGATE")
+    SKIP_LIST+=("test/TEST-19-DELEGATE")
 fi
 
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
