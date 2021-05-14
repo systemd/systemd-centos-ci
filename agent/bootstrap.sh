@@ -194,27 +194,7 @@ SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 # The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
 # However, the ext4 module is not included in initramfs by default, because
 # CentOS uses xfs as the default filesystem
-# Also, install the new udev rules introduced in systemd/systemd#7594 explicitly
-# until dracut's udev module is updated
-INSTALL_FILES=()
-REQUESTED_FILES=(
-    /usr/lib/udev/rules.d/53-storage-hardware.rules
-    /usr/lib/udev/rules.d/56-fallback-scsi_id.rules
-    /usr/lib/udev/rules.d/59-storage-content.rules
-)
-# To get rid of the (although bening but ugly) dracut's error message about
-# non-existent files, let's first check out if the files we're trying to install
-# into the initrd indeed exist
-for rfile in "${REQUESTED_FILES[@]}"; do
-    if [[ -f $rfile ]]; then
-        INSTALL_FILES+=(--install "$rfile")
-    fi
-done
-
-# A particularly ugly workaround for older versions of bash which treat empty
-# array as an unset variable, thus tripping over `set -u` used above.
-# The ${param+expr} expression expands `expr` only if `param` is set.
-dracut -f --regenerate-all --filesystems ext4 ${INSTALL_FILES[@]+"${INSTALL_FILES[@]}"}
+dracut -f --regenerate-all --filesystems ext4
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
