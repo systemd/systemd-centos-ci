@@ -3,19 +3,19 @@
 
 LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/task-control.sh
-. "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel8" || exit 1
+. "$LIB_ROOT/task-control.sh" "bootstrap-logs-rhel9" || exit 1
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
-REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-8.git}"
-CGROUP_HIERARCHY="legacy"
+REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-9.git}"
+CGROUP_HIERARCHY="unified"
 REMOTE_REF=""
 
 # EXIT signal handler
 at_exit() {
     # Let's collect some build-related logs
     set +e
-    rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR" &>/dev/null || :
+    rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" &>/dev/null || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
     exectask "list-of-installed-packages" "rpm -qa"
 }
@@ -50,29 +50,45 @@ set -e -u
 set -o pipefail
 
 ADDITIONAL_DEPS=(
+    attr
+    bpftool
+    clang
+    device-mapper-event
     dnsmasq
+    dosfstools
     e2fsprogs
-    gdb
+    elfutils
+    elfutils-devel
+    gcc-c++
+    iproute-tc
+    kernel-modules-extra
     libasan
-    libubsan
+    libfdisk-devel
+    libpwquality-devel
+    libzstd-devel
+    llvm
     make
     net-tools
     nmap-ncat
-    perl-IPC-SysV
-    perl-Time-HiRes
+    openssl-devel
+    pcre2-devel
     qemu-kvm
+    qrencode-devel
     quota
+    rust
     socat
+    squashfs-tools
     strace
+    tpm2-tss-devel
+    veritysetup
     wget
 )
 
-# Install and enable EPEL
-dnf -y install epel-release dnf-plugins-core
-dnf config-manager --enable epel --enable powertools
-# Upgrade the machine to get the most recent environment
-dnf -y upgrade
-# Install systemd's build dependencies
+dnf -y install epel-release dnf-plugins-core gdb
+dnf -y config-manager --enable epel --enable powertools
+# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
+dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
+dnf -y update
 dnf -y builddep systemd
 dnf -y install "${ADDITIONAL_DEPS[@]}"
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
@@ -85,7 +101,7 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
-# Fetch the systemd repo
+# Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
@@ -99,6 +115,9 @@ if setenforce 0; then
     echo SELINUX=disabled >/etc/selinux/config
 fi
 
+# Disable firewalld (needed for systemd-networkd tests)
+systemctl disable firewalld
+
 # Enable systemd-coredump
 if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
@@ -106,7 +125,8 @@ if ! coredumpctl_init; then
 fi
 
 # Compile systemd
-#   - slow-tests=true: enable slow tests
+#   - slow-tests=true: enables slow tests
+#   - fuzz-tests=true: enables fuzzy tests using libasan installed above
 #   - tests=unsafe: enable unsafe tests, which might change the environment
 #   - install-tests=true: necessary for test/TEST-24-UNIT-TESTS
 (
@@ -115,14 +135,18 @@ fi
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     # shellcheck disable=SC2191
     CONFIGURE_OPTS=(
-            # RHEL8 options
+            -Dmode=release
             -Dsysvinit-path=/etc/rc.d/init.d
             -Drc-local=/etc/rc.d/rc.local
-            -Ddns-servers=''
+            -Dntp-servers='0.rhel.pool.ntp.org 1.rhel.pool.ntp.org 2.rhel.pool.ntp.org 3.rhel.pool.ntp.org'
+            -Ddns-servers=
+            -Duser-path=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
+            -Dservice-watchdog=
             -Ddev-kvm-mode=0666
             -Dkmod=true
             -Dxkbcommon=true
             -Dblkid=true
+            -Dfdisk=true
             -Dseccomp=true
             -Dima=true
             -Dselinux=true
@@ -132,40 +156,54 @@ fi
             -Dzlib=true
             -Dbzip2=true
             -Dlz4=true
+            -Dzstd=true
             -Dpam=true
             -Dacl=true
             -Dsmack=true
+            -Dopenssl=true
+            -Dp11kit=true
             -Dgcrypt=true
             -Daudit=true
             -Delfutils=true
             -Dlibcryptsetup=true
             -Delfutils=true
-            -Dqrencode=false
+            -Dpwquality=true
             -Dgnutls=true
             -Dmicrohttpd=true
             -Dlibidn2=true
             -Dlibiptc=true
             -Dlibcurl=true
-            -Defi=true
+            -Dqrencode=false
+            -Dlibfido2=false
+            -Defi=false
             -Dtpm=true
             -Dhwdb=true
             -Dsysusers=true
+            -Dstandalone-binaries=true
             -Ddefault-kill-user-processes=false
-            -Dtests=unsafe
-            -Dinstall-tests=true
             -Dtty-gid=5
             -Dusers-gid=100
             -Dnobody-user=nobody
             -Dnobody-group=nobody
+            -Dcompat-mutable-uid-boundaries=true
             -Dsplit-usr=false
             -Dsplit-bin=true
-            -Db_lto=false
-            -Dnetworkd=false
+            -Db_lto=true
+            -Db_ndebug=false
+            #-Dversion-tag=v%{version}-%{release}
+            -Dfallback-hostname=localhost
+            -Ddefault-dnssec=no
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1867830
+            -Ddefault-mdns=no
+            -Ddefault-llmnr=resolve
+            -Doomd=true
             -Dtimesyncd=false
-            -Ddefault-hierarchy=legacy
+            -Dhomed=false
+            -Duserdb=false
             # Custom options
             -Dslow-tests=true
             -Dtests=unsafe
+            -Dfuzz-tests=true
             -Dinstall-tests=true
             -Dc_args='-g -O0 -ftrapv'
             --werror
@@ -179,19 +217,16 @@ fi
 # Install the compiled systemd
 ninja-build -C build install
 
-# Create necessary systemd users/groups
-getent group systemd-resolve &>/dev/null || groupadd -r -g 193 systemd-resolve 2>&1
-getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-resolve -d / -s /sbin/nologin -c "systemd Resolver" systemd-resolve &>/dev/null
-
 # Configure the selected cgroup hierarchy for both the host machine and each
 # integration test VM
 if [[ "$CGROUP_HIERARCHY" == unified ]]; then
-    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=1 systemd.legacy_systemd_cgroup_controller=0"
+    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=1" "systemd.legacy_systemd_cgroup_controller=0")
 else
-    CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
+    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=0" "systemd.legacy_systemd_cgroup_controller=1")
 fi
 
 # Let's check if the new systemd at least boots before rebooting the system
+# As the CentOS' systemd-nspawn version is too old, we have to use QEMU
 (
     # Ensure the initrd contains the same systemd version as the one we're
     # trying to test
@@ -208,13 +243,13 @@ fi
     # (for QEMU tests)
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console $CGROUP_KERNEL_ARGS"
+    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console ${CGROUP_KERNEL_ARGS[*]}"
     # Set timeout for QEMU tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
 
-    make -C test/TEST-01-BASIC clean setup run clean
+    make -C test/TEST-01-BASIC clean setup run clean-again
 
     rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
@@ -224,10 +259,8 @@ fi
 # the old systemd binary was incompatible with the unit files on disk and
 # prevented the system from reboot
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-# The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
-# However, the ext4 module is not included in initramfs by default, because
-# CentOS uses xfs as the default filesystem
 dracut -f --regenerate-all --filesystems ext4
 
 # Check if the new dracut image contains the systemd module to avoid issues
@@ -239,18 +272,47 @@ if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
 fi
 
 # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
-echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
+echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS[*]}'"
 
-# Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
-grubby --args="user_namespace.enable=1 $CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
-# grub on RHEL 8 uses BLS
-grep -r "user_namespace.enable=1" /boot/loader/entries/
-grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
-echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+GRUBBY_ARGS=(
+    "${CGROUP_KERNEL_ARGS[@]}"
+    # Needed for systemd-nspawn -U
+    "user_namespace.enable=1"
+    # As the RTC on CentOS CI machines is notoriously incorrect, let's override
+    # it early in the boot process to properly execute units using
+    # ConditionNeedsUpdate=
+    # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
+    # Update: if the original time difference is too big, the mtime of
+    # /etc/.updated is already too far in the future, so it doesn't matter if
+    # we correct the time during the next boot, since it's still going to be
+    # in the past. Let's just explicitly override all ConditionNeedsUpdate=
+    # directives to true to fix this once and for all
+    "systemd.condition-needs-update=1"
+    # Also, store & reuse the current (and corrected) time & date, as it doesn't
+    # persist across reboots without this kludge and can (actually it does)
+    # interfere with running tests
+    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+)
+grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
+# Check if the $GRUBBY_ARGS were applied correctly
+for arg in "${GRUBBY_ARGS[@]}"; do
+    if ! grep -q -r "$arg" /boot/loader/entries/; then
+        echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
+        exit 1
+    fi
+done
 
 # coredumpctl_collect takes an optional argument, which upsets shellcheck
 # shellcheck disable=SC2119
 coredumpctl_collect
+
+# Let's leave this here for a while for debugging purposes
+echo "Current date:         $(date)"
+echo "RTC:                  $(hwclock --show)"
+echo "/usr mtime:           $(date -r /usr)"
+echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
+
+echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
