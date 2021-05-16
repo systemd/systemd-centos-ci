@@ -176,10 +176,10 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     for t in "TEST-01-BASIC_sanitizers-qemu" "${EXECUTED_LIST[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
-            if [[ "$t" == test/TEST-17-UDEV_* ]]; then
-                # This test intentionally kills several processes using SIGABRT, thus
-                # generating cores which we're not interested in
-                export COREDUMPCTL_EXCLUDE_RX="/(sleep|udevadm)$"
+            # Filter out test-specific coredumps which are usually intentional
+            # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
+            if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$t]" ]]; then
+                export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$t]}"
             fi
             # Attempt to collect coredumps from test-specific journals as well
             exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"

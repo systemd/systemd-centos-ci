@@ -6,6 +6,11 @@ set -o pipefail
 set -u
 
 __COREDUMPCTL_TS=""
+# Keep a map of test-specific excludes to avoid code duplication
+declare -Arx COREDUMPCTL_EXCLUDE_MAP=(
+    ["test/TEST-17-UDEV"]="/(sleep|udevadm)$"
+    ["test/TEST-59-RELOADING-RESTART"]="/(sleep|bash|systemd-notify)$"
+)
 
 # Internal logging helpers which make use of the internal call stack to get
 # the function name of the caller
