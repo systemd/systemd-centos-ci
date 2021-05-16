@@ -64,6 +64,7 @@ ADDITIONAL_DEPS=(
     nmap-ncat
     openssl-devel
     pcre2-devel
+    python3-jinja2
     qemu-kvm
     qrencode-devel
     quota

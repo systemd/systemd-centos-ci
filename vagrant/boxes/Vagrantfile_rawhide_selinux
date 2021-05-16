@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
     dnf upgrade --refresh -y
 
     # Install build & test dependencies
-    dnf install -y attr busybox cryptsetup dosfstools fedpkg git nc qemu-kvm rpm-build rpmdevtools rust socat strace tpm2-tss-devel
+    dnf install -y attr busybox cryptsetup dosfstools fedpkg git nc qemu-kvm rpm-build rpmdevtools rust socat strace tpm2-tss-devel 'python3dist(jinja2)'
     dnf builddep -y systemd
 
     # Unlock root account and set its password to 'vagrant' to allow root login
