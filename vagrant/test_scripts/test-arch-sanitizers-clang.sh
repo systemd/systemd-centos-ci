@@ -178,8 +178,10 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         if [[ -f "$testdir/system.journal" ]]; then
             # Filter out test-specific coredumps which are usually intentional
             # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
-            if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$t]" ]]; then
-                export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$t]}"
+            # Note2: since all tests in this run are using the `exectask_retry`
+            #        runner, they're always suffixed with '_X'
+            if [[ -v "COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]" ]]; then
+                export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]}"
             fi
             # Attempt to collect coredumps from test-specific journals as well
             exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
