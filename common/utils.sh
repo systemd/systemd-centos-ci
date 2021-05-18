@@ -253,7 +253,8 @@ coredumpctl_collect() {
     #   python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
     #               (since systemd/systemd#16675)
     #   sleep/bash - intentional SIGABRT caused by TEST-57
-    local EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep)$}"
+    #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
+    local EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify)$}"
     _log "Excluding coredumps matching '$EXCLUDE_RX'"
     if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$EXCLUDE_RX" > "$TEMPFILE"; then
         _log "No relevant coredumps found"
