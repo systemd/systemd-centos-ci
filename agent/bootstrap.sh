@@ -69,6 +69,7 @@ ADDITIONAL_DEPS=(
     qrencode-devel
     quota
     rust
+    selinux-policy-devel
     socat
     squashfs-tools
     strace
@@ -103,9 +104,10 @@ git_checkout_pr "$REMOTE_REF"
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
-# Disable SELinux on the test hosts and avoid false positives.
+# Set SELinux to permissive on the test hosts to avoid false positives, but
+# to still allow running tests which require SELinux.
 if setenforce 0; then
-    echo SELINUX=disabled >/etc/selinux/config
+    echo SELINUX=permissive >/etc/selinux/config
 fi
 
 # Disable firewalld (needed for systemd-networkd tests)

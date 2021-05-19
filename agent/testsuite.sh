@@ -127,8 +127,9 @@ for t in test/TEST-??-*; do
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
+    # Explicitly enable user namespaces and default SELinux to permissive
+    # for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
+    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
