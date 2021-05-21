@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # shellcheck disable=SC2155
 
+set -x
+
 LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "bootstrap-logs-upstream" || exit 1
@@ -19,7 +21,14 @@ at_exit() {
     exectask "list-of-installed-packages" "rpm -qa"
 }
 
+# All commands from this script are fundamental, ensure they all pass
+# before continuing (or die trying)
+set -e -u
+set -o pipefail
+
 trap at_exit EXIT
+trap -p
+command -V at_exit
 
 # Parse optional script arguments
 while getopts "r:" opt; do
@@ -35,11 +44,6 @@ while getopts "r:" opt; do
             exit 1
     esac
 done
-
-# All commands from this script are fundamental, ensure they all pass
-# before continuing (or die trying)
-set -e -u
-set -o pipefail
 
 ADDITIONAL_DEPS=(
     attr
@@ -119,6 +123,9 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
+trap -p
+command -V at_exit
+
 # Compile & install libbpf-next
 (
     git clone --depth=1 https://github.com/libbpf/libbpf libbpf
@@ -128,6 +135,9 @@ fi
     popd
     rm -fr libbpf
 )
+
+trap -p
+command -V at_exit
 
 # Compile systemd
 #   - slow-tests=true: enables slow tests
@@ -154,6 +164,9 @@ fi
                 -Dhtml=true
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
+
+trap -p
+command -V at_exit
 
 # Install the compiled systemd
 ninja-build -C build install
@@ -186,6 +199,9 @@ ninja-build -C build install
 
     rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
+
+trap -p
+command -V at_exit
 
 # The new systemd binary boots, so let's issue a daemon-reexec to use it.
 # This is necessary, since at least once we got into a situation where
@@ -250,3 +266,7 @@ echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
 echo "-         CONTINUING        -"
 echo "-----------------------------"
+
+trap -p
+command -V at_exit
+

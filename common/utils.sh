@@ -221,7 +221,7 @@ coredumpctl_collect() {
 
     # Register a cleanup handler
     # shellcheck disable=SC2064
-    trap "rm -f '$TEMPFILE'" EXIT
+    trap "rm -f '$TEMPFILE'" RETURN
 
     if ! "$COREDUMPCTL_BIN" --version >/dev/null; then
         _err "'$COREDUMPCTL_BIN' is not a valid binary"
