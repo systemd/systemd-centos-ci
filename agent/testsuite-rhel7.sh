@@ -13,11 +13,10 @@ at_exit() {
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
 
-trap at_exit EXIT
+set -eu
+set -o pipefail
 
-### SETUP PHASE ###
-# Exit on error in the setup phase
-set -e -u
+trap at_exit EXIT
 
 # Install test dependencies
 exectask "yum-depinstall" \

@@ -18,6 +18,9 @@ at_exit() {
     exectask "list-of-installed-packages" "rpm -qa"
 }
 
+set -eu
+set -o pipefail
+
 trap at_exit EXIT
 
 # Parse optional script arguments
@@ -38,11 +41,6 @@ while getopts "r:" opt; do
             exit 1
     esac
 done
-
-# All commands from this script are fundamental, ensure they all pass
-# before continuing (or die trying)
-set -e -u
-set -o pipefail
 
 # Install necessary dependencies
 # - systemd-* packages are necessary for correct users/groups to be created

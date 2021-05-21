@@ -15,12 +15,12 @@ at_exit() {
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
 
+set -eu
+set -o pipefail
+
 trap at_exit EXIT
 
-### SETUP PHASE ###
-# Exit on error in the setup phase
-set -e -u
-
+### TEST PHASE ###
 CGROUP_HIERARCHY="$(print_cgroup_hierarchy)"
 
 echo "Current cgroup hierarchy: $CGROUP_HIERARCHY"

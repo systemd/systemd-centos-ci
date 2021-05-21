@@ -23,7 +23,7 @@ if [[ $# -ne 1 ]]; then
     exit 1
 fi
 
-set -e -u
+set -eu
 set -o pipefail
 
 VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"

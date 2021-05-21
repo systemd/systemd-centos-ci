@@ -41,9 +41,7 @@ SCRIPT_ROOT="$(dirname "$0")"
 # distro-tag: arch
 DISTRO="${1:?missing argument: distro tag}"
 
-# All commands from this script are fundamental, ensure they all pass
-# before continuing (or die trying)
-set -e -u
+set -eu
 set -o pipefail
 
 # Fetch the upstream systemd repo
