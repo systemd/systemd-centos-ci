@@ -7,8 +7,8 @@
 VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.rpm"
 WORKAROUNDS_DIR="$(dirname "$(readlink -f "$0")")/workarounds"
 
+set -eu
 set -o pipefail
-set -e -u
 
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly

@@ -13,13 +13,12 @@ at_exit() {
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
 }
 
-trap at_exit EXIT
-
-### SETUP PHASE ###
-# Exit on error in the setup phase
 set -eu
 set -o pipefail
 
+trap at_exit EXIT
+
+### TEST PHASE ###
 # Enable systemd-coredump
 if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
