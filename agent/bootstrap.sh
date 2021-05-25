@@ -123,6 +123,7 @@ fi
     pushd libbpf/src
     LD_FLAGS="-Wl,--no-as-needed" NO_PKG_CONFIG=1 make
     make install
+    ldconfig
     popd
     rm -fr libbpf
 )
