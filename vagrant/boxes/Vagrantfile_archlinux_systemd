@@ -23,6 +23,12 @@ Vagrant.configure("2") do |config|
 
     whoami
 
+    # FIXME: don't upgrade libcap to >2.49
+    # NOTE: add libcap back to the list of build deps below when reverting this
+    # See: https://bugs.archlinux.org/task/71071
+    sed -i '/\\[options\\]/aIgnorePkg=libcap' /etc/pacman.conf
+    grep libcap /etc/pacman.conf
+
     # Initialize pacman's keyring
     pacman-key --init
     pacman-key --populate archlinux
@@ -32,7 +38,7 @@ Vagrant.configure("2") do |config|
     # Install build dependencies
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel bpf acl audit bash-completion clang compiler-rt docbook-xsl ethtool \
-        git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libfido2 libgcrypt libidn2 \
+        git gnu-efi-libs gperf intltool iptables kexec-tools kmod libelf libfido2 libgcrypt libidn2 \
         libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lz4 meson ninja \
         p11-kit pam pcre2 python-jinja python-lxml qrencode quota-tools rust tpm2-pkcs11 xz
     # Install test dependencies
