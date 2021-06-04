@@ -13,32 +13,25 @@ set -o pipefail
 # Set up nested KVM
 # Let's make all errors "soft", at least for now, as we're still perfectly
 # fine with running tests without nested KVM
-#
-# FIXME: there's something wrong with QEMU and nested KVM on Dusty nodes
-#        after the recent upgrade to CentOS 8.4
-if ! [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]]; then
-    if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_intel|kvm_amd)')"; then
-        echo "[vagrant-setup] Detected KVM module: $KVM_MODULE_NAME"
-        # Attempt to reload the detected KVM module with nested=1 parameter
-        if modprobe -v -r "$KVM_MODULE_NAME" && modprobe -v "$KVM_MODULE_NAME" nested=1; then
-            # The reload was successful, check if the module's 'nested' parameter
-            # confirms that nested KVM is indeed enabled
-            KVM_MODULE_NESTED="$(< "/sys/module/$KVM_MODULE_NAME/parameters/nested")" || :
-            echo "[vagrant-setup] /sys/module/$KVM_MODULE_NAME/parameters/nested: $KVM_MODULE_NESTED"
+if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_intel|kvm_amd)')"; then
+    echo "[vagrant-setup] Detected KVM module: $KVM_MODULE_NAME"
+    # Attempt to reload the detected KVM module with nested=1 parameter
+    if modprobe -v -r "$KVM_MODULE_NAME" && modprobe -v "$KVM_MODULE_NAME" nested=1; then
+        # The reload was successful, check if the module's 'nested' parameter
+        # confirms that nested KVM is indeed enabled
+        KVM_MODULE_NESTED="$(< "/sys/module/$KVM_MODULE_NAME/parameters/nested")" || :
+        echo "[vagrant-setup] /sys/module/$KVM_MODULE_NAME/parameters/nested: $KVM_MODULE_NESTED"
 
-            if [[ "$KVM_MODULE_NESTED" =~ (1|Y) ]]; then
-                echo "[vagrant-setup] Nested KVM is enabled"
-            else
-                echo "[vagrant-setup] Failed to enable nested KVM"
-            fi
+        if [[ "$KVM_MODULE_NESTED" =~ (1|Y) ]]; then
+            echo "[vagrant-setup] Nested KVM is enabled"
         else
-            echo "[vagrant-setup] Failed to reload module '$KVM_MODULE_SETUP'"
+            echo "[vagrant-setup] Failed to enable nested KVM"
         fi
     else
-        echo "[vagrant-setup] No KVM module found, can't setup nested KVM"
+        echo "[vagrant-setup] Failed to reload module '$KVM_MODULE_SETUP'"
     fi
 else
-    echo "[vagrant-setup] FIXME: refusing to enable nested KVM on Dusty nodes"
+    echo "[vagrant-setup] No KVM module found, can't setup nested KVM"
 fi
 
 # Configure NTP (chronyd)
