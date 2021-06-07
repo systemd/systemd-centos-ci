@@ -7,7 +7,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
-REPO_URL="${REPO_URL:-https://github.com/systemd-rhel/rhel-9.git}"
+REPO_URL="${REPO_URL:-https://github.com/redhat-plumbers/systemd-rhel9}"
 CGROUP_HIERARCHY="unified"
 REMOTE_REF=""
 

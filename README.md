@@ -5,8 +5,8 @@ on test machines provisioned from a pool provided by the [CentOS CI](https://wik
 using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
 As of right now these scripts provide CI for [upstream](https://github.com/systemd/systemd)
-on CentOS 8 and Arch Linux, and for [RHEL downstream](https://github.com/systemd-rhel)
-on both CentOS 7 and CentOS 8.
+on CentOS 8 and Arch Linux, and for [RHEL downstream](https://github.com/redhat-plumbers)
+on supported CentOS releases.
 
 # Structure
 
@@ -75,13 +75,13 @@ the respective PR (along with other necessary dependencies), reboots the machine
 
 The same worklflow as above, but for systemd in RHEL:
 
-  * [RHEL 7/CentOS 7](https://github.com/systemd-rhel/rhel-7)
+  * [RHEL 7/CentOS 7](https://github.com/redhat-plumbers/systemd-rhel7)
 
 ```
 agent-control.py +-> agent/bootstrap-rhel7.sh +-> reboot +-> agent/testsuite-rhel7.sh
 ```
 
-  * [RHEL 8/CentOS 8](https://github.com/systemd-rhel/rhel-8)
+  * [RHEL 8/CentOS 8](https://github.com/redhat-plumbers/systemd-rhel8)
 
 ```
 agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhel8.sh
