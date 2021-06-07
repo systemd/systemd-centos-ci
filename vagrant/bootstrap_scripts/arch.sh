@@ -72,6 +72,6 @@ ninja -C "$BUILD_DIR" install
   make -C test/TEST-01-BASIC clean setup run clean-again
 
   rm -f "$INITRD"
-) 2>&1 | grep --line-buffered '^' | tee vagrant-arch-sanity-boot-check.log
+) 2>&1 | grep --text --line-buffered '^' | tee vagrant-arch-sanity-boot-check.log
 
 popd
