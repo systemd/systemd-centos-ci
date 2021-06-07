@@ -8,7 +8,7 @@ set -eu
 set -o pipefail
 
 OUT_DIR="${OUT_DIR:-$PWD}"
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.16/vagrant_2.2.16_x86_64.rpm"
 
 [[ ! -d "$OUT_DIR" ]] && mkdir -p "$OUT_DIR"
 
@@ -17,7 +17,7 @@ if ! vagrant version 2>/dev/null; then
 fi
 
 # Install necessary dependencies
-dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl diffutils
+dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl diffutils libarchive
 
 # Workaround for current Vagrant's DSO hell
 # ---
@@ -73,5 +73,5 @@ dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl diffutils
 )
 
 pushd "$OUT_DIR"
-tar -pczvf vagrant-shared-libs.tar.gz --exclude "*.sh" --remove-files -- *
+tar -pczvf vagrant-shared-libs.tar.gz --exclude "*.sh" --exclude "*.gz" --remove-files -- *
 popd
