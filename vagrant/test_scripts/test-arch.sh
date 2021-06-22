@@ -82,7 +82,10 @@ FLAKE_LIST=(
     "test/TEST-56-EXIT-TYPE"      # flaky test, see below (systemd/systemd#19345)
     "test/TEST-58-REPART"         # flaky test, see below (systemd/systemd#19442)
 )
-SKIP_LIST=("${FLAKE_LIST[@]}")
+SKIP_LIST=(
+    "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
+    "${FLAKE_LIST[@]}"
+)
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
