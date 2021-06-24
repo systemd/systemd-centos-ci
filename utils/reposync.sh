@@ -123,6 +123,9 @@ name=Mirror of $REPO_ID Copr repo (\$basearch)
 baseurl=http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID/\$basearch/
 skip_if_unavailable=False
 enabled=1
+# Disable modular filtering for this repository, so we can override certain
+# module packages with our own
+module_hotfixes=1
 EOF
     # Copy over the downloaded GPG key, if any
     if [[ -f "$GPG_KEY_NAME" ]]; then
