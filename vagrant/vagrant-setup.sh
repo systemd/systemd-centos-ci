@@ -64,12 +64,9 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     dnf -y install dnf-plugins-core
     # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
     dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
-    # Note: this is necessary, because a package from a module shadows every other
-    #       package with the same name even if it's newer than the module one,
-    #       *sigh*. See: https://access.redhat.com/solutions/5588101
-    dnf -y module disable virt
+    # Note: make sure the repo with newer qemu has "module_hotfixes=true", otherwise
+    # the packages will be shadowed by qemu from the virt module
     dnf -y update qemu-kvm
-    dnf -y module enable virt
 
     # Start libvirt daemon
     systemctl start libvirtd
