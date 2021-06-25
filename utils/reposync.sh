@@ -113,7 +113,10 @@ sync_repo() {
 
     for arch in "${ARCHES[@]}"; do
         # Make a local copy of the original repository packages
-        dnf "${DNF_OPTS[@]}" reposync --norepopath --newest-only --download-metadata --arch "$arch" --forcearch "$arch" --config="repo-config.repo" --repoid="$REPO_ID" --download-path="$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$arch"
+        dnf "${DNF_OPTS[@]}" reposync --norepopath --newest-only --download-metadata \
+                                      --arch "${arch},noarch" --forcearch "$arch" \
+                                      --config="repo-config.repo" --repoid="$REPO_ID" \
+                                      --download-path="$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$arch"
     done
 
     # Create a repo file
