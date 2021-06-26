@@ -39,6 +39,14 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Using '$BOX_NAME' as the Fedora Rawhide box name"
 
     sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANT_FILE"
+
+    # FIXME: since F34 Fedora uses btrfs as the default FS, which causes errors
+    #        when re-boxing such image, since CentOS 8 doesn't understand btrfs.
+    #        Let's workaround this by using a couple of custom packages, which
+    #        were rebuilt to make them "btrfs-aware".
+    echo "[WORKAROUND] Installing btrfs-aware packages"
+    dnf -y copr enable mrc0mmand/epel8-btrfs-playground
+    dnf -y install btrfs-progs kernel-5.12.4 libguestfs-tools-c
 fi
 
 # Disable SELinux on the test hosts and avoid false positives.
