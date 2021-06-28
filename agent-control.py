@@ -16,6 +16,7 @@ import signal
 API_BASE = "http://admin.ci.centos.org:8080"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
+KEEP_NODE = False
 
 
 class AgentControl(object):
@@ -34,7 +35,7 @@ class AgentControl(object):
 
     def __del__(self):
         # Deallocate the allocated node on script exit, if not requested otherwise
-        if self._node is not None and "ssid" in self._node:
+        if self._node is not None and "ssid" in self._node and not KEEP_NODE:
             self.free_session(self._node["ssid"])
 
     def _execute_api_command(self, endpoint, payload={}, include_api_key=True):
@@ -419,6 +420,7 @@ if __name__ == "__main__":
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
+    KEEP_NODE = args.keep
 
     ac = AgentControl()
 
@@ -518,7 +520,7 @@ if __name__ == "__main__":
 
     finally:
         # Return the loaned node back to the pool if not requested otherwise
-        if not args.keep:
+        if not KEEP_NODE:
             # Ugly workaround for current Jenkin's behavior, where the signal
             # is sent several times under certain conditions. This is already
             # filed upstream, but the fix is still incomplete. Let's just
