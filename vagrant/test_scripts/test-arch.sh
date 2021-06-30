@@ -79,7 +79,6 @@ FLAKE_LIST=(
     "test/TEST-25-IMPORT"         # flaky when paralellized (systemd/systemd#13973)
     "test/TEST-29-PORTABLE"       # flaky test (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test (systemd/systemd#17469)
-    "test/TEST-56-EXIT-TYPE"      # flaky test, see below (systemd/systemd#19345)
     "test/TEST-58-REPART"         # flaky test, see below (systemd/systemd#19442)
 )
 SKIP_LIST=(
