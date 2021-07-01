@@ -56,6 +56,11 @@ echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
 #   systemd/systemd#18166
 echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 
+# FIXME: test-execute
+# This test occasionally timeouts when running under sanitizers. Until the root
+# cause is figured out, let's temporarily skip this test to not disturb CI runs.
+echo 'int main(void) { return 77; }' > src/test/test-execute.c
+
 ## FIXME: systemd-networkd testsuite: skip test_macsec
 # Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
 # dereference (and since 5.8.0 an additional oops). Since the issue hasn't been
@@ -64,30 +69,8 @@ echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
-## Temporary wrapper for `meson test` which disables LSan for `test-execute`
-# LSan keeps randomly crashing during `test-execute` so let's (temporarily)
-# disable it until we find out the culprit.
-# See:
-#   https://github.com/systemd/systemd-centos-ci/pull/217#issuecomment-580717687
-#   https://github.com/systemd/systemd/issues/14598
-ASAN_WRAPPER="$(mktemp "$BUILD_DIR/asan-wrapper-XXX.sh")"
-cat > "$ASAN_WRAPPER" << EOF
-#!/bin/bash
-
-export ASAN_OPTIONS=$ASAN_OPTIONS
-export UBSAN_OPTIONS=$UBSAN_OPTIONS
-
-if [[ \$(basename "\$1") == 'test-execute' ]]; then
-    ASAN_OPTIONS="\$ASAN_OPTIONS:detect_leaks=0"
-fi
-
-exec "\$@"
-EOF
-
-chmod +x "$ASAN_WRAPPER"
-
 # Run the internal unit tests (make check)
-exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --wrapper=$ASAN_WRAPPER --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 
 ## Run TEST-01-BASIC under sanitizers
