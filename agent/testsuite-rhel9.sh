@@ -88,7 +88,7 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 # If we're not testing the main branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration
 # tests
-if ! git diff --quiet main HEAD && ! git diff "$(git merge-base main HEAD)" --name-only | grep -qvE "^man/"; then
+if ! git diff --quiet main HEAD && ! git diff "$(git merge-base main HEAD)" --name-only | grep -vE "^man/" >/dev/null; then
     echo "Detected man-only PR, skipping integration tests"
     exit $FAILED
 fi
