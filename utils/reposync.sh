@@ -137,7 +137,7 @@ EOF
     fi
 
     # Sync the repo to the CentOS CI artifacts server
-    rsync --password-file="$PASSWORD_FILE" -av "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID" systemd@artifacts.ci.centos.org::systemd/repos/
+    rsync --password-file="$PASSWORD_FILE" --delete -av "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID" systemd@artifacts.ci.centos.org::systemd/repos/
     echo "Mirror url: http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID"
 }
 
