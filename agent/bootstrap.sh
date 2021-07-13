@@ -80,6 +80,10 @@ dnf -y install epel-release dnf-plugins-core gdb
 dnf -y config-manager --enable epel --enable powertools
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
 dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
+# FIXME: workaround for broken "private" mirrors served via metalink API
+while read -r repofile; do
+    sed -i '/^metalink/s/metalink/mirrorlist/g' "$repofile"
+done < <(find /etc/yum.repos.d -name "epel*.repo")
 dnf -y update
 dnf -y builddep systemd
 dnf -y install "${ADDITIONAL_DEPS[@]}"
