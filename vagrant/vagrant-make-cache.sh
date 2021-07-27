@@ -60,35 +60,6 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "[WORKAROUND] Installing btrfs-aware packages"
     dnf -y copr enable mrc0mmand/epel8-btrfs-playground
     dnf -y install btrfs-progs kernel-5.12.4 libguestfs-tools-c
-
-    # FIXME: preprocess the image a bit
-    #        The latest Rawhide Cloud Base images are not sparse, which prolongs
-    #        the test runtime significantly. Let's unpack the box, sparsify
-    #        the image, and re-package it to temporarily workaround the issue.
-    #
-    # See: https://pagure.io/cloud-sig/issue/340
-    # Note: this needs the btrfs-aware packages from the previous workaround
-    echo "[WORKAROUND] Sparsifying the backing image (this will take a while)"
-    TEMP_DIR="$(mktemp -d rawhide-prep.XXXXX)"
-    pushd "$TEMP_DIR"
-    curl -o "$BOX_NAME" "https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/$BOX_NAME"
-    /opt/vagrant/embedded/bin/bsdtar --no-same-owner --no-same-permissions -v -x -m -f "$BOX_NAME"
-    echo -ne "real:\t\t$(du -h box.img)\napparent:\t$(du -h --apparent-size box.img)\n"
-    export LIBGUESTFS_BACKEND=direct
-    # Don't do an in-place sparsification, since in this case it's far less effective
-    # Note: don't zero-ify btrfs subvolumes, since they're already covered by
-    #       processing /dev/sda2
-    virt-sparsify --ignore btrfsvol:/dev/sda2/home --ignore btrfsvol:/dev/sda2/root --ignore btrfsvol:/dev/sda2/root/var/lib/portables box.img box.sparse
-    mv -fv box.sparse box.img
-    echo -ne "real:\t\t$(du -h box.img)\napparent:\t$(du -h --apparent-size box.img)\n"
-    rm -fv "$BOX_NAME"
-    /opt/vagrant/embedded/bin/bsdtar -czf "$BOX_NAME" box.img Vagrantfile metadata.json
-    ls -lh
-    vagrant box add "$BOX_NAME" --name fedora-rawhide-cloud
-    popd
-    rm -fr "$TEMP_DIR"
-    # Make sure we don't re-download the "broken" box
-    sed -i '/config.vm.box_url/d' "$VAGRANT_FILE"
 fi
 
 # Start a VM described in the Vagrantfile with all provision steps
