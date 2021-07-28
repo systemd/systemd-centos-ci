@@ -39,6 +39,27 @@ rm -fr "$BUILD_DIR"
 # Sanitizer (UBSan) using llvm/clang
 export CC=clang
 export CXX=clang++
+
+# Unlike gcc's ASan, clang's ASan DSO is in a non-standard path, thus any binary
+# compiled with -shared-libasan using clang will fail to start. Let's add the
+# necessary path to the ldconfig cache to avoid that.
+if ! ASAN_RT_PATH="$(${CC:-clang} --print-file-name "libclang_rt.asan-$(uname -m).so")"; then
+    echo >&2 "Couldn't detect path to the clang's ASan RT library"
+    exit 1
+fi
+
+if ! ldconfig -p | grep -- "$ASAN_RT_PATH" >/dev/null; then
+    LDCONFIG_PATH="$(mktemp /etc/ld.so.conf.d/99-clang-libasan-XXX.conf)"
+    echo "Adding ${ASAN_RT_PATH%/*} to ldconfig cache (using $LDCONFIG_PATH)"
+    echo "${ASAN_RT_PATH%/*}" >"$LDCONFIG_PATH"
+    ldconfig
+
+    if ! ldconfig -p | grep -- "$ASAN_RT_PATH" >/dev/null; then
+        echo >&2 "Failed to add $ASAN_RT_PATH to ldconfig cache"
+        exit 1
+    fi
+fi
+
 # FIXME (--as-needed)
 # Since version 10, both gcc and clang started to ignore certain linker errors
 # when compiling with -fsanitize=address. This eventually leads up to -lcrypt

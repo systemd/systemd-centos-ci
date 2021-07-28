@@ -25,25 +25,6 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
-## To be able to run integration tests under sanitizers we have to use the dynamic
-## versions of sanitizer libraries, especially when it comes to ASAn. With gcc
-## it's quite easy as ASan is compiled dynamically by default there and all necessary
-## libraries are in standard locations.
-## With clang things get a little bit complicated as we need to explicitly tell clang
-## to use the dynamic ASan library and then instruct the rest of the system
-## to where it can find it, as it is in a non-standard library location.
-_clang_asan_rt_name="$(ldd "$BUILD_DIR/systemd" | awk '/libclang_rt.asan/ {print $1; exit}')"
-
-if [[ -n "$_clang_asan_rt_name" ]]; then
-    # We are compiled with clang & -shared-libasan, let's tweak the runtime library
-    # paths, so binaries can correctly find the clang's runtime ASan DSO
-    _clang_asan_rt_path="$(find /usr/lib* /usr/local/lib* -type f -name "$_clang_asan_rt_name" 2>/dev/null | sed 1q)"
-    # Add the non-standard clang DSO path to the ldconfig cache
-    mkdir -p /etc/ld.so.conf.d/
-    echo "${_clang_asan_rt_path%/*}" > /etc/ld.so.conf.d/99-clang-libasan.conf
-    ldconfig
-fi
-
 ## Disable certain flaky tests
 # test-journal-flush: unstable on nested KVM
 echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
