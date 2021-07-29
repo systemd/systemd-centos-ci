@@ -227,6 +227,8 @@ GRUBBY_ARGS=(
     # persist across reboots without this kludge and can (actually it does)
     # interfere with running tests
     "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+    # Reboot the machine on kernel panic
+    "panic=3"
 )
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
@@ -240,6 +242,11 @@ done
 # coredumpctl_collect takes an optional argument, which upsets shellcheck
 # shellcheck disable=SC2119
 coredumpctl_collect
+
+# Configure kdump
+kdumpctl status || kdumpctl restart
+kdumpctl showmem
+kdumpctl rebuild
 
 # Let's leave this here for a while for debugging purposes
 echo "Current date:         $(date)"
