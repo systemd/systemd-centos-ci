@@ -328,8 +328,14 @@ class AgentControl(object):
         self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
         time.sleep(30)
 
+        self.wait_for_node(node, 10)
+
+        # Give the node time to finish the booting process
+        time.sleep(30)
+
+    def wait_for_node(self, node, attempts):
         ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
-        for i in range(10):
+        for i in range(attempts):
             logging.info("Checking if the node {} is alive (try #{})".format(node, i))
             rc = self.execute_local_command(ping_command)
             if rc == 0:
@@ -340,8 +346,6 @@ class AgentControl(object):
             raise Exception("Timeout reached when waiting for node to become online")
 
         logging.info("Node {} appears reachable again".format(node))
-        # Give the node time to finish booting process
-        time.sleep(30)
 
     def upload_file(self, node, local_source, remote_target):
         """Upload a file (or a directory) to a remote host
@@ -519,9 +523,18 @@ if __name__ == "__main__":
     except Exception as e:
         if args.kdump_collect:
             logging.info("Trying to collect kernel dumps from {}:/var/crash".format(node))
+            # Wait a bit for the reboot to kick in in case we got a kernel panic
+            time.sleep(10)
 
-            if not ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")):
-                logging.warn("Failed to collect kernel dumps from {}".format(node))
+            try:
+                ac.wait_for_node(node, 10)
+
+                if ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
+                    logging.warn("Failed to collect kernel dumps from {}".format(node))
+            except Exception as e:
+                # Fetching the kdumps is a best-effort thing, there's not much
+                # we can do if the machine is FUBAR
+                pass
 
         logging.exception("Execution failed")
         rc = 1
