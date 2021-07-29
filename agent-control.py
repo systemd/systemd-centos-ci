@@ -426,6 +426,7 @@ if __name__ == "__main__":
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
+    logging.info(args)
     KEEP_NODE = args.keep
 
     ac = AgentControl()
