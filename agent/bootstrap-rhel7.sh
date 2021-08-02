@@ -49,7 +49,7 @@ yum-builddep -y systemd
 
 # Fetch the downstream systemd repo
 test -e systemd && rm -rf systemd
-git clone https://github.com/redhat-plumbers/systemd-rhel7
+git clone https://github.com/redhat-plumbers/systemd-rhel7 systemd
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "$REMOTE_REF"
