@@ -141,15 +141,14 @@ EOF
     echo "Mirror url: http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID"
 }
 
-# TODO: add ppc64le once the copr builders are up
 # EPEL-8
 ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/repo/epel-8/mrc0mmand-systemd-centos-ci-centos8-epel-8.repo"
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos8"
 LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos8-epel8"
-sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64"
+sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 ppc64le"
 
 # centos-8-stream
 ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/repo/centos-stream-8/mrc0mmand-systemd-centos-ci-centos8-centos-stream-8.repo"
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos8"
 LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos8-stream8"
-sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64"
+sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 ppc64le"
