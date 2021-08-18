@@ -267,7 +267,7 @@ coredumpctl_collect() {
         local EXE
         local GDB_CMD="bt full\nquit"
 
-        _log "Gathering coredumps for '$path'"
+        _log "Collecting coredumps for '$path'"
         "$COREDUMPCTL_BIN" "${ARGS[@]}" info "$path"
         # Make sure we use the built binaries for getting gdb trace
         # This is relevant mainly for the sanitizers run, where we don't install
