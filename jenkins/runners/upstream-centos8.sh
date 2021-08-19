@@ -17,6 +17,25 @@ set -o pipefail
 
 ARGS=()
 
+retry_on_kdump() {
+    # "Workaround" for RHBZ#1956276
+    # Since the kernel panic still occurs scarcely, but still often enough to cause
+    # annoying noise, let's make use of the Jenkin's Naginator plugin to reschedule
+    # the job when it encounters a specific line in the job output.
+    #
+    # Jenkins part: Post-build Actions -> Retry build after failure
+    #
+    # shellcheck disable=SC2181
+    if [[ $? -ne 0 ]]; then
+        set +e
+        if grep -s "VFS: Busy inodes after unmount of loop" artifacts_*/kdumps/*/vmcore-dmesg.txt; then
+            echo "[NAGINATOR REQUEST] RHBZ#1956276 encountered, reschedule the job"
+        fi
+    fi
+}
+
+trap retry_on_kdump EXIT
+
 if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
     ARGS+=(--pr "$ghprbPullId")
 
