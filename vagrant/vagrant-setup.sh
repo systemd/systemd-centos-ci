@@ -4,7 +4,7 @@
 # vagrant-libvirt module to support "proper" virtualization (kvm/qemu) instead
 # of default containers.
 
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.16/vagrant_2.2.16_x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.18/vagrant_2.2.18_x86_64.rpm"
 WORKAROUNDS_DIR="$(dirname "$(readlink -f "$0")")/workarounds"
 
 set -eu
