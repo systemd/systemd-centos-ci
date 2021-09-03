@@ -80,6 +80,7 @@ FLAKE_LIST=(
     "test/TEST-29-PORTABLE"       # flaky test (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test (systemd/systemd#17469)
     "test/TEST-58-REPART"         # flaky test, see below (systemd/systemd#19442)
+    "test/TEST-64-UDEV-STORAGE"   # resource-heavy test, needs to run separately
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
