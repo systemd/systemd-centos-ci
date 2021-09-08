@@ -33,8 +33,8 @@ Vagrant.configure("2") do |config|
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel bpf acl audit bash-completion clang compiler-rt docbook-xsl ethtool \
         git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libfido2 libgcrypt libidn2 \
-        libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lz4 meson ninja \
-        p11-kit pam pcre2 python-jinja python-lxml qrencode quota-tools rust tpm2-pkcs11 xz
+        libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lz4 meson \
+        multipath-tools ninja p11-kit pam pcre2 python-jinja python-lxml qrencode quota-tools rust tpm2-pkcs11 xz
     # Install test dependencies
     # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
