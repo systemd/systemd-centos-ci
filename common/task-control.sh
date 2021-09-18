@@ -263,6 +263,7 @@ exectask_p_finish() {
         wait ${TASK_QUEUE[$key]}
         ec=$?
         logfile="$LOGDIR/$key.log"
+        echo "[TASK END] $(date)" >>"$logfile"
         printresult $ec "$logfile" "$key"
         unset "TASK_QUEUE[$key]"
     done
