@@ -28,7 +28,7 @@ retry_on_kdump() {
     # shellcheck disable=SC2181
     if [[ $? -ne 0 ]]; then
         set +e
-        if grep -s "VFS: Busy inodes after unmount of loop" artifacts_*/kdumps/*/vmcore-dmesg.txt; then
+        if grep -s "VFS: Busy inodes after unmount of" artifacts_*/kdumps/*/vmcore-dmesg.txt; then
             echo "[NAGINATOR REQUEST] RHBZ#1956276 encountered, reschedule the job"
         fi
     fi
