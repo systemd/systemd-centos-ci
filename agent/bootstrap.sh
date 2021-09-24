@@ -52,6 +52,7 @@ ADDITIONAL_DEPS=(
     elfutils-devel
     gcc-c++
     iproute-tc
+    iscsi-initiator-utils
     kernel-modules-extra
     libasan
     libfdisk-devel
@@ -68,6 +69,7 @@ ADDITIONAL_DEPS=(
     qrencode-devel
     quota
     rust
+    scsi-target-utils
     selinux-policy-devel
     socat
     squashfs-tools
