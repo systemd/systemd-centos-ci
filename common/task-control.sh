@@ -130,16 +130,16 @@ printresult() {
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
     local TASK_NAME="${1:?Missing task name}"
-    local TASK_COMAMND="${2:?Missing task command}"
+    local TASK_COMMAND="${2:?Missing task command}"
     local IGNORE_EC="${3:-0}"
     local LOGFILE="$LOGDIR/$TASK_NAME.log"
     touch "$LOGFILE"
 
-    echo "[TASK] $TASK_NAME ($TASK_COMAMND)"
+    echo "[TASK] $TASK_NAME ($TASK_COMMAND)"
     echo "[TASK START] $(date)" >>"$LOGFILE"
 
     # shellcheck disable=SC2086
-    eval $TASK_COMAMND &>>"$LOGFILE" &
+    eval $TASK_COMMAND &>>"$LOGFILE" &
     local PID=$!
     waitforpid $PID
     local EC=$?
