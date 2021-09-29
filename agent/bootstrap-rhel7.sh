@@ -44,8 +44,8 @@ done
 
 # Install necessary dependencies
 # - systemd-* packages are necessary for correct users/groups to be created
-yum -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
-yum-builddep -y systemd
+cmd_retry yum -y install systemd-journal-gateway systemd-resolved rpm-build yum-utils net-tools strace nc busybox e2fsprogs quota dnsmasq qemu-kvm
+cmd_retry yum-builddep -y systemd
 
 # Fetch the downstream systemd repo
 test -e systemd && rm -rf systemd

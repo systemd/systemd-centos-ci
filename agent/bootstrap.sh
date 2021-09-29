@@ -79,20 +79,20 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-dnf -y install epel-release dnf-plugins-core gdb
-dnf -y config-manager --enable epel --enable powertools
+cmd_retry dnf -y install epel-release dnf-plugins-core gdb
+cmd_retry dnf -y config-manager --enable epel --enable powertools
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
+cmd_retry dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
 # FIXME: workaround for broken "private" mirrors served via metalink API
 while read -r repofile; do
     sed -i '/^metalink/s/metalink/mirrorlist/g' "$repofile"
 done < <(find /etc/yum.repos.d -name "epel*.repo")
-dnf -y update
-dnf -y builddep systemd
-dnf -y install "${ADDITIONAL_DEPS[@]}"
+cmd_retry dnf -y update
+cmd_retry dnf -y builddep systemd
+cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
-wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
+cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
 # Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
 # with the OpenBSD version present on CentOS 8
 if alternatives --display nmap; then
