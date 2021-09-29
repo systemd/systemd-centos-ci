@@ -36,12 +36,9 @@ rpm -qa > vagrant-rawhide-installed-pkgs.txt
 
 rm -fr "$BUILD_DIR"
 # Build phase
-# FIXME: temporarily disable the deprecated-declarations check to allow building
-#        with OpenSSL 3.x
-# See: https://github.com/systemd/systemd/issues/20775
 meson "$BUILD_DIR" \
       --werror \
-      -Dc_args='-fno-omit-frame-pointer -ftrapv -Wno-deprecated-declarations' \
+      -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
       --optimization=g \
       -Dtests=true \
