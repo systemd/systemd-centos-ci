@@ -50,6 +50,32 @@ in_set() {
     return 1
 }
 
+# Retry specified commands if it fails. The default # of retries is 3, this
+# value can be overriden via the $RETRIES env variable
+#
+# Arguments:
+#   $1 - $* - command to run
+#
+# Returns:
+#   0 on success, last EC of the failing command otherwise
+cmd_retry() {
+    if [[ $# -eq 0 ]]; then
+        _err "Missing arguments"
+        return 1
+    fi
+
+    local retries="${RETRIES:-3}"
+    local ec i
+
+    for ((i = 1; i <= retries; i++)); do
+        eval "$@" && return 0 || ec=$?
+        _log "Command '$*' failed (EC: $ec) [try $i/$retries]"
+        [[ $i -eq $retries ]] || sleep 5
+    done
+
+    return $ec
+}
+
 # Checkout to the requested branch:
 #   1) if pr:XXX where XXX is a pull request ID is passed to the script,
 #      the corresponding branch for this PR is be checked out
