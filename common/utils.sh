@@ -38,16 +38,42 @@ in_set() {
         return 1
     fi
 
-    local NEEDLE="$1"
+    local needle="$1"
     shift
 
     for _elem in "$@"; do
-        if [[ "$_elem" == "$NEEDLE" ]]; then
+        if [[ "$_elem" == "$needle" ]]; then
             return 0
         fi
     done
 
     return 1
+}
+
+# Retry specified commands if it fails. The default # of retries is 3, this
+# value can be overriden via the $RETRIES env variable
+#
+# Arguments:
+#   $1 - $* - command to run
+#
+# Returns:
+#   0 on success, last EC of the failing command otherwise
+cmd_retry() {
+    if [[ $# -eq 0 ]]; then
+        _err "Missing arguments"
+        return 1
+    fi
+
+    local retries="${RETRIES:-3}"
+    local ec i
+
+    for ((i = 1; i <= retries; i++)); do
+        eval "$@" && return 0 || ec=$?
+        _log "Command '$*' failed (EC: $ec) [try $i/$retries]"
+        [[ $i -eq $retries ]] || sleep 5
+    done
+
+    return $ec
 }
 
 # Checkout to the requested branch:
@@ -58,20 +84,20 @@ in_set() {
 #   3) if the script is called without arguments, the default (possibly master)
 #      branch is used
 git_checkout_pr() {
-    local MASTER_BRANCH
+    local master_branch
 
     _log "Arguments: $*"
     (
         set -e -u
         case $1 in
             pr:*)
-                git branch | grep -E '\bmaster\b' && MASTER_BRANCH="master" || MASTER_BRANCH="main"
+                git branch | grep -E '\bmaster\b' && master_branch="master" || master_branch="main"
                 # Draft and already merged pull requests don't have the 'merge'
                 # ref anymore, so fall back to the *standard* 'head' ref in
                 # such cases and rebase it against the master branch
                 if ! git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"; then
                     git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
-                    git rebase "$MASTER_BRANCH" pr
+                    git rebase "$master_branch" pr
                 fi
 
                 git checkout pr
@@ -172,7 +198,7 @@ check_for_sanitizer_errors() {
 # Returns:
 #   0 when both systemd-coredump & coredumpctl work as expected, 1 otherwise
 coredumpctl_init() {
-    local EC
+    local ec
 
     if ! systemctl start systemd-coredump.socket; then
         _err "Failed to start systemd-coredump.socket"
@@ -183,9 +209,9 @@ coredumpctl_init() {
     # Note: coredumpctl returns 1 when no coredumps are found, so accept this EC
     # as a success as well
     coredumpctl > /dev/null
-    EC=$?
+    ec=$?
 
-    if ! [[ $EC -eq 0 || $EC -eq 1 ]]; then
+    if ! [[ $ec -eq 0 || $ec -eq 1 ]]; then
         _err "coredumpctl is not in operative state"
         return 1
     fi
@@ -211,20 +237,20 @@ coredumpctl_set_ts() {
 # Returns:
 #   0 when no coredumps were found, 1 otherwise
 coredumpctl_collect() {
-    local ARGS=(-q --no-legend --no-pager)
+    local args=(-q --no-legend --no-pager)
     # Allow overriding the coredumpctl binary for cases when we read coredumps
     # from a custom directory, which may contain journals with different features
     # than are supported by the local journalctl/coredumpctl versions
-    local COREDUMPCTL_BIN="${COREDUMPCTL_BIN:-coredumpctl}"
-    local JOURNALDIR="${1:-}"
-    local TEMPFILE="$(mktemp)"
+    local coredumpctl_bin="${COREDUMPCTL_BIN:-coredumpctl}"
+    local journaldir="${1:-}"
+    local tempfile="$(mktemp)"
 
     # Register a cleanup handler
     # shellcheck disable=SC2064
-    trap "rm -f '$TEMPFILE'" RETURN
+    trap "rm -f '$tempfile'" RETURN
 
-    if ! "$COREDUMPCTL_BIN" --version >/dev/null; then
-        _err "'$COREDUMPCTL_BIN' is not a valid binary"
+    if ! "$coredumpctl_bin" --version >/dev/null; then
+        _err "'$coredumpctl_bin' is not a valid binary"
         return 1
     fi
 
@@ -233,15 +259,15 @@ coredumpctl_collect() {
     # If coredumpctl_set_ts() was called beforehand, use the saved timestamp
     if [[ -n "$__COREDUMPCTL_TS" ]]; then
         _log "Looking for coredumps since $__COREDUMPCTL_TS"
-        ARGS+=(--since "$__COREDUMPCTL_TS")
+        args+=(--since "$__COREDUMPCTL_TS")
     fi
 
     # To get meaningful results from non-standard journal locations (especially
     # when it comes to full stack traces), systemd-coredump should be configured
     # with 'Storage=journal'
-    if [[ -n "$JOURNALDIR" ]]; then
-        _log "Using a custom journal directory: $JOURNALDIR"
-        ARGS+=(-D "$JOURNALDIR")
+    if [[ -n "$journaldir" ]]; then
+        _log "Using a custom journal directory: $journaldir"
+        args+=(-D "$journaldir")
     fi
 
     # Collect executable paths of all coredumps and filter out the expected ones.
@@ -254,9 +280,9 @@ coredumpctl_collect() {
     #               (since systemd/systemd#16675)
     #   sleep/bash - intentional SIGABRT caused by TEST-57
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
-    local EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify)$}"
-    _log "Excluding coredumps matching '$EXCLUDE_RX'"
-    if ! "$COREDUMPCTL_BIN" "${ARGS[@]}" -F COREDUMP_EXE | grep -Ev "$EXCLUDE_RX" > "$TEMPFILE"; then
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify)$}"
+    _log "Excluding coredumps matching '$exclude_rx'"
+    if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
         return 0
     fi
@@ -264,11 +290,11 @@ coredumpctl_collect() {
     # For each unique executable path call 'coredumpctl info' to get the stack
     # trace and other useful info
     while read -r path; do
-        local EXE
-        local GDB_CMD="bt full\nquit"
+        local exe
+        local gdb_cmd="bt full\nquit"
 
         _log "Collecting coredumps for '$path'"
-        "$COREDUMPCTL_BIN" "${ARGS[@]}" info "$path"
+        "$coredumpctl_bin" "${args[@]}" info "$path"
         # Make sure we use the built binaries for getting gdb trace
         # This is relevant mainly for the sanitizers run, where we don't install
         # the just built revision, so `coredumpctl debug` pulls in a local binary
@@ -279,21 +305,21 @@ coredumpctl_collect() {
         if [[ -v BUILD_DIR && -d $BUILD_DIR && -x $BUILD_DIR/${path##*/} ]]; then
             # $BUILD_DIR is set and we found the binary in it, let's override
             # the gdb command
-            EXE="$BUILD_DIR/${path##*/}"
-            GDB_CMD="file $EXE\nthread apply all bt\nbt full\nquit"
+            exe="$BUILD_DIR/${path##*/}"
+            gdb_cmd="file $exe\nthread apply all bt\nbt full\nquit"
             _log "\$BUILD_DIR is set and '${path##*/}' was found in it"
-            _log "Overriding the executable to '$EXE' and gdb command to '$GDB_CMD'"
+            _log "Overriding the executable to '$exe' and gdb command to '$gdb_cmd'"
         fi
 
         # Attempt to get a full stack trace for the first occurrence of the
         # given executable path
         if gdb -v > /dev/null; then
             echo -e "\n"
-            _log "Trying to run gdb with '$GDB_CMD' for '$path'"
-            echo -e "$GDB_CMD" | "$COREDUMPCTL_BIN" "${ARGS[@]}" debug "$path"
+            _log "Trying to run gdb with '$gdb_cmd' for '$path'"
+            echo -e "$gdb_cmd" | "$coredumpctl_bin" "${args[@]}" debug "$path"
             echo -e "\n"
         fi
-    done < <(sort -u "$TEMPFILE")
+    done < <(sort -u "$tempfile")
 
     return 1
 }
@@ -315,15 +341,15 @@ print_cgroup_hierarchy() {
 }
 
 is_nested_kvm_enabled() {
-    local KVM_MODULE_NAME KVM_MODULE_NESTED
+    local kvm_module_name kvm_module_nested
 
-    if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_amd|kvm_intel)')"; then
-        _log "Detected KVM module: $KVM_MODULE_NAME"
+    if kvm_module_name="$(lsmod | grep -m1 -Eo '(kvm_amd|kvm_intel)')"; then
+        _log "Detected KVM module: $kvm_module_name"
 
-        KVM_MODULE_NESTED="$(< "/sys/module/$KVM_MODULE_NAME/parameters/nested")" || :
-        _log "/sys/module/$KVM_MODULE_NAME/parameters/nested: $KVM_MODULE_NESTED"
+        kvm_module_nested="$(< "/sys/module/$kvm_module_name/parameters/nested")" || :
+        _log "/sys/module/$kvm_module_name/parameters/nested: $kvm_module_nested"
 
-        if [[ "$KVM_MODULE_NESTED" =~ (1|Y) ]]; then
+        if [[ "$kvm_module_nested" =~ (1|Y) ]]; then
             _log "Nested KVM is enabled"
             return 0
         else

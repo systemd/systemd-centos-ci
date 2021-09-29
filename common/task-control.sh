@@ -47,25 +47,25 @@ echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
 # Arguments
 #   - PID (must be a child of current shell)
 waitforpid() {
-    local PID="${1:?Missing PID}"
-    local EC
+    local pid="${1:?Missing PID}"
+    local ec
     SECONDS=0
 
-    echo "Waiting for PID $PID to finish"
-    while kill -0 "$PID" 2>/dev/null; do
+    echo "Waiting for PID $pid to finish"
+    while kill -0 "$pid" 2>/dev/null; do
         if ((SECONDS % 10 == 0)); then
             echo -n "."
         fi
         sleep 1
     done
 
-    wait "$PID"
-    EC=$?
+    wait "$pid"
+    ec=$?
 
     echo
-    echo "PID $PID finished with EC $EC in ${SECONDS}s"
+    echo "PID $pid finished with EC $ec in ${SECONDS}s"
 
-    return $EC
+    return $ec
 }
 
 # Convert passed exit code to a "human readable" message
@@ -80,42 +80,42 @@ waitforpid() {
 #   $4 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 printresult() {
-    local TASK_EC="${1:?Missing task exit code}"
-    local TASK_LOGFILE="${2:?Missing task log file}"
-    local TASK_NAME="${3:?Missing task name}"
-    local IGNORE_EC="${4:-0}"
+    local task_ec="${1:?Missing task exit code}"
+    local task_logfile="${2:?Missing task log file}"
+    local task_name="${3:?Missing task name}"
+    local ignore_ec="${4:-0}"
     # Let's rename the target log file according to the test result (PASS/FAIL)
-    local LOGFILE_BASE="${TASK_LOGFILE%.*}" # Log file path without the extension
-    local LOGFILE_EXT="${TASK_LOGFILE##*.}" # Log file extension without the leading dot
-    local NEW_LOGFILE
+    local logfile_base="${task_logfile%.*}" # Log file path without the extension
+    local logfile_ext="${task_logfile##*.}" # Log file extension without the leading dot
+    local new_logfile
 
     # Determine the log's new name
-    if [[ $TASK_EC -eq 0 ]]; then
-        NEW_LOGFILE="${LOGFILE_BASE}_PASS.${LOGFILE_EXT}"
+    if [[ $task_ec -eq 0 ]]; then
+        new_logfile="${logfile_base}_PASS.${logfile_ext}"
     else
-        NEW_LOGFILE="${LOGFILE_BASE}_FAIL.${LOGFILE_EXT}"
+        new_logfile="${logfile_base}_FAIL.${logfile_ext}"
     fi
 
     # Attempt to rename the log file. If we don't succeed, continue with the old one
-    if mv "$TASK_LOGFILE" "$NEW_LOGFILE"; then
-        TASK_LOGFILE="$NEW_LOGFILE"
+    if mv "$task_logfile" "$new_logfile"; then
+        task_logfile="$new_logfile"
     else
         _err "Log rename failed"
     fi
 
     # Don't update internal counters if we want to ignore task's EC
-    if [[ $IGNORE_EC -eq 0 ]]; then
-        if [[ $TASK_EC -eq 0 ]]; then
+    if [[ $ignore_ec -eq 0 ]]; then
+        if [[ $task_ec -eq 0 ]]; then
             PASSED=$((PASSED + 1))
-            echo "[RESULT] $TASK_NAME - PASS (log file: $TASK_LOGFILE)"
+            echo "[RESULT] $task_name - PASS (log file: $task_logfile)"
         else
-            cat "$TASK_LOGFILE"
+            cat "$task_logfile"
             FAILED=$((FAILED + 1))
-            FAILED_LIST+=("$TASK_NAME")
-            echo "[RESULT] $TASK_NAME - FAIL (EC: $TASK_EC) (log file: $TASK_LOGFILE)"
+            FAILED_LIST+=("$task_name")
+            echo "[RESULT] $task_name - FAIL (EC: $task_ec) (log file: $task_logfile)"
         fi
     else
-        echo "[IGNORED RESULT] $TASK_NAME - EC: $TASK_EC (log file: $TASK_LOGFILE)"
+        echo "[IGNORED RESULT] $task_name - EC: $task_ec (log file: $task_logfile)"
     fi
 }
 
@@ -129,26 +129,26 @@ printresult() {
 #   $3 - ignore EC (i.e. don't update statistics with this task's results)
 #        takes int (0: don't ignore, !0: ignore; default: 0) [optional]
 exectask() {
-    local TASK_NAME="${1:?Missing task name}"
-    local TASK_COMAMND="${2:?Missing task command}"
-    local IGNORE_EC="${3:-0}"
-    local LOGFILE="$LOGDIR/$TASK_NAME.log"
-    touch "$LOGFILE"
+    local task_name="${1:?Missing task name}"
+    local task_command="${2:?Missing task command}"
+    local ignore_ec="${3:-0}"
+    local logfile="$LOGDIR/$task_name.log"
+    touch "$logfile"
 
-    echo "[TASK] $TASK_NAME ($TASK_COMAMND)"
-    echo "[TASK START] $(date)" >>"$LOGFILE"
+    echo "[TASK] $task_name ($task_command)"
+    echo "[TASK START] $(date)" >>"$logfile"
 
     # shellcheck disable=SC2086
-    eval $TASK_COMAMND &>>"$LOGFILE" &
-    local PID=$!
-    waitforpid $PID
-    local EC=$?
-    echo "[TASK END] $(date)" >>"$LOGFILE"
+    eval $task_command &>>"$logfile" &
+    local pid=$!
+    waitforpid $pid
+    local ec=$?
+    echo "[TASK END] $(date)" >>"$logfile"
 
-    printresult $EC "$LOGFILE" "$TASK_NAME" "$IGNORE_EC"
+    printresult $ec "$logfile" "$task_name" "$ignore_ec"
     echo
 
-    return $EC
+    return $ec
 }
 
 # Execute given task "silently" and retry it n-times in case the task fails:
@@ -163,51 +163,51 @@ exectask() {
 #   $2 - task command
 #   $3 - # of retries (default: 3) [optional]
 exectask_retry() {
-    local TASK_NAME="${1:?Missing task name}"
-    local TASK_COMMAND="${2:?Missing task command}"
-    local RETRIES="${3:-$EXECTASK_RETRY_DEFAULT}"
-    local EC=0
-    local ORIG_TESTDIR
+    local task_name="${1:?Missing task name}"
+    local task_command="${2:?Missing task command}"
+    local retries="${3:-$EXECTASK_RETRY_DEFAULT}"
+    local ec=0
+    local orig_testdir
 
-    for ((i = 1; i <= RETRIES; i++)); do
-        local logfile="$LOGDIR/${TASK_NAME}_${i}.log"
+    for ((i = 1; i <= retries; i++)); do
+        local logfile="$LOGDIR/${task_name}_${i}.log"
         local pid
 
         touch "$logfile"
 
-        echo "[TASK] $TASK_NAME ($TASK_COMMAND) [try $i/$RETRIES]"
+        echo "[TASK] $task_name ($task_command) [try $i/$retries]"
         echo "[TASK START] $(date)" >>"$logfile"
 
         # Suffix the $TESTDIR for each retry by its index if requested
         if [[ -v MANGLE_TESTDIR && "$MANGLE_TESTDIR" -ne 0 ]]; then
-            ORIG_TESTDIR="${ORIG_TESTDIR:-$TESTDIR}"
-            export TESTDIR="${ORIG_TESTDIR}_${i}"
+            orig_testdir="${orig_testdir:-$TESTDIR}"
+            export TESTDIR="${orig_testdir}_${i}"
             mkdir -p "$TESTDIR"
             rm -f "$TESTDIR/pass"
         fi
 
         # shellcheck disable=SC2086
-        eval $TASK_COMMAND &>>"$logfile" &
+        eval $task_command &>>"$logfile" &
         pid=$!
         waitforpid $pid
-        EC=$?
+        ec=$?
         echo "[TASK END] $(date)" >>"$logfile"
 
-        if [[ $EC -eq 0 ]]; then
+        if [[ $ec -eq 0 ]]; then
             # Task passed => report the result & bail out early
-            printresult $EC "$logfile" "$TASK_NAME" 0
+            printresult $ec "$logfile" "$task_name" 0
             echo
             break
         else
             # Task failed => check if we still have retries left. If so, report
             # the result as "ignored" and continue to the next retry. Otherwise,
             # report the result as failed.
-            printresult $EC "$logfile" "$TASK_NAME" $((i < RETRIES))
+            printresult $ec "$logfile" "$task_name" $((i < retries))
             echo
         fi
     done
 
-    return $EC
+    return $ec
 }
 
 # Execute given task in parallel fashion:
@@ -219,13 +219,14 @@ exectask_retry() {
 #   $1 - task name
 #   $2 - task command
 exectask_p() {
-    local TASK_NAME="${1:?Missing task name}"
-    local TASK_COMMAND="${2:?Missing task command}"
-    local LOGFILE="$LOGDIR/$TASK_NAME.log"
-    touch "$LOGFILE"
+    local task_name="${1:?Missing task name}"
+    local task_command="${2:?Missing task command}"
+    local logfile="$LOGDIR/$task_name.log"
+    local ec key
+    touch "$logfile"
 
-    echo "[PARALLEL TASK] $TASK_NAME ($TASK_COMMAND)"
-    echo "[TASK START] $(date)" >>"$LOGFILE"
+    echo "[PARALLEL TASK] $task_name ($task_command)"
+    echo "[TASK START] $(date)" >>"$logfile"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
@@ -249,14 +250,16 @@ exectask_p() {
     done
 
     # shellcheck disable=SC2086
-    eval $TASK_COMMAND &>>"$LOGFILE" &
-    TASK_QUEUE[$TASK_NAME]=$!
+    eval $task_command &>>"$logfile" &
+    TASK_QUEUE[$task_name]=$!
 
     return 0
 }
 
 # Wait for the remaining tasks in the parallel tasks queue
 exectask_p_finish() {
+    local ec key logfile
+
     echo "[INFO] Waiting for remaining running parallel tasks"
 
     for key in "${!TASK_QUEUE[@]}"; do
