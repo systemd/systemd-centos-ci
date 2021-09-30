@@ -33,7 +33,7 @@ pushd "$WORK_DIR"
 INSTALLROOT="$PWD/installroot"
 mkdir "$INSTALLROOT"
 
-for package in dnf dnf-plugins-core patch rsync wget; do
+for package in curl dnf dnf-plugins-core patch rsync; do
     if ! rpm -q "$package"; then
         yumdownloader --destdir "$INSTALLROOT" --resolve "$package"
     fi
@@ -101,14 +101,14 @@ sync_repo() {
     IFS=" " read -ra ARCHES <<<"${4:?}"
 
     rm -f repo-config.repo
-    wget -O repo-config.repo "$REPO_LINK"
+    curl -s -o repo-config.repo "$REPO_LINK"
 
     # Check if the original repository configuration contains a URL to a GPG key
     # If so, parse it and download it
     GPG_KEY_URL="$(awk -F= '/^gpgkey=/ { print $2 }' repo-config.repo)"
     if [[ -n "$GPG_KEY_URL" ]]; then
         GPG_KEY_NAME="${GPG_KEY_URL##*/}"
-        wget -O "$GPG_KEY_NAME" "$GPG_KEY_URL"
+        curl -s -o "$GPG_KEY_NAME" "$GPG_KEY_URL"
     fi
 
     for arch in "${ARCHES[@]}"; do
