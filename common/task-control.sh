@@ -222,7 +222,7 @@ exectask_p() {
     local task_name="${1:?Missing task name}"
     local task_command="${2:?Missing task command}"
     local logfile="$LOGDIR/$task_name.log"
-    local ec key
+    local ec finished_logfile key
     touch "$logfile"
 
     echo "[PARALLEL TASK] $task_name ($task_command)"
@@ -234,9 +234,9 @@ exectask_p() {
                 # Task has finished, report its result and drop it from the queue
                 wait "${TASK_QUEUE[$key]}"
                 ec=$?
-                logfile="$LOGDIR/$key.log"
-                echo "[TASK END] $(date)" >>"$logfile"
-                printresult $ec "$logfile" "$key"
+                finished_logfile="$LOGDIR/$key.log"
+                echo "[TASK END] $(date)" >>"$finished_logfile"
+                printresult $ec "$finished_logfile" "$key"
                 echo
                 unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
