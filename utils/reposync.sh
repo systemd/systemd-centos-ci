@@ -25,6 +25,10 @@ echo "${CICO_API_KEY:0:13}" >"$PASSWORD_FILE"
 WORK_DIR="$(mktemp -d)"
 pushd "$WORK_DIR"
 
+# Make sure we have the latest CA certificates, to avoid issues
+# like https://access.redhat.com/articles/6338021
+yum -y update ca-certificates
+
 # Make sure we have all packages we need
 # As we now run this task in a rootless container, let's do a "little" (and ugly)
 # hack to install necessary packages, instead of having to deal with custom
