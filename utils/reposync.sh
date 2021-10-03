@@ -88,42 +88,42 @@ EOF
 fi
 
 sync_repo() {
-    local REPO_LINK="${1:?}"
-    local REPO_ID="${2:?}"
-    local LOCAL_REPO_ID="${3:?}"
-    local ARCHES GPG_KEY_URL GPG_KEY_NAME
+    local repo_link="${1:?}"
+    local repo_id="${2:?}"
+    local local_repo_id="${3:?}"
+    local arches gpg_key_url gpg_key_name
     # This is so ugly, yet I'm still amazed that it works
-    local DNF_OPTS=(
+    local dnf_opts=(
         "--setopt=pluginconfpath=$INSTALLROOT/etc/dnf/plugins/"
         "--setopt=pluginpath=$INSTALLROOT/usr/lib/python2.7/site-packages/dnf-plugins/"
     )
 
-    IFS=" " read -ra ARCHES <<<"${4:?}"
+    IFS=" " read -ra arches <<<"${4:?}"
 
     rm -f repo-config.repo
-    curl -s -o repo-config.repo "$REPO_LINK"
+    curl -s -o repo-config.repo "$repo_link"
 
     # Check if the original repository configuration contains a URL to a GPG key
     # If so, parse it and download it
-    GPG_KEY_URL="$(awk -F= '/^gpgkey=/ { print $2 }' repo-config.repo)"
-    if [[ -n "$GPG_KEY_URL" ]]; then
-        GPG_KEY_NAME="${GPG_KEY_URL##*/}"
-        curl -s -o "$GPG_KEY_NAME" "$GPG_KEY_URL"
+    gpg_key_url="$(awk -F= '/^gpgkey=/ { print $2 }' repo-config.repo)"
+    if [[ -n "$gpg_key_url" ]]; then
+        gpg_key_name="${gpg_key_url##*/}"
+        curl -s -o "$gpg_key_name" "$gpg_key_url"
     fi
 
-    for arch in "${ARCHES[@]}"; do
+    for arch in "${arches[@]}"; do
         # Make a local copy of the original repository packages
-        dnf "${DNF_OPTS[@]}" reposync --norepopath --newest-only --download-metadata \
+        dnf "${dnf_opts[@]}" reposync --norepopath --newest-only --download-metadata \
                                       --arch "${arch},noarch" --forcearch "$arch" \
-                                      --config="repo-config.repo" --repoid="$REPO_ID" \
-                                      --download-path="$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$arch"
+                                      --config="repo-config.repo" --repoid="$repo_id" \
+                                      --download-path="$DOWNLOAD_LOCATION/$local_repo_id/$arch"
     done
 
     # Create a repo file
-    cat >"$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$LOCAL_REPO_ID.repo" << EOF
-[$LOCAL_REPO_ID]
-name=Mirror of $REPO_ID Copr repo (\$basearch)
-baseurl=http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID/\$basearch/
+    cat >"$DOWNLOAD_LOCATION/$local_repo_id/$local_repo_id.repo" << EOF
+[$local_repo_id]
+name=Mirror of $repo_id Copr repo (\$basearch)
+baseurl=http://artifacts.ci.centos.org/systemd/repos/$local_repo_id/\$basearch/
 skip_if_unavailable=False
 enabled=1
 # Disable modular filtering for this repository, so we can override certain
@@ -131,14 +131,14 @@ enabled=1
 module_hotfixes=1
 EOF
     # Copy over the downloaded GPG key, if any
-    if [[ -f "$GPG_KEY_NAME" ]]; then
-        mv "$GPG_KEY_NAME" "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$GPG_KEY_NAME"
-        echo "gpgkey=http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID/$GPG_KEY_NAME" >>"$DOWNLOAD_LOCATION/$LOCAL_REPO_ID/$LOCAL_REPO_ID.repo"
+    if [[ -f "$gpg_key_name" ]]; then
+        mv "$gpg_key_name" "$DOWNLOAD_LOCATION/$local_repo_id/$gpg_key_name"
+        echo "gpgkey=http://artifacts.ci.centos.org/systemd/repos/$local_repo_id/$gpg_key_name" >>"$DOWNLOAD_LOCATION/$local_repo_id/$local_repo_id.repo"
     fi
 
     # Sync the repo to the CentOS CI artifacts server
-    rsync --password-file="$PASSWORD_FILE" --delete -av "$DOWNLOAD_LOCATION/$LOCAL_REPO_ID" systemd@artifacts.ci.centos.org::systemd/repos/
-    echo "Mirror url: http://artifacts.ci.centos.org/systemd/repos/$LOCAL_REPO_ID"
+    rsync --password-file="$PASSWORD_FILE" --delete -av "$DOWNLOAD_LOCATION/$local_repo_id" systemd@artifacts.ci.centos.org::systemd/repos/
+    echo "Mirror url: http://artifacts.ci.centos.org/systemd/repos/$local_repo_id"
 }
 
 # EPEL-8
