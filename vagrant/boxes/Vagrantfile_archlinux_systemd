@@ -39,7 +39,7 @@ Vagrant.configure("2") do |config|
     # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S coreutils busybox dhclient dhcpcd diffutils dnsmasq dosfstools e2fsprogs \
-        gdb inetutils net-tools openbsd-netcat open-iscsi qemu rsync socat squashfs-tools strace vi
+        gdb inetutils lcov net-tools openbsd-netcat open-iscsi qemu rsync socat squashfs-tools strace vi
 
     # Unlock root account and set its password to 'vagrant' to allow root login
     # via ssh
