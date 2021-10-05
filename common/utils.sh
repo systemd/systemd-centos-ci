@@ -50,6 +50,53 @@ in_set() {
     return 1
 }
 
+# Convert a string boolean value to a corresponding bash exit code
+#
+# Arguments:
+#   $1 - boolean string
+#
+# Returns:
+#   0 if the string value evaluates to 'true' (i.e. 1, yes, true, etc.),
+#   1 otherwise (including an empty string)
+get_bool() {
+    # Make the value lowercase to make the regex matching simpler
+    local _bool="${1,,}"
+
+    # Consider empty value as "false"
+    if [[ -z "$_bool" || "$_bool" =~ ^(0|no|false)$ ]]; then
+        return 1
+    elif [[ "$_bool" =~ ^(1|yes|true)$ ]]; then
+        return 0
+    else
+        _err "Value '$_bool' is not a valid boolean value"
+        exit 1
+    fi
+}
+
+# Get the value of a boolean flag from the given meson project
+#
+# Arguments:
+#   $1 - initialized meson build directory
+#   $2 - flag name
+#
+# Returns:
+#   0 if the flag value evaluates to 'true', 0 otherwise
+meson_get_bool() {
+    local build_dir="${1:?}"
+    local flag_name="${2:?}"
+    local value
+
+    # jq alternative: | jq '.[] | select(.name=="b_coverage") | .value'
+    # Use python, since jq might not be installed and we require python3 anyway
+    value="$(meson introspect --buildoptions "$build_dir" | python3 -c "import json, sys; j = json.load(sys.stdin); [print(x['value']) for x in j if x['name'] == '$flag_name']")"
+    if [[ -z "$value" ]]; then
+        _err "'$flag_name' flag not found in the introspect output for '$build_dir'"
+        exit 1
+    fi
+
+    get_bool "$value"
+}
+
 # Retry specified commands if it fails. The default # of retries is 3, this
 # value can be overriden via the $RETRIES env variable
 #
