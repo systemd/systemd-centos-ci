@@ -502,7 +502,7 @@ if __name__ == "__main__":
         elif args.vagrant:
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
-            command = "{}/vagrant/vagrant-ci-wrapper.sh {} {}".format(GITHUB_CI_REPO, args.vagrant, remote_ref)
+            command = "{}/vagrant/vagrant-ci-wrapper.sh -d '{}' -r '{}'".format(GITHUB_CI_REPO, args.vagrant, remote_ref)
             ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine

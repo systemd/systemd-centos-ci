@@ -39,10 +39,32 @@ SCRIPT_ROOT="$(dirname "$0")"
 # "Standalone" Arch Linux
 # Runs unit tests, fuzzers, and integration tests
 # distro-tag: arch
-DISTRO="${1:?missing argument: distro tag}"
+DISTRO=""
+REMOTE_REF=""
 
 set -eu
 set -o pipefail
+
+while getopts "d:r:" opt; do
+    case "$opt" in
+        d)
+            DISTRO="$OPTARG"
+            ;;
+        r)
+            REMOTE_REF="$OPTARG"
+            ;;
+        ?)
+            exit 1
+            ;;
+        *)
+            echo "Usage: $0 -d DISTRO_TAG [-c] [-r REMOTE_REF]"
+            exit 1
+    esac
+done
+
+if [[ -z "$DISTRO" ]]; then
+    echo >&2 "Missing argument: distro tag"
+fi
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -52,7 +74,7 @@ export SYSTEMD_ROOT="$PWD/systemd"
 trap at_exit EXIT
 
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
-git_checkout_pr "${2:-""}"
+git_checkout_pr "$REMOTE_REF"
 popd
 
 # Disable SELinux on the test hosts and avoid false positives.
