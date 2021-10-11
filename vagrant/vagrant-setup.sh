@@ -80,7 +80,9 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     export GEM_HOME=~/.vagrant.d/gems
     export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
     export PATH=/opt/vagrant/embedded/bin:$PATH
-    vagrant plugin install vagrant-libvirt
+    # FIXME: vagrant-libvirt v0.6.0 introduced a couple of regressions; let's
+    #        pin its version until they're resolved
+    vagrant plugin install vagrant-libvirt --plugin-version "0.5.3"
 fi
 
 vagrant --version
