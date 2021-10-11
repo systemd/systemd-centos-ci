@@ -15,6 +15,8 @@ Vagrant.configure("2") do |config|
     config.vm.box_url = "http://artifacts.ci.centos.org/systemd/vagrant_boxes/archlinux_systemd"
   end
 
+  # Disable the default /vagrant share, since we don't use it anyway
+  config.vm.synced_folder ".", "/vagrant", disabled: true
   # NFSv4 supports TCP only and requires 'no_root_squash' (instead of the default
   # 'all_squash') in /etc/exports
   config.vm.synced_folder ENV["SYSTEMD_ROOT"], "/build",
