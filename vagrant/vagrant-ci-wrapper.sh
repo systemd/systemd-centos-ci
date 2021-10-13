@@ -75,6 +75,12 @@ trap at_exit EXIT
 
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 git_checkout_pr "$REMOTE_REF"
+
+# Create a Coveralls configuration file if the Coveralls token is present
+# (the file is provided by the agent-control.py script)
+if [[ -f /.coveralls.token ]]; then
+    (set +x; echo "repo_token: $(</.coveralls.token)" >.coveralls.yml)
+fi
 popd
 
 # Disable SELinux on the test hosts and avoid false positives.

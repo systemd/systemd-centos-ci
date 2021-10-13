@@ -28,6 +28,7 @@ class AgentControl(object):
 
         # Load Duffy key
         self._duffy_key = os.environ.get("CICO_API_KEY")
+        self._coveralls_token = os.environ.get("COVERALLS_REPO_TOKEN")
 
         if not self._duffy_key:
             logging.fatal("Invalid Duffy key")
@@ -500,6 +501,15 @@ if __name__ == "__main__":
             command = "{}/vagrant/vagrant-make-cache.sh '{}'".format(GITHUB_CI_REPO, args.vagrant_sync)
             ac.execute_remote_command(node, command)
         elif args.vagrant:
+            # If the Coveralls token is set, upload it to the node, so it can
+            # be consumed by relevant tools
+            if ac._coveralls_token:
+                token_file = tempfile.NamedTemporaryFile()
+                token_file.write(ac._coveralls_token)
+                token_file.flush()
+                ac.upload_file(node, token_file.name, "/.coveralls.token")
+                token_file.close()
+
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
             command = "{}/vagrant/vagrant-ci-wrapper.sh -d '{}' -r '{}'".format(GITHUB_CI_REPO, args.vagrant, remote_ref)

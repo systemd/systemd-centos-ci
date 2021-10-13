@@ -409,3 +409,79 @@ is_nested_kvm_enabled() {
 
     return 1
 }
+
+# Collect coverage metadata from given directory and generate a coverage report
+#
+# Arguments:
+#   $1 - output file (coverage report)
+#   $2 - directory which will be searched for coverage metadata (recursively)
+lcov_collect() {
+    local output_file="${1:?}"
+    local build_dir="${2:?}"
+
+    if ! lcov --directory "$build_dir" --capture --output-file "$output_file"; then
+        _err "Failed to capture coverage data from '$build_dir'"
+        return 1
+    fi
+
+    if ! lcov --remove "$output_file" -o "$output_file" '/usr/include/*' '/usr/lib/*'; then
+        _err "Failed to remove unrelated data from the capture file"
+        return 1
+    fi
+}
+
+# Collect all lcov reports from given directory (recursively) and merge them
+# into a single file
+#
+# Arguments:
+#   $1 - output file
+#   $2 - $* - directories to search the lcov reports in
+#
+# Returns:
+#   0 on success, 1 otherwise (i.e. no reports found, invalid data, etc.)
+lcov_merge() {
+    local lcov_args=()
+    local file
+    local output_file="${1:?}"
+    shift
+
+    if [[ $# -eq 0 ]]; then
+        _err "Usage: ${FUNCNAME[0]} <output file> <input dir> [<input dir> ...]"
+        return 1
+    fi
+
+    # Recursively find all *.coverage-info files in the given directory and
+    # add them to the command line for `lcov`
+    while read -r file; do
+        lcov_args+=(--add-tracefile "${file}")
+    done < <(find "$@" -name "*.coverage-info")
+
+    if [[ ${#lcov_args[@]} -gt 0 ]]; then
+        _log "Merging $((${#lcov_args[@]}/2)) lcov reports into $output_file"
+        if ! lcov "${lcov_args[@]}" --output-file "$output_file"; then
+            _err "Failed to merge the coverage reports"
+            return 1
+        fi
+    else
+        _err "No coverage files (*.coverage-info) found in given directories"
+        return 1
+    fi
+}
+
+# Remove coverage metadata (*.gcda and *.gcno files) from given directory (recursively)
+#
+# Arguments:
+#   $1 - directory which will be search for metadata (recursively)
+#
+# Returns:
+#   0 on success, >0 otherwise
+lcov_clear_metadata() {
+    local dir="${1?}"
+
+    if [[ ! -d "$dir" ]]; then
+        _err "Invalid directory '$dir'"
+        return 1
+    fi
+
+    find "$dir" \( -name "*.gcda" -o -name "*.gcno" \) -exec rm -f '{}' \;
+}

@@ -30,7 +30,8 @@ VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"
 VAGRANT_FILES="$VAGRANT_ROOT/vagrantfiles"
 VAGRANT_BOOTSTRAP_SCRIPTS="$VAGRANT_ROOT/bootstrap_scripts"
 VAGRANT_TEST_SCRIPTS="$VAGRANT_ROOT/test_scripts"
-USING_SANITIZERS=false
+WITH_SANITIZERS=false
+WITH_COVERAGE=false
 DISTRO_STRING="${1,,}"
 # Takes the first part of the hyphen-delimited distro string as a distro name
 # e.g.: if DISTRO_STRING=arch-sanitizers-clang then DISTRO=arch
@@ -52,7 +53,9 @@ fi
 # systemd using various sanitizers (ASan, UBSan, etc.) and due to performance
 # issue we want to skip certain steps (like reboot and integration tests).
 if [[ $DISTRO_STRING =~ -sanitizers- ]]; then
-    USING_SANITIZERS=true
+    WITH_SANITIZERS=true
+elif [[ $DISTRO_STRING =~ -coverage ]]; then
+    WITH_COVERAGE=true
 fi
 
 # Decide which Vagrant file to use
@@ -116,7 +119,7 @@ vagrant up --no-tty --provider=libvirt
 
 set +e
 
-if $USING_SANITIZERS; then
+if $WITH_SANITIZERS || $WITH_COVERAGE; then
     # Skip the reboot/reload when running with sanitizers, as it in most cases
     # causes boot to timeout or die completely
     # Run tests with sanitizers
