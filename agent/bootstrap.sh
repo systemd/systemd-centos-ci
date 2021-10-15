@@ -45,6 +45,7 @@ ADDITIONAL_DEPS=(
     clang
     device-mapper-event
     device-mapper-multipath
+    dhcp-server
     dnsmasq
     dosfstools
     e2fsprogs
