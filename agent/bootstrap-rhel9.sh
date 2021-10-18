@@ -134,7 +134,7 @@ fi
             -Dntp-servers='0.rhel.pool.ntp.org 1.rhel.pool.ntp.org 2.rhel.pool.ntp.org 3.rhel.pool.ntp.org'
             -Ddns-servers=
             -Duser-path=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
-            -Dservice-watchdog=
+            -Dservice-watchdog=3min
             -Ddev-kvm-mode=0666
             -Dkmod=true
             -Dxkbcommon=true
@@ -160,20 +160,22 @@ fi
             -Delfutils=true
             -Dlibcryptsetup=true
             -Delfutils=true
-            -Dpwquality=true
+            -Dpwquality=false
+            -Dqrencode=false
             -Dgnutls=true
             -Dmicrohttpd=true
             -Dlibidn2=true
-            -Dlibiptc=true
+            -Dlibiptc=false
             -Dlibcurl=true
-            -Dqrencode=false
             -Dlibfido2=false
-            -Defi=false
+            -Dgnu-efi=false
             -Dtpm=true
             -Dhwdb=true
             -Dsysusers=true
             -Dstandalone-binaries=true
             -Ddefault-kill-user-processes=false
+            -Dtests=unsafe
+            -Dinstall-tests=false
             -Dtty-gid=5
             -Dusers-gid=100
             -Dnobody-user=nobody
@@ -183,6 +185,7 @@ fi
             -Dsplit-bin=true
             -Db_lto=true
             -Db_ndebug=false
+            -Dman=true
             #-Dversion-tag=v%{version}-%{release}
             -Dfallback-hostname=localhost
             -Ddefault-dnssec=no
@@ -193,6 +196,9 @@ fi
             -Dtimesyncd=false
             -Dhomed=false
             -Duserdb=false
+            -Dportabled=false
+            -Dnetworkd=false
+            -Dsupport-url=https://access.redhat.com/support
             # Custom options
             -Dslow-tests=true
             -Dtests=unsafe
