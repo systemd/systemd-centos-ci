@@ -84,8 +84,8 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install epel-release dnf-plugins-core gdb
-cmd_retry dnf -y config-manager --enable epel --enable powertools
+cmd_retry dnf -y install dnf-plugins-core gdb
+cmd_retry dnf -y config-manager --enable powertools
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
