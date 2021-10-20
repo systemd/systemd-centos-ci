@@ -71,7 +71,6 @@ ADDITIONAL_DEPS=(
     pcre2-devel
     python3-jinja2
     qemu-kvm
-    qrencode-devel
     quota
     rust
     selinux-policy-devel
