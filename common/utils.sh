@@ -50,6 +50,53 @@ in_set() {
     return 1
 }
 
+# Convert a string boolean value to a corresponding bash exit code
+#
+# Arguments:
+#   $1 - boolean string
+#
+# Returns:
+#   0 if the string value evaluates to 'true' (i.e. 1, yes, true, etc.),
+#   1 otherwise (including an empty string)
+get_bool() {
+    # Make the value lowercase to make the regex matching simpler
+    local _bool="${1,,}"
+
+    # Consider empty value as "false"
+    if [[ -z "$_bool" || "$_bool" =~ ^(0|no|false)$ ]]; then
+        return 1
+    elif [[ "$_bool" =~ ^(1|yes|true)$ ]]; then
+        return 0
+    else
+        _err "Value '$_bool' is not a valid boolean value"
+        exit 1
+    fi
+}
+
+# Get the value of a boolean flag from the given meson project
+#
+# Arguments:
+#   $1 - initialized meson build directory
+#   $2 - flag name
+#
+# Returns:
+#   0 if the flag value evaluates to 'true', 0 otherwise
+meson_get_bool() {
+    local build_dir="${1:?}"
+    local flag_name="${2:?}"
+    local value
+
+    # jq alternative: | jq '.[] | select(.name=="b_coverage") | .value'
+    # Use python, since jq might not be installed and we require python3 anyway
+    value="$(meson introspect --buildoptions "$build_dir" | python3 -c "import json, sys; j = json.load(sys.stdin); [print(x['value']) for x in j if x['name'] == '$flag_name']")"
+    if [[ -z "$value" ]]; then
+        _err "'$flag_name' flag not found in the introspect output for '$build_dir'"
+        exit 1
+    fi
+
+    get_bool "$value"
+}
+
 # Retry specified commands if it fails. The default # of retries is 3, this
 # value can be overriden via the $RETRIES env variable
 #
@@ -361,4 +408,80 @@ is_nested_kvm_enabled() {
     fi
 
     return 1
+}
+
+# Collect coverage metadata from given directory and generate a coverage report
+#
+# Arguments:
+#   $1 - output file (coverage report)
+#   $2 - directory which will be searched for coverage metadata (recursively)
+lcov_collect() {
+    local output_file="${1:?}"
+    local build_dir="${2:?}"
+
+    if ! lcov --directory "$build_dir" --capture --output-file "$output_file"; then
+        _err "Failed to capture coverage data from '$build_dir'"
+        return 1
+    fi
+
+    if ! lcov --remove "$output_file" -o "$output_file" '/usr/include/*' '/usr/lib/*'; then
+        _err "Failed to remove unrelated data from the capture file"
+        return 1
+    fi
+}
+
+# Collect all lcov reports from given directory (recursively) and merge them
+# into a single file
+#
+# Arguments:
+#   $1 - output file
+#   $2 - $* - directories to search the lcov reports in
+#
+# Returns:
+#   0 on success, 1 otherwise (i.e. no reports found, invalid data, etc.)
+lcov_merge() {
+    local lcov_args=()
+    local file
+    local output_file="${1:?}"
+    shift
+
+    if [[ $# -eq 0 ]]; then
+        _err "Usage: ${FUNCNAME[0]} <output file> <input dir> [<input dir> ...]"
+        return 1
+    fi
+
+    # Recursively find all *.coverage-info files in the given directory and
+    # add them to the command line for `lcov`
+    while read -r file; do
+        lcov_args+=(--add-tracefile "${file}")
+    done < <(find "$@" -name "*.coverage-info")
+
+    if [[ ${#lcov_args[@]} -gt 0 ]]; then
+        _log "Merging $((${#lcov_args[@]}/2)) lcov reports into $output_file"
+        if ! lcov "${lcov_args[@]}" --output-file "$output_file"; then
+            _err "Failed to merge the coverage reports"
+            return 1
+        fi
+    else
+        _err "No coverage files (*.coverage-info) found in given directories"
+        return 1
+    fi
+}
+
+# Remove coverage metadata (*.gcda and *.gcno files) from given directory (recursively)
+#
+# Arguments:
+#   $1 - directory which will be search for metadata (recursively)
+#
+# Returns:
+#   0 on success, >0 otherwise
+lcov_clear_metadata() {
+    local dir="${1?}"
+
+    if [[ ! -d "$dir" ]]; then
+        _err "Invalid directory '$dir'"
+        return 1
+    fi
+
+    find "$dir" \( -name "*.gcda" -o -name "*.gcno" \) -exec rm -f '{}' \;
 }
