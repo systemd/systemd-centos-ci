@@ -41,7 +41,7 @@ meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
-      --optimization=g \
+      --optimization=0 \
       -Db_coverage=true \
       -Dlog-trace=true \
       -Dfexecve=true \
