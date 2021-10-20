@@ -194,13 +194,11 @@ systemctl reload dbus.service
 systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
-# FIXME: the systemd-networkd test suite has some issues when running with
-#        coverage-enabled build
 # Delete coverage metadata left over by unit/integration tests
-#lcov_clear_metadata "$BUILD_DIR"
-#exectask "systemd-networkd" \
-#            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug"
-#exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+lcov_clear_metadata "$BUILD_DIR"
+exectask "systemd-networkd" \
+         "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
+exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
