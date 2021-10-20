@@ -468,7 +468,7 @@ lcov_merge() {
     fi
 }
 
-# Remove coverage metadata (*.gcda and *.gcno files) from given directory (recursively)
+# Remove coverage metadata (*.gcda files) from given directory (recursively)
 #
 # Arguments:
 #   $1 - directory which will be search for metadata (recursively)
@@ -483,5 +483,5 @@ lcov_clear_metadata() {
         return 1
     fi
 
-    find "$dir" \( -name "*.gcda" -o -name "*.gcno" \) -exec rm -f '{}' \;
+    find "$dir" -name "*.gcda" -exec rm -f '{}' \;
 }
