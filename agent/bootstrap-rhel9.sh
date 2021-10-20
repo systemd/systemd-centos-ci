@@ -52,6 +52,7 @@ ADDITIONAL_DEPS=(
     bpftool
     clang
     device-mapper-event
+    dhcp-client
     dnsmasq
     dosfstools
     e2fsprogs
