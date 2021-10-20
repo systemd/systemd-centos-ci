@@ -60,7 +60,6 @@ ADDITIONAL_DEPS=(
     gcc-c++
     iproute-tc
     kernel-modules-extra
-    libasan
     libfdisk-devel
     libpwquality-devel
     libzstd-devel
