@@ -56,7 +56,10 @@ ninja -C "$BUILD_DIR" install
 # Install cpp-coveralls to generate the Coveralls-compatible report
 # See: https://github.com/eddyxu/cpp-coveralls
 python3 -m ensurepip
-python3 -m pip install cpp-coveralls
+# Temporarily install cpp-coveralls from a custom fork until
+# https://github.com/eddyxu/cpp-coveralls/pull/165 is merged/resolved
+python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@send-correct-ids
+#python3 -m pip install cpp-coveralls
 
 # In order to be able to collect all coverage reports, we need to run
 # the systemd-networkd test suite from the build dir, which means we need to
