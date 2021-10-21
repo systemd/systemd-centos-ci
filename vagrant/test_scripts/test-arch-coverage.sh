@@ -196,6 +196,9 @@ systemctl status dhcpcd@eth0.service
 
 # Delete coverage metadata left over by unit/integration tests
 lcov_clear_metadata "$BUILD_DIR"
+# Tweak $BUILD_DIR's permissions, since networkd and resolved run under unprivileged
+# users and wouldn't be able to generate coverage reports
+chmod -R o+rwX "$BUILD_DIR"
 exectask "systemd-networkd" \
          "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
 exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
