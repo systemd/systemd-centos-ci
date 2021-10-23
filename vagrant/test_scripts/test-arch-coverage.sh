@@ -59,7 +59,7 @@ echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
-exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 
 ## Integration test suite ##
