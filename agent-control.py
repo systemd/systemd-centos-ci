@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 
-from __future__ import print_function, with_statement
+from __future__ import absolute_import, print_function, with_statement
 from collections import OrderedDict
 import argparse
 import json
