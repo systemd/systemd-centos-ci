@@ -39,7 +39,7 @@ class AgentControl(object):
         if self._node is not None and "ssid" in self._node and not KEEP_NODE:
             self.free_session(self._node["ssid"])
 
-    def _execute_api_command(self, endpoint, payload={}, include_api_key=True):
+    def _execute_api_command(self, endpoint, payload=None, include_api_key=True):
         """Execute a Duffy command
 
         See also: https://wiki.centos.org/QaWiki/CI/Duffy
@@ -57,6 +57,7 @@ class AgentControl(object):
         --------
         Server response as a stringified JSON
         """
+        payload = payload or {}
         url = "{}{}".format(API_BASE, endpoint)
         if include_api_key:
             payload["key"] = self._duffy_key
