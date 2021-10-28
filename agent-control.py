@@ -384,7 +384,8 @@ def handle_signal(signum, frame):
     print("handle_signal: got signal {}".format(signum))
     raise SignalException()
 
-if __name__ == "__main__":
+def main():
+    global KEEP_NODE
     # Setup logging
     logging.basicConfig(level=logging.INFO,
             format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
@@ -434,11 +435,11 @@ if __name__ == "__main__":
 
     if args.free_session:
         ac.free_session(args.free_session)
-        sys.exit(0)
+        return 0
 
     if args.free_all_nodes:
         ac.free_all_nodes()
-        sys.exit(0)
+        return 0
 
     if args.list_nodes:
         if args.list_nodes == "owned":
@@ -446,7 +447,7 @@ if __name__ == "__main__":
         else:
             ac.list_all_nodes()
 
-        sys.exit(0)
+        return 0
 
     rc = 0
     try:
@@ -458,7 +459,7 @@ if __name__ == "__main__":
 
         if node is None or ssid is None:
             logging.critical("Can't continue without a valid node")
-            sys.exit(1)
+            return 1
 
         # Figure out a systemd branch to compile
         if args.pr:
@@ -573,4 +574,7 @@ if __name__ == "__main__":
             ac.execute_local_command(command)
 
 
-    sys.exit(rc)
+    return rc
+
+if __name__ == "__main__":
+    sys.exit(main())
