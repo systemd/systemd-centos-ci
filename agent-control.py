@@ -16,13 +16,13 @@ import signal
 API_BASE = "http://admin.ci.centos.org:8080"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
-KEEP_NODE = False
 
 
 class AgentControl(object):
     def __init__(self, artifacts_storage=None):
         # Should probably use a setter/getter in the future
         self.artifacts_storage = artifacts_storage
+        self.keep_node = False
         self._node = {}
         self._reboot_count = 0
 
@@ -36,7 +36,7 @@ class AgentControl(object):
 
     def __del__(self):
         # Deallocate the allocated node on script exit, if not requested otherwise
-        if self._node is not None and "ssid" in self._node and not KEEP_NODE:
+        if self._node is not None and "ssid" in self._node and not self.keep_node:
             self.free_session(self._node["ssid"])
 
     def _execute_api_command(self, endpoint, payload=None, include_api_key=True):
@@ -385,7 +385,6 @@ def handle_signal(signum, frame):
     raise SignalException()
 
 def main():
-    global KEEP_NODE
     # Setup logging
     logging.basicConfig(level=logging.INFO,
             format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
@@ -429,9 +428,9 @@ def main():
             help="CentOS version")
     args = parser.parse_args()
     logging.info("%s", args)
-    KEEP_NODE = args.keep
 
     ac = AgentControl()
+    ac.keep_node = args.keep
 
     if args.free_session:
         ac.free_session(args.free_session)
@@ -553,7 +552,7 @@ def main():
 
     finally:
         # Return the loaned node back to the pool if not requested otherwise
-        if not KEEP_NODE:
+        if not ac.keep_node:
             # Ugly workaround for current Jenkin's behavior, where the signal
             # is sent several times under certain conditions. This is already
             # filed upstream, but the fix is still incomplete. Let's just
