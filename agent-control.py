@@ -60,7 +60,7 @@ class AgentControl(object):
         url = "{}{}".format(API_BASE, endpoint)
         if include_api_key:
             payload["key"] = self._duffy_key
-        logging.info("Duffy request URL: {}".format(url))
+        logging.info("Duffy request URL: %s", url)
 
         r = requests.get(url, params=payload)
 
@@ -91,8 +91,8 @@ class AgentControl(object):
         if flavor:
             payload["flavor"] = flavor
 
-        logging.info("Attempting to allocate a node (version: {}, arch: {}, flavor: {})".format(
-                     version, architecture, flavor if flavor else "n/a"))
+        logging.info("Attempting to allocate a node (version: %s, arch: %s, flavor: %s)",
+                     version, architecture, flavor if flavor else "n/a")
 
         # When the machine pool runs out of pre-installed machines, Duffy returns
         # an error (Insufficient Nodes in READY State) which is not a valid
@@ -109,8 +109,8 @@ class AgentControl(object):
 
                 break
             except ValueError:
-                logging.error("Received unexpected response from the server: {}".format(res))
-                logging.info("Waiting {} seconds before another retry".format(timeout))
+                logging.error("Received unexpected response from the server: %s", res)
+                logging.info("Waiting %d seconds before another retry", timeout)
 
             time.sleep(timeout)
 
@@ -126,7 +126,7 @@ class AgentControl(object):
             logging.error("Failed to allocated a node")
             return (None, None)
 
-        logging.info("Successfully allocated node '{}' ({})".format(host, ssid))
+        logging.info("Successfully allocated node '%s' (%s)", host, ssid)
 
         return (host, ssid)
 
@@ -151,7 +151,7 @@ class AgentControl(object):
         nodes = []
         for node in jroot:
             if verbose:
-                logging.info("{} ({})".format(node[0], node[1]))
+                logging.info("%s (%s)", node[0], node[1])
 
             nodes.append({"host" : node[0], "ssid" : node[1]})
 
@@ -170,7 +170,7 @@ class AgentControl(object):
         --------
         Exit code of the command
         """
-        logging.info("Executing a LOCAL command: {}".format(" ".join(command)))
+        logging.info("Executing a LOCAL command: %s", " ".join(command))
 
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
         proc.communicate()
@@ -220,7 +220,7 @@ class AgentControl(object):
             node, command
         ]
 
-        logging.info("Executing a REMOTE command on node'{}': {}".format(node, command))
+        logging.info("Executing a REMOTE command on node '%s': %s", node, command)
         rc = self.execute_local_command(command_wrapper)
 
         # Fetch artifacts if both remote and local dirs are set
@@ -257,8 +257,8 @@ class AgentControl(object):
             "root@{}:{}".format(node, remote_dir), local_dir
         ]
 
-        logging.info("Fetching artifacts from node {}: (remote: {}, local: {})".format(
-                node, remote_dir, local_dir))
+        logging.info("Fetching artifacts from node %s: (remote: %s, local: %s)",
+                     node, remote_dir, local_dir)
 
         return self.execute_local_command(command)
 
@@ -267,7 +267,7 @@ class AgentControl(object):
         nodes = self.allocated_nodes()
 
         for node in nodes:
-            logging.info("Freeing node {} ({})".format(node["host"], node["ssid"]))
+            logging.info("Freeing node %s (%s)", node["host"], node["ssid"])
             self.free_session(node["ssid"])
 
     def free_session(self, node_ssid):
@@ -281,7 +281,7 @@ class AgentControl(object):
         if not node_ssid:
             return
 
-        logging.info("Freeing session {}".format(node_ssid))
+        logging.info("Freeing session %s", node_ssid)
         res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
         logging.info(res)
 
@@ -309,9 +309,9 @@ class AgentControl(object):
         ])
         format_str = " ".join(schema.values())
 
-        logging.info(format_str.format(*schema.keys()))
+        logging.info("%s", format_str.format(*schema.keys()))
         for node in jroot:
-            logging.info(format_str.format(*node[0:14]))
+            logging.info("%s", format_str.format(*node[0:14]))
 
     def reboot_node(self, node):
         """Reboot a node
@@ -325,7 +325,7 @@ class AgentControl(object):
         -------
         An exception if the waiting timeout is reached
         """
-        logging.info("Rebooting node {}".format(node))
+        logging.info("Rebooting node %s", node)
         self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
         time.sleep(30)
 
@@ -337,7 +337,7 @@ class AgentControl(object):
     def wait_for_node(self, node, attempts):
         ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
         for i in range(attempts):
-            logging.info("Checking if the node {} is alive (try #{})".format(node, i))
+            logging.info("Checking if the node %s is alive (try #%d)", node, i)
             rc = self.execute_local_command(ping_command)
             if rc == 0:
                 break
@@ -346,7 +346,7 @@ class AgentControl(object):
         if rc != 0:
             raise Exception("Timeout reached when waiting for node to become online")
 
-        logging.info("Node {} appears reachable again".format(node))
+        logging.info("Node %s appears reachable again", node)
 
     def upload_file(self, node, local_source, remote_target):
         """Upload a file (or a directory) to a remote host
@@ -371,8 +371,7 @@ class AgentControl(object):
             local_source, "root@{}:{}".format(node, remote_target)
         ]
 
-        logging.info("Uploading file {} to node {} as {}".format(local_source,
-                node, remote_target))
+        logging.info("Uploading file %s to node %s as %s", local_source, node, remote_target)
 
         return self.execute_local_command(command)
 
@@ -427,7 +426,7 @@ if __name__ == "__main__":
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
-    logging.info(args)
+    logging.info("%s", args)
     KEEP_NODE = args.keep
 
     ac = AgentControl()
@@ -484,7 +483,7 @@ if __name__ == "__main__":
         ac.execute_remote_command(node, command)
 
         if args.ci_pr:
-            logging.info("PHASE 1.5: Using a custom CI repository ref (PR#{})".format(args.ci_pr))
+            logging.info("PHASE 1.5: Using a custom CI repository ref (PR#%s)", args.ci_pr)
             command = "cd {} && git fetch -fu origin 'refs/pull/{}/merge:pr' && " \
                       "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
             ac.execute_remote_command(node, command)
@@ -516,7 +515,7 @@ if __name__ == "__main__":
             ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine
-            logging.info("PHASE 2: Bootstrap (ref: {})".format(remote_ref))
+            logging.info("PHASE 2: Bootstrap (ref: %s)", remote_ref)
             command = "{}/agent/{} -r '{}' {}".format(GITHUB_CI_REPO, args.bootstrap_script, remote_ref, args.bootstrap_args)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
@@ -533,7 +532,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         if args.kdump_collect:
-            logging.info("Trying to collect kernel dumps from {}:/var/crash".format(node))
+            logging.info("Trying to collect kernel dumps from %s:/var/crash", node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
             time.sleep(10)
 
@@ -541,7 +540,7 @@ if __name__ == "__main__":
                 ac.wait_for_node(node, 10)
 
                 if ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
-                    logging.warn("Failed to collect kernel dumps from {}".format(node))
+                    logging.warn("Failed to collect kernel dumps from %s", node)
             except Exception as e:
                 # Fetching the kdumps is a best-effort thing, there's not much
                 # we can do if the machine is FUBAR
