@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
 
 from __future__ import absolute_import, print_function, with_statement
 from collections import OrderedDict
