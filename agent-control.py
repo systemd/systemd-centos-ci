@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# pylint: disable=line-too-long,invalid-name
+# pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
 from __future__ import absolute_import, print_function, with_statement
 from collections import OrderedDict
@@ -27,10 +29,10 @@ class AgentControl(object):
         self._reboot_count = 0
 
         # Load Duffy key
-        self._duffy_key = os.environ.get("CICO_API_KEY")
-        self._coveralls_token = os.environ.get("COVERALLS_REPO_TOKEN")
+        self.duffy_key = os.environ.get("CICO_API_KEY")
+        self.coveralls_token = os.environ.get("COVERALLS_REPO_TOKEN")
 
-        if not self._duffy_key:
+        if not self.duffy_key:
             logging.fatal("Invalid Duffy key")
             sys.exit(1)
 
@@ -60,7 +62,7 @@ class AgentControl(object):
         payload = payload or {}
         url = "{}{}".format(API_BASE, endpoint)
         if include_api_key:
-            payload["key"] = self._duffy_key
+            payload["key"] = self.duffy_key
         logging.info("Duffy request URL: %s", url)
 
         r = requests.get(url, params=payload)
@@ -228,7 +230,7 @@ class AgentControl(object):
         if artifacts_dir is not None and self.artifacts_storage is not None:
             arc = self.fetch_artifacts(node, artifacts_dir, self.artifacts_storage)
             if arc != 0:
-                logging.warn("Fetching artifacts failed")
+                logging.warning("Fetching artifacts failed")
 
         if not ignore_rc and rc != expected_rc:
             raise Exception("Remote command exited with an unexpected return code "
@@ -493,7 +495,7 @@ def main():
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
             key_file = tempfile.NamedTemporaryFile()
-            key_file.write(ac._duffy_key)
+            key_file.write(ac.duffy_key)
             key_file.flush()
             ac.upload_file(node, key_file.name, "/duffy.key")
             key_file.close()
@@ -503,9 +505,9 @@ def main():
         elif args.vagrant:
             # If the Coveralls token is set, upload it to the node, so it can
             # be consumed by relevant tools
-            if ac._coveralls_token:
+            if ac.coveralls_token:
                 token_file = tempfile.NamedTemporaryFile()
-                token_file.write(ac._coveralls_token)
+                token_file.write(ac.coveralls_token)
                 token_file.flush()
                 ac.upload_file(node, token_file.name, "/.coveralls.token")
                 token_file.close()
@@ -531,7 +533,7 @@ def main():
         # (i.e. continue with the `finally` section)
         logging.info("Ignoring received signal...")
 
-    except Exception as e:
+    except Exception:
         if args.kdump_collect:
             logging.info("Trying to collect kernel dumps from %s:/var/crash", node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
@@ -541,8 +543,8 @@ def main():
                 ac.wait_for_node(node, 10)
 
                 if ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
-                    logging.warn("Failed to collect kernel dumps from %s", node)
-            except Exception as e:
+                    logging.warning("Failed to collect kernel dumps from %s", node)
+            except Exception:
                 # Fetching the kdumps is a best-effort thing, there's not much
                 # we can do if the machine is FUBAR
                 pass
