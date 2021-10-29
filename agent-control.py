@@ -1,6 +1,8 @@
-#!/usr/bin/env python2
+#!/usr/bin/python
+# pylint: disable=line-too-long,invalid-name
+# pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
-from __future__ import print_function, with_statement
+from __future__ import absolute_import, print_function, with_statement
 from collections import OrderedDict
 import argparse
 import json
@@ -16,30 +18,30 @@ import signal
 API_BASE = "http://admin.ci.centos.org:8080"
 GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
-KEEP_NODE = False
 
 
 class AgentControl(object):
     def __init__(self, artifacts_storage=None):
         # Should probably use a setter/getter in the future
         self.artifacts_storage = artifacts_storage
+        self.keep_node = False
         self._node = {}
         self._reboot_count = 0
 
         # Load Duffy key
-        self._duffy_key = os.environ.get("CICO_API_KEY")
-        self._coveralls_token = os.environ.get("COVERALLS_REPO_TOKEN")
+        self.duffy_key = os.environ.get("CICO_API_KEY")
+        self.coveralls_token = os.environ.get("COVERALLS_REPO_TOKEN")
 
-        if not self._duffy_key:
+        if not self.duffy_key:
             logging.fatal("Invalid Duffy key")
             sys.exit(1)
 
     def __del__(self):
         # Deallocate the allocated node on script exit, if not requested otherwise
-        if self._node is not None and "ssid" in self._node and not KEEP_NODE:
+        if self._node is not None and "ssid" in self._node and not self.keep_node:
             self.free_session(self._node["ssid"])
 
-    def _execute_api_command(self, endpoint, payload={}, include_api_key=True):
+    def _execute_api_command(self, endpoint, payload=None, include_api_key=True):
         """Execute a Duffy command
 
         See also: https://wiki.centos.org/QaWiki/CI/Duffy
@@ -57,10 +59,11 @@ class AgentControl(object):
         --------
         Server response as a stringified JSON
         """
+        payload = payload or {}
         url = "{}{}".format(API_BASE, endpoint)
         if include_api_key:
-            payload["key"] = self._duffy_key
-        logging.info("Duffy request URL: {}".format(url))
+            payload["key"] = self.duffy_key
+        logging.info("Duffy request URL: %s", url)
 
         r = requests.get(url, params=payload)
 
@@ -91,8 +94,8 @@ class AgentControl(object):
         if flavor:
             payload["flavor"] = flavor
 
-        logging.info("Attempting to allocate a node (version: {}, arch: {}, flavor: {})".format(
-                     version, architecture, flavor if flavor else "n/a"))
+        logging.info("Attempting to allocate a node (version: %s, arch: %s, flavor: %s)",
+                     version, architecture, flavor if flavor else "n/a")
 
         # When the machine pool runs out of pre-installed machines, Duffy returns
         # an error (Insufficient Nodes in READY State) which is not a valid
@@ -109,8 +112,8 @@ class AgentControl(object):
 
                 break
             except ValueError:
-                logging.error("Received unexpected response from the server: {}".format(res))
-                logging.info("Waiting {} seconds before another retry".format(timeout))
+                logging.error("Received unexpected response from the server: %s", res)
+                logging.info("Waiting %d seconds before another retry", timeout)
 
             time.sleep(timeout)
 
@@ -126,7 +129,7 @@ class AgentControl(object):
             logging.error("Failed to allocated a node")
             return (None, None)
 
-        logging.info("Successfully allocated node '{}' ({})".format(host, ssid))
+        logging.info("Successfully allocated node '%s' (%s)", host, ssid)
 
         return (host, ssid)
 
@@ -151,7 +154,7 @@ class AgentControl(object):
         nodes = []
         for node in jroot:
             if verbose:
-                logging.info("{} ({})".format(node[0], node[1]))
+                logging.info("%s (%s)", node[0], node[1])
 
             nodes.append({"host" : node[0], "ssid" : node[1]})
 
@@ -170,7 +173,7 @@ class AgentControl(object):
         --------
         Exit code of the command
         """
-        logging.info("Executing a LOCAL command: {}".format(" ".join(command)))
+        logging.info("Executing a LOCAL command: %s", " ".join(command))
 
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
         proc.communicate()
@@ -220,14 +223,14 @@ class AgentControl(object):
             node, command
         ]
 
-        logging.info("Executing a REMOTE command on node'{}': {}".format(node, command))
+        logging.info("Executing a REMOTE command on node '%s': %s", node, command)
         rc = self.execute_local_command(command_wrapper)
 
         # Fetch artifacts if both remote and local dirs are set
         if artifacts_dir is not None and self.artifacts_storage is not None:
             arc = self.fetch_artifacts(node, artifacts_dir, self.artifacts_storage)
             if arc != 0:
-                logging.warn("Fetching artifacts failed")
+                logging.warning("Fetching artifacts failed")
 
         if not ignore_rc and rc != expected_rc:
             raise Exception("Remote command exited with an unexpected return code "
@@ -257,8 +260,8 @@ class AgentControl(object):
             "root@{}:{}".format(node, remote_dir), local_dir
         ]
 
-        logging.info("Fetching artifacts from node {}: (remote: {}, local: {})".format(
-                node, remote_dir, local_dir))
+        logging.info("Fetching artifacts from node %s: (remote: %s, local: %s)",
+                     node, remote_dir, local_dir)
 
         return self.execute_local_command(command)
 
@@ -267,7 +270,7 @@ class AgentControl(object):
         nodes = self.allocated_nodes()
 
         for node in nodes:
-            logging.info("Freeing node {} ({})".format(node["host"], node["ssid"]))
+            logging.info("Freeing node %s (%s)", node["host"], node["ssid"])
             self.free_session(node["ssid"])
 
     def free_session(self, node_ssid):
@@ -281,7 +284,7 @@ class AgentControl(object):
         if not node_ssid:
             return
 
-        logging.info("Freeing session {}".format(node_ssid))
+        logging.info("Freeing session %s", node_ssid)
         res = self._execute_api_command("/Node/done", {"ssid" : node_ssid})
         logging.info(res)
 
@@ -309,9 +312,9 @@ class AgentControl(object):
         ])
         format_str = " ".join(schema.values())
 
-        logging.info(format_str.format(*schema.keys()))
+        logging.info("%s", format_str.format(*schema.keys()))
         for node in jroot:
-            logging.info(format_str.format(*node[0:14]))
+            logging.info("%s", format_str.format(*node[0:14]))
 
     def reboot_node(self, node):
         """Reboot a node
@@ -325,7 +328,7 @@ class AgentControl(object):
         -------
         An exception if the waiting timeout is reached
         """
-        logging.info("Rebooting node {}".format(node))
+        logging.info("Rebooting node %s", node)
         self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
         time.sleep(30)
 
@@ -337,7 +340,7 @@ class AgentControl(object):
     def wait_for_node(self, node, attempts):
         ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
         for i in range(attempts):
-            logging.info("Checking if the node {} is alive (try #{})".format(node, i))
+            logging.info("Checking if the node %s is alive (try #%d)", node, i)
             rc = self.execute_local_command(ping_command)
             if rc == 0:
                 break
@@ -346,7 +349,7 @@ class AgentControl(object):
         if rc != 0:
             raise Exception("Timeout reached when waiting for node to become online")
 
-        logging.info("Node {} appears reachable again".format(node))
+        logging.info("Node %s appears reachable again", node)
 
     def upload_file(self, node, local_source, remote_target):
         """Upload a file (or a directory) to a remote host
@@ -371,8 +374,7 @@ class AgentControl(object):
             local_source, "root@{}:{}".format(node, remote_target)
         ]
 
-        logging.info("Uploading file {} to node {} as {}".format(local_source,
-                node, remote_target))
+        logging.info("Uploading file %s to node %s as %s", local_source, node, remote_target)
 
         return self.execute_local_command(command)
 
@@ -384,7 +386,7 @@ def handle_signal(signum, frame):
     print("handle_signal: got signal {}".format(signum))
     raise SignalException()
 
-if __name__ == "__main__":
+def main():
     # Setup logging
     logging.basicConfig(level=logging.INFO,
             format="%(asctime)-14s [%(module)s/%(funcName)s] %(levelname)s: %(message)s")
@@ -427,18 +429,18 @@ if __name__ == "__main__":
     parser.add_argument("--version", default="7",
             help="CentOS version")
     args = parser.parse_args()
-    logging.info(args)
-    KEEP_NODE = args.keep
+    logging.info("%s", args)
 
     ac = AgentControl()
+    ac.keep_node = args.keep
 
     if args.free_session:
         ac.free_session(args.free_session)
-        sys.exit(0)
+        return 0
 
     if args.free_all_nodes:
         ac.free_all_nodes()
-        sys.exit(0)
+        return 0
 
     if args.list_nodes:
         if args.list_nodes == "owned":
@@ -446,7 +448,7 @@ if __name__ == "__main__":
         else:
             ac.list_all_nodes()
 
-        sys.exit(0)
+        return 0
 
     rc = 0
     try:
@@ -458,7 +460,7 @@ if __name__ == "__main__":
 
         if node is None or ssid is None:
             logging.critical("Can't continue without a valid node")
-            sys.exit(1)
+            return 1
 
         # Figure out a systemd branch to compile
         if args.pr:
@@ -484,7 +486,7 @@ if __name__ == "__main__":
         ac.execute_remote_command(node, command)
 
         if args.ci_pr:
-            logging.info("PHASE 1.5: Using a custom CI repository ref (PR#{})".format(args.ci_pr))
+            logging.info("PHASE 1.5: Using a custom CI repository ref (PR#%s)", args.ci_pr)
             command = "cd {} && git fetch -fu origin 'refs/pull/{}/merge:pr' && " \
                       "git checkout pr".format(GITHUB_CI_REPO, args.ci_pr)
             ac.execute_remote_command(node, command)
@@ -493,7 +495,7 @@ if __name__ == "__main__":
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
             key_file = tempfile.NamedTemporaryFile()
-            key_file.write(ac._duffy_key)
+            key_file.write(ac.duffy_key)
             key_file.flush()
             ac.upload_file(node, key_file.name, "/duffy.key")
             key_file.close()
@@ -503,9 +505,9 @@ if __name__ == "__main__":
         elif args.vagrant:
             # If the Coveralls token is set, upload it to the node, so it can
             # be consumed by relevant tools
-            if ac._coveralls_token:
+            if ac.coveralls_token:
                 token_file = tempfile.NamedTemporaryFile()
-                token_file.write(ac._coveralls_token)
+                token_file.write(ac.coveralls_token)
                 token_file.flush()
                 ac.upload_file(node, token_file.name, "/.coveralls.token")
                 token_file.close()
@@ -516,7 +518,7 @@ if __name__ == "__main__":
             ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine
-            logging.info("PHASE 2: Bootstrap (ref: {})".format(remote_ref))
+            logging.info("PHASE 2: Bootstrap (ref: %s)", remote_ref)
             command = "{}/agent/{} -r '{}' {}".format(GITHUB_CI_REPO, args.bootstrap_script, remote_ref, args.bootstrap_args)
             ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
 
@@ -531,9 +533,9 @@ if __name__ == "__main__":
         # (i.e. continue with the `finally` section)
         logging.info("Ignoring received signal...")
 
-    except Exception as e:
+    except Exception:
         if args.kdump_collect:
-            logging.info("Trying to collect kernel dumps from {}:/var/crash".format(node))
+            logging.info("Trying to collect kernel dumps from %s:/var/crash", node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
             time.sleep(10)
 
@@ -541,8 +543,8 @@ if __name__ == "__main__":
                 ac.wait_for_node(node, 10)
 
                 if ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
-                    logging.warn("Failed to collect kernel dumps from {}".format(node))
-            except Exception as e:
+                    logging.warning("Failed to collect kernel dumps from %s", node)
+            except Exception:
                 # Fetching the kdumps is a best-effort thing, there's not much
                 # we can do if the machine is FUBAR
                 pass
@@ -552,7 +554,7 @@ if __name__ == "__main__":
 
     finally:
         # Return the loaned node back to the pool if not requested otherwise
-        if not KEEP_NODE:
+        if not ac.keep_node:
             # Ugly workaround for current Jenkin's behavior, where the signal
             # is sent several times under certain conditions. This is already
             # filed upstream, but the fix is still incomplete. Let's just
@@ -573,4 +575,7 @@ if __name__ == "__main__":
             ac.execute_local_command(command)
 
 
-    sys.exit(rc)
+    return rc
+
+if __name__ == "__main__":
+    sys.exit(main())
