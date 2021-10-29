@@ -494,7 +494,7 @@ def main():
         if args.vagrant_sync:
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
-            key_file = tempfile.NamedTemporaryFile()
+            key_file = tempfile.NamedTemporaryFile(mode="w")
             key_file.write(ac.duffy_key)
             key_file.flush()
             ac.upload_file(node, key_file.name, "/duffy.key")
@@ -506,7 +506,7 @@ def main():
             # If the Coveralls token is set, upload it to the node, so it can
             # be consumed by relevant tools
             if ac.coveralls_token:
-                token_file = tempfile.NamedTemporaryFile()
+                token_file = tempfile.NamedTemporaryFile(mode="w")
                 token_file.write(ac.coveralls_token)
                 token_file.flush()
                 ac.upload_file(node, token_file.name, "/.coveralls.token")
