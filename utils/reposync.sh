@@ -25,78 +25,11 @@ echo "${CICO_API_KEY:0:13}" >"$PASSWORD_FILE"
 WORK_DIR="$(mktemp -d)"
 pushd "$WORK_DIR"
 
-# Make sure we have all packages we need
-# As we now run this task in a rootless container, let's do a "little" (and ugly)
-# hack to install necessary packages, instead of having to deal with custom
-# containers, etc.
-# All this will go away once the worker image is updated to CentOS 8.
-INSTALLROOT="$PWD/installroot"
-mkdir "$INSTALLROOT"
-
-for package in curl dnf dnf-plugins-core patch rsync; do
-    if ! rpm -q "$package"; then
-        yumdownloader --destdir "$INSTALLROOT" --resolve "$package"
-    fi
-done
-
-if ls "$INSTALLROOT"/*.rpm >/dev/null; then
-    # cpio needs to be invoked separately for each RPM, thus the weird
-    # construction
-    cd "$INSTALLROOT" && find . -name "*.rpm" -printf "rpm2cpio %p | cpio -id\n" | sh
-
-    export PATH="$PATH:$INSTALLROOT/usr/bin"
-    export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$INSTALLROOT/usr/lib64"
-    export PYTHONPATH="$INSTALLROOT/usr/lib/python2.7/site-packages/:$INSTALLROOT/usr/lib64/python2.7/site-packages/"
-
-    # Taken from https://github.com/rpm-software-management/dnf-plugins-core/commit/a2ce53d3ac534f9677206ff66358e819d9de4d6e.patch
-    patch "$INSTALLROOT/usr/lib/python2.7/site-packages/dnf-plugins/reposync.py" <<EOF
-diff --git a/plugins/reposync.py b/plugins/reposync.py
-index 8306651c..548a05b4 100644
---- a/plugins/reposync.py
-+++ b/plugins/reposync.py
-@@ -71,6 +71,8 @@ def set_argparser(parser):
-                             help=_('download only newest packages per-repo'))
-         parser.add_argument('-p', '--download-path', default='./',
-                             help=_('where to store downloaded repositories'))
-+        parser.add_argument('--norepopath', default=False, action='store_true',
-+                            help=_("Don't add the reponame to the download path."))
-         parser.add_argument('--metadata-path',
-                             help=_('where to store downloaded repository metadata. '
-                                    'Defaults to the value of --download-path.'))
-@@ -102,6 +104,10 @@ def configure(self):
-         if self.opts.source:
-             repos.enable_source_repos()
-
-+        if len(list(repos.iter_enabled())) > 1 and self.opts.norepopath:
-+            raise dnf.cli.CliError(
-+                _("Can't use --norepopath with multiple repositories"))
-+
-         for repo in repos.iter_enabled():
-             repo._repo.expire()
-             repo.deltarpm = False
-@@ -148,7 +154,8 @@ def run(self):
-                 self.delete_old_local_packages(repo, pkglist)
-
-     def repo_target(self, repo):
--        return _pkgdir(self.opts.destdir or self.opts.download_path, repo.id)
-+        return _pkgdir(self.opts.destdir or self.opts.download_path,
-+                       repo.id if not self.opts.norepopath else '')
-
-     def metadata_target(self, repo):
-         if self.opts.metadata_path:
-EOF
-fi
-
 sync_repo() {
     local repo_link="${1:?}"
     local repo_id="${2:?}"
     local local_repo_id="${3:?}"
     local arches gpg_key_url gpg_key_name
-    # This is so ugly, yet I'm still amazed that it works
-    local dnf_opts=(
-        "--setopt=pluginconfpath=$INSTALLROOT/etc/dnf/plugins/"
-        "--setopt=pluginpath=$INSTALLROOT/usr/lib/python2.7/site-packages/dnf-plugins/"
-    )
 
     IFS=" " read -ra arches <<<"${4:?}"
 
@@ -113,10 +46,10 @@ sync_repo() {
 
     for arch in "${arches[@]}"; do
         # Make a local copy of the original repository packages
-        dnf "${dnf_opts[@]}" reposync --norepopath --newest-only --download-metadata \
-                                      --arch "${arch},noarch" --forcearch "$arch" \
-                                      --config="repo-config.repo" --repoid="$repo_id" \
-                                      --download-path="$DOWNLOAD_LOCATION/$local_repo_id/$arch"
+        dnf reposync --norepopath --newest-only --download-metadata \
+                     --arch "${arch},noarch" --forcearch "$arch" \
+                     --config="repo-config.repo" --repoid="$repo_id" \
+                     --download-path="$DOWNLOAD_LOCATION/$local_repo_id/$arch"
     done
 
     # Create a repo file
