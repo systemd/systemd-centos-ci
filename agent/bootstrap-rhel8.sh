@@ -165,11 +165,20 @@ fi
             -Dslow-tests=true
             -Dtests=unsafe
             -Dinstall-tests=true
-            -Dc_args='-g -O0 -ftrapv'
             --werror
             -Dman=true
             -Dhtml=true
     )
+
+    # Ignore compiler's `unused-function` warnings on rhel-8.{1,2}.0 based branches,
+    # since we disable the `test-cap-util` test there in a rather crude way, leading
+    # up to valid but expected warnings
+    if git diff --quiet ..remotes/origin/rhel-8.1.0 || git diff --quiet ..remotes/origin/rhel-8.2.0; then
+        CONFIGURE_OPTS+=(-Dc_args='-g -O0 -ftrapv -Wno-error=unused-function')
+    else
+        CONFIGURE_OPTS+=(-Dc_args='-g -O0 -ftrapv')
+    fi
+
     meson build "${CONFIGURE_OPTS[@]}"
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
