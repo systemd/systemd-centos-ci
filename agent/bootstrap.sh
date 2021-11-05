@@ -52,6 +52,7 @@ ADDITIONAL_DEPS=(
     elfutils
     elfutils-devel
     gcc-c++
+    integritysetup
     iproute-tc
     iscsi-initiator-utils
     kernel-modules-extra
