@@ -290,6 +290,8 @@ GRUBBY_ARGS=(
     # persist across reboots without this kludge and can (actually it does)
     # interfere with running tests
     "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+    # Reboot the machine on kernel panic
+    "panic=3"
 )
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
