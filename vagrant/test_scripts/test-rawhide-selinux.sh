@@ -47,4 +47,6 @@ if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
     done
 fi
 
+exectask "journalctl-testsuite" "journalctl -b --no-pager"
+
 exit $FAILED
