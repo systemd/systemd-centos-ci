@@ -52,6 +52,7 @@ ADDITIONAL_DEPS=(
     bpftool
     clang
     device-mapper-event
+    dhcp-client
     dnsmasq
     dosfstools
     e2fsprogs
@@ -60,7 +61,6 @@ ADDITIONAL_DEPS=(
     gcc-c++
     iproute-tc
     kernel-modules-extra
-    libasan
     libfdisk-devel
     libpwquality-devel
     libzstd-devel
@@ -72,7 +72,6 @@ ADDITIONAL_DEPS=(
     pcre2-devel
     python3-jinja2
     qemu-kvm
-    qrencode-devel
     quota
     rust
     selinux-policy-devel
@@ -84,22 +83,14 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install epel-release dnf-plugins-core gdb
-cmd_retry dnf -y config-manager --enable epel --enable powertools
-# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-cmd_retry dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
+cmd_retry dnf -y install dnf-plugins-core gdb
+cmd_retry dnf -y config-manager --enable crb
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
+# As busybox is not shipped since RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
 cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
-# Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
-# with the OpenBSD version present on CentOS 8
-if alternatives --display nmap; then
-    alternatives --set nmap /usr/bin/ncat
-    alternatives --display nmap
-fi
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -142,7 +133,7 @@ fi
             -Dntp-servers='0.rhel.pool.ntp.org 1.rhel.pool.ntp.org 2.rhel.pool.ntp.org 3.rhel.pool.ntp.org'
             -Ddns-servers=
             -Duser-path=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
-            -Dservice-watchdog=
+            -Dservice-watchdog=3min
             -Ddev-kvm-mode=0666
             -Dkmod=true
             -Dxkbcommon=true
@@ -168,20 +159,22 @@ fi
             -Delfutils=true
             -Dlibcryptsetup=true
             -Delfutils=true
-            -Dpwquality=true
+            -Dpwquality=false
+            -Dqrencode=false
             -Dgnutls=true
             -Dmicrohttpd=true
             -Dlibidn2=true
-            -Dlibiptc=true
+            -Dlibiptc=false
             -Dlibcurl=true
-            -Dqrencode=false
             -Dlibfido2=false
-            -Defi=false
+            -Dgnu-efi=false
             -Dtpm=true
             -Dhwdb=true
             -Dsysusers=true
             -Dstandalone-binaries=true
             -Ddefault-kill-user-processes=false
+            -Dtests=unsafe
+            -Dinstall-tests=false
             -Dtty-gid=5
             -Dusers-gid=100
             -Dnobody-user=nobody
@@ -191,6 +184,7 @@ fi
             -Dsplit-bin=true
             -Db_lto=true
             -Db_ndebug=false
+            -Dman=true
             #-Dversion-tag=v%{version}-%{release}
             -Dfallback-hostname=localhost
             -Ddefault-dnssec=no
@@ -201,6 +195,9 @@ fi
             -Dtimesyncd=false
             -Dhomed=false
             -Duserdb=false
+            -Dportabled=false
+            -Dnetworkd=false
+            -Dsupport-url=https://access.redhat.com/support
             # Custom options
             -Dslow-tests=true
             -Dtests=unsafe
@@ -293,6 +290,8 @@ GRUBBY_ARGS=(
     # persist across reboots without this kludge and can (actually it does)
     # interfere with running tests
     "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+    # Reboot the machine on kernel panic
+    "panic=3"
 )
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly

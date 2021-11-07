@@ -84,6 +84,13 @@ echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
 #   https://github.com/systemd/systemd/commit/a1e3f0f38b43e68ff9ea33ab1935aed4edf6ed7f
 echo 'int main(void) { return 77; }' > src/test/test-barrier.c
 
+# FIXME: test-watchdog
+# One of the chassis has (most likely) broken HW watchdog, causing unexpected
+# reboots.
+#
+# See: https://pagure.io/centos-infra/issue/505
+echo 'int main(void) { return 77; }' > src/test/test-watchdog.c
+
 # Run the internal unit tests (make check)
 # Note: All .dusty.* servers have Intel Xeon CPUs with 4 cores and HT enabled
 #       which causes issues when the machine is under heavy load (in this case
@@ -106,10 +113,10 @@ fi
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
-    "test/TEST-29-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
     "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
 )
 SKIP_LIST=(
+    "test/TEST-29-PORTABLE"      # we don't ship portabled in RHEL 9
     "test/TEST-30-ONCLOCKCHANGE" # we don't ship timesyncd in RHEL 9
     "${FLAKE_LIST[@]}"
 )
