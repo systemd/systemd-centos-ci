@@ -56,6 +56,7 @@ ADDITIONAL_DEPS=(
     iproute-tc
     iscsi-initiator-utils
     kernel-modules-extra
+    kmod-wireguard # Kmods SIG
     libasan
     libfdisk-devel
     libpwquality-devel
@@ -83,6 +84,9 @@ ADDITIONAL_DEPS=(
 
 cmd_retry dnf -y install epel-release dnf-plugins-core gdb
 cmd_retry dnf -y config-manager --enable epel --enable powertools
+# Install the Kmods SIG repository for certain kernel modules
+# See: https://sigs.centos.org/kmods/repositories/
+cmd_retry dnf -y install centos-release-kmods
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
 cmd_retry dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
 # FIXME: workaround for broken "private" mirrors served via metalink API
