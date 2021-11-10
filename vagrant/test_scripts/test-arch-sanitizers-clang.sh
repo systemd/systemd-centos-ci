@@ -164,7 +164,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
             [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
 
             # Check for sanitizer errors in test journals
-            exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl --file $testdir/system.journal | check_for_sanitizer_errors"
+            exectask "${t##*/}_sanitizer_errors" "$BUILD_DIR/journalctl -o short-monotonic --no-hostname --file $testdir/system.journal | check_for_sanitizer_errors"
             # Keep the journal files only if the associated test case failed
             if [[ ! -f "$testdir/pass" ]]; then
                 rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
@@ -202,7 +202,7 @@ exectask "systemd-networkd_sanitizers" \
             "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
-exectask "check-journal-for-sanitizer-errors" "journalctl -b | check_for_sanitizer_errors"
+exectask "check-journal-for-sanitizer-errors" "journalctl -o short-monotonic --no-hostname -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
