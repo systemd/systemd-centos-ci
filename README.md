@@ -171,7 +171,7 @@ this job's sole purpose is to rebuild the base images (Vagrant Boxes) every few 
 (based on Jenkins cron) and upload it to the artifacts server, where it can be
 used by the respective Vagrantfile.
 
-## (Auxiliary) Mirror the Copr repo with CentOS 7 dependencies (centos7-reposync)
+## (Auxiliary) Mirror the Copr repo with CentOS 8 dependencies (centos8-reposync)
 
 ```
 utils/reposync.sh
