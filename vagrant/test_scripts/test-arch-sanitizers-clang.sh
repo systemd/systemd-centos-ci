@@ -29,9 +29,6 @@ export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}help=1" "$BUILD_DIR/systemctl" is-system-running &>"$LOGDIR/asan_config.txt"
 
 ## Disable certain flaky tests
-# test-journal-flush: unstable on nested KVM
-echo 'int main(void) { return 77; }' > src/journal/test-journal-flush.c
-
 # FIXME: test-loop-block
 # This test is flaky due to uevent mess, and requires a kernel change.
 #
