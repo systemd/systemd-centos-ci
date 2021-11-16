@@ -115,7 +115,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-29-PORTABLE       # systemd-portabled
-        test/TEST-46-HOMED          # systemd-homed
         test/TEST-50-DISSECT        # systemd-dissect
         test/TEST-58-REPART         # systemd-repart
     )
