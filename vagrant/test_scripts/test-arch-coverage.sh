@@ -59,6 +59,16 @@ echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
+# FIXME: test-execute
+# Kernel 5.15 introduced an change in the API which breaks one of the subtests.
+# Drop this change once either the test is tweaked for this change or the change
+# is reconsidered in kernel.
+#
+# See:
+#   systemd/systemd#21087
+#   https://github.com/torvalds/linux/commit/e70344c05995a190a56bbd1a23dc2218bcc8c924
+sed -i '/exec-ioschedulingclass-none.service/d' src/test/test-execute.c
+
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 
