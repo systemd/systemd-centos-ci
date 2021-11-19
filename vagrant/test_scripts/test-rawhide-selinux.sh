@@ -28,7 +28,7 @@ fi
 
 exectask "selinux-status" "sestatus -v -b"
 
-exectask "avc-check" "! ausearch -m avc -i --start boot"
+exectask "avc-check" "! ausearch -m avc -i --start boot | audit2why"
 
 # Summary
 echo
