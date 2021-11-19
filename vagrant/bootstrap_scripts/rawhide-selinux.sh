@@ -61,3 +61,8 @@ popd
 setenforce 0
 sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
 cat /etc/selinux/config
+
+dracut -f --regenerate-all
+
+systemd-analyze set-log-level debug
+systemd-analyze set-log-target console
