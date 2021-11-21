@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # pylint: disable=line-too-long,invalid-name
 # pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
