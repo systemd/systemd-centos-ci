@@ -426,7 +426,7 @@ def main():
     parser.add_argument("--vagrant-sync", metavar="VAGRANTFILE", type=str, default="",
             help="Run a script which updates and rebuilds Vagrant images used by systemd CentOS CI")
     # 'version' must be a string, as we want to support "8-stream" as well
-    parser.add_argument("--version", default="7",
+    parser.add_argument("--version", default="8-stream",
             help="CentOS version")
     args = parser.parse_args()
     logging.info("%s", args)
