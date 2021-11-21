@@ -42,15 +42,15 @@ set +e
     set -e
     # Run the "leftover" ASan/UBSan job (i.e. the one which is not run by
     # the `upstream-vagrant-archlinux-sanitizers` job for each PR)
-    ./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
-    #./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
+    #./agent-control.py --version 8-stream --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
 )
 [[ $? -ne 0 ]] && EC=$((EC + 1))
 
 (
     set -e
     # Collect test coverage & upload it to Coveralls
-    ./agent-control.py --version 8 --no-index --vagrant arch-coverage ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant arch-coverage ${ARGS:+"${ARGS[@]}"}
 )
 [[ $? -ne 0 ]] && EC=$((EC + 1))
 

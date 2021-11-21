@@ -57,4 +57,4 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --version 8 --kdump-collect ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --version 8-stream-stream --kdump-collect ${ARGS:+"${ARGS[@]}"}
