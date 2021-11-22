@@ -20,7 +20,7 @@ GITHUB_BASE = "https://github.com/systemd/"
 GITHUB_CI_REPO = "systemd-centos-ci"
 
 
-class AgentControl(object):
+class AgentControl():
     def __init__(self, artifacts_storage=None):
         # Should probably use a setter/getter in the future
         self.artifacts_storage = artifacts_storage
