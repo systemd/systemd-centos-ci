@@ -5,7 +5,7 @@ on test machines provisioned from a pool provided by the [CentOS CI](https://wik
 using their [Duffy](https://wiki.centos.org/QaWiki/CI/Duffy) API.
 
 As of right now these scripts provide CI for [upstream](https://github.com/systemd/systemd)
-on CentOS 8 and Arch Linux, and for [RHEL downstream](https://github.com/redhat-plumbers)
+on CentOS Stream 8 and Arch Linux, and for [RHEL downstream](https://github.com/redhat-plumbers)
 on supported CentOS releases.
 
 # Structure
@@ -21,7 +21,7 @@ The CI scripts are scattered among several directories:
 * `agent/`
 
     Bootstrap and test runner scripts used to run tests directly on the provisioned
-    machines (i.e. for running tests on CentOS 7 and CentOS 8).
+    machines (i.e. for running tests on CentOS (Stream) X).
 
 * `common/`
 
@@ -58,20 +58,20 @@ chmod +x runner.sh
 
 Jenkins instance: https://jenkins-systemd.apps.ocp.ci.centos.org/
 
-## Upstream on CentOS 7 (upstream-centos7)
+## Upstream on CentOS Stream 8 (upstream-centos8)
 
 ```
 agent-control.py +-> agent/bootstrap.sh +-> reboot +-> agent/testsuite.sh
 ```
 
 To test compatibility of the upstream systemd with older kernels, this job builds, installs, and
-tests an upstream PR on a CentOS 8 baremetal machine.
+tests an upstream PR on a CentOS Stream 8 baremetal machine.
 
 To achieve this, `agent-control.py` runs `agent/bootstrap.sh` script to fetch, build, and install
 the respective PR (along with other necessary dependencies), reboots the machine, and executes
 `agent/testsuite.sh` to to the actual testing.
 
-## Downstream (RHEL) on CentOS 7 and CentOS 8 (rhel7-centos7 and rhel8-centos8)
+## Downstream (RHEL) on CentOS 7 and CentOS Stream 8 (rhel7-centos7 and rhel8-centos8)
 
 The same worklflow as above, but for systemd in RHEL:
 
@@ -81,7 +81,7 @@ The same worklflow as above, but for systemd in RHEL:
 agent-control.py +-> agent/bootstrap-rhel7.sh +-> reboot +-> agent/testsuite-rhel7.sh
 ```
 
-  * [RHEL 8/CentOS 8](https://github.com/redhat-plumbers/systemd-rhel8)
+  * [RHEL 8/CentOS Stream 8](https://github.com/redhat-plumbers/systemd-rhel8)
 
 ```
 agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhel8.sh
@@ -89,7 +89,7 @@ agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhe
 
 ## Upstream on Arch Linux using Vagrant (upstream-vagrant-archlinux)
 
-To achieve the exact opposite of the testing on CentOS 8, this pipeline check the compatibility
+To achieve the exact opposite of the testing on CentOS Stream 8, this pipeline check the compatibility
 of systemd with the latest versions of kernel and other components. As the CentOS CI
 pool provides only CentOS machines, this pipeline introduces an intermediary in form of
 a [Vagrant](https://www.vagrantup.com) VM along with [vagrant-libvirt](https://github.com/vagrant-libvirt/vagrant-libvirt)
@@ -171,13 +171,13 @@ this job's sole purpose is to rebuild the base images (Vagrant Boxes) every few 
 (based on Jenkins cron) and upload it to the artifacts server, where it can be
 used by the respective Vagrantfile.
 
-## (Auxiliary) Mirror the Copr repo with CentOS 8 dependencies (centos8-reposync)
+## (Auxiliary) Mirror the Copr repo with CentOS (Stream) 8 dependencies (centos8-reposync)
 
 ```
 utils/reposync.sh
 ```
 
-We need a couple of newer dependencies for systemd on CentOS 8 to cover the most
+We need a couple of newer dependencies for systemd on CentOS (Stream) 8 to cover the most
 recent features. For this we have a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/)
 with necessary packages.
 
