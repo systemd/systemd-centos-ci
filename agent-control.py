@@ -450,7 +450,11 @@ def main():
 
         return 0
 
+    artifacts_dir = None
+    node = None
+    ssid = None
     rc = 0
+
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
         signal.signal(signal.SIGTERM, handle_signal)
@@ -554,7 +558,7 @@ def main():
 
     finally:
         # Return the loaned node back to the pool if not requested otherwise
-        if not ac.keep_node:
+        if ssid and not ac.keep_node:
             # Ugly workaround for current Jenkin's behavior, where the signal
             # is sent several times under certain conditions. This is already
             # filed upstream, but the fix is still incomplete. Let's just
