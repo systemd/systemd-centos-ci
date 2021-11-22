@@ -43,11 +43,11 @@ set +e
     echo "Updating the systemd Arch Linux image"
 
     # Generate a new image with '-new' suffix
-    ./agent-control.py --version 8 --vagrant-sync Vagrantfile_archlinux_systemd ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --vagrant-sync Vagrantfile_archlinux_systemd ${ARGS:+"${ARGS[@]}"}
     # Check if it doesn't break anything
-    ./agent-control.py --version 8 --no-index --vagrant arch-new ${ARGS:+"${ARGS[@]}"}
-    ./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-clang-new ${ARGS:+"${ARGS[@]}"}
-    ./agent-control.py --version 8 --no-index --vagrant arch-sanitizers-gcc-new ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant arch-new ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant arch-sanitizers-clang-new ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant arch-sanitizers-gcc-new ${ARGS:+"${ARGS[@]}"}
     # Overwrite the production image with the just tested one. Since the CentOS CI
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that
@@ -60,7 +60,7 @@ set +e
     echo "Updating the systemd/selinux Fedora Rawhide image"
 
     # Generate a new image with '-new' suffix
-    ./agent-control.py --version 8 --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
     # Overwrite the production image with the just tested one. Since the CentOS CI
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that
