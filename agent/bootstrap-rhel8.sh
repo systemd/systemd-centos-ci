@@ -142,7 +142,7 @@ fi
             -Dgnutls=true
             -Dmicrohttpd=true
             -Dlibidn2=true
-            -Dlibiptc=true
+            -Dlibiptc=false
             -Dlibcurl=true
             -Defi=true
             -Dtpm=true
