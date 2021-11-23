@@ -48,6 +48,7 @@ while getopts "r:h:" opt; do
 done
 
 ADDITIONAL_DEPS=(
+    dhclient
     dnsmasq
     e2fsprogs
     gdb
