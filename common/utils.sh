@@ -98,7 +98,7 @@ meson_get_bool() {
 }
 
 # Retry specified commands if it fails. The default # of retries is 3, this
-# value can be overriden via the $RETRIES env variable
+# value can be overridden via the $RETRIES env variable
 #
 # Arguments:
 #   $1 - $* - command to run

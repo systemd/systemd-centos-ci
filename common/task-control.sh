@@ -156,7 +156,7 @@ exectask() {
 #   - show a simple progress "bar"
 #   - dump the log on error
 #   - retry the task up to n times in case it fails
-# Esentially the same function as exectask(), but for flaky tests.
+# Essentially the same function as exectask(), but for flaky tests.
 #
 # Arguments
 #   $1 - task name
