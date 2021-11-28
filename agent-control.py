@@ -329,7 +329,11 @@ class AgentControl():
         An exception if the waiting timeout is reached
         """
         logging.info("Rebooting node %s", node)
-        self.execute_remote_command(node, "systemctl reboot", 255, ignore_rc=True)
+        self.execute_remote_command(
+                node,
+                "systemd-analyze set-log-level debug; systemd-analyze set-log-target console; systemctl reboot",
+                255,
+                ignore_rc=True)
         time.sleep(30)
 
         self.wait_for_node(node, 10)
