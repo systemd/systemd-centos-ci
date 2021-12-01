@@ -2,7 +2,7 @@
 # A single-purpose script to build the necessary shared libraries to make
 # vagrant-libvirt work on CentOS 8 (see the comments below for explanation).
 #
-# Usage: podman run -it --rm -v $PWD:/build --env OUT_DIR=/build centos:8 /build/build-shared-libs.sh
+# Usage: podman run -it --rm -v $PWD:/build --env OUT_DIR=/build centos:stream8 /build/build-shared-libs.sh
 
 set -eu
 set -o pipefail
@@ -50,6 +50,23 @@ dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl cpio diffuti
     popd
     rm -fr "$BUILD_DIR"
 )
+
+# pam_wrapper (libssh dep) is not, for some reason, in C8S repositories, *sigh*
+(
+    BUILD_DIR="$(mktemp -d)"
+    pushd "$BUILD_DIR"
+    git clone https://git.centos.org/rpms/pam_wrapper
+    cd pam_wrapper
+    git checkout c8s || git checkout c8
+    dnf -y --enablerepo powertools builddep SPECS/pam_wrapper.spec
+    mkdir SOURCES
+    spectool -g -C SOURCES SPECS/pam_wrapper.spec
+    rpmbuild -ba --define "_topdir $PWD" SPECS/pam_wrapper.spec
+    dnf -y install "RPMS/$(uname -m)/"pam_wrapper*.rpm
+    popd
+    rm -fr "$BUILD_DIR"
+)
+
 # Same as above, but for libssh
 (
     BUILD_DIR="$(mktemp -d)"
