@@ -8,7 +8,7 @@ set -eu
 set -o pipefail
 
 OUT_DIR="${OUT_DIR:-$PWD}"
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.18/vagrant_2.2.18_x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.2.19/vagrant_2.2.19_x86_64.rpm"
 
 [[ ! -d "$OUT_DIR" ]] && mkdir -p "$OUT_DIR"
 
