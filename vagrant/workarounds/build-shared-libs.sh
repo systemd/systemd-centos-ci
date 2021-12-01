@@ -17,7 +17,7 @@ if ! vagrant version 2>/dev/null; then
 fi
 
 # Install necessary dependencies
-dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl diffutils libarchive
+dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl cpio diffutils git libarchive spectool
 
 # Workaround for current Vagrant's DSO hell
 # ---
