@@ -54,11 +54,7 @@ dnf -y install 'dnf-command(download)' 'dnf-command(builddep)' perl diffutils li
 (
     BUILD_DIR="$(mktemp -d)"
     pushd "$BUILD_DIR"
-    # In some cases the currently installed libssh version doesn't have its SRPM
-    # in the repositories. Keep a fallback SRPM version for such cases.
-    if ! dnf download --source libssh; then
-        dnf download --source "libssh-0.9.4-2.el8"
-    fi
+    dnf download --source libssh
     dnf -y --enablerepo powertools builddep libssh*.src.rpm
     rpm2cpio libssh-*.src.rpm | cpio -imdV
     tar xf libssh-*.tar.xz
