@@ -99,6 +99,11 @@ cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
 cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
+# Remove setroubleshoot-server if it's installed, since we don't use it anyway
+# and it's causing some weird performance issues
+if rpm -q setroubleshoot-server; then
+    dnf -y remove setroubleshoot-server
+fi
 # Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
 # with the OpenBSD version present on CentOS 8
 if alternatives --display nmap; then
