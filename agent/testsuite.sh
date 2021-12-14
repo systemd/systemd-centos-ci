@@ -206,6 +206,10 @@ for t in "${EXECUTED_LIST[@]}"; do
     [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
 done
 
+# Rotate journal before running the networkd test suite to avoid
+# https://github.com/systemd/systemd/issues/21675#issuecomment-993524324
+journalctl --rotate
+
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
