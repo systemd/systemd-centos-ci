@@ -88,7 +88,7 @@ cmd_retry dnf -y config-manager --enable epel --enable powertools
 # See: https://sigs.centos.org/kmods/repositories/
 cmd_retry dnf -y install centos-release-kmods
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-cmd_retry dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-epel8/mrc0mmand-systemd-centos-ci-centos8-epel8.repo"
+cmd_retry dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
 # FIXME: workaround for broken "private" mirrors served via metalink API
 while read -r repofile; do
     sed -i '/^metalink/s/metalink/mirrorlist/g' "$repofile"
