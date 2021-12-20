@@ -40,7 +40,7 @@ if ! rpm -q chrony; then
 fi
 
 systemctl enable --now chronyd
-systemctl status chronyd
+systemctl status --no-pager chronyd
 
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
