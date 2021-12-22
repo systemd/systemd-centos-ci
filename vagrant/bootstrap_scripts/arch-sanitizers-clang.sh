@@ -90,6 +90,7 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
+      -Dcryptolib=openssl \
       -Db_sanitize=address,undefined \
       -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
 ninja -C "$BUILD_DIR"

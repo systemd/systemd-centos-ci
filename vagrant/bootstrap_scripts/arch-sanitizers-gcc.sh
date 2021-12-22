@@ -65,6 +65,7 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dman=false \
+      -Dcryptolib=openssl \
       -Db_sanitize=address,undefined
 ninja -C "$BUILD_DIR"
 
