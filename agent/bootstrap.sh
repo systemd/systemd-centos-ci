@@ -72,6 +72,7 @@ ADDITIONAL_DEPS=(
     qrencode-devel
     quota
     rust
+    screen
     scsi-target-utils
     selinux-policy-devel
     socat
