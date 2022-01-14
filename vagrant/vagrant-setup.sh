@@ -59,15 +59,6 @@ fi
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
     dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
-
-    # FIXME?: install newer qemu-kvm
-    dnf -y install dnf-plugins-core
-    # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-    dnf -y config-manager --add-repo "http://artifacts.ci.centos.org/systemd/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
-    # Note: make sure the repo with newer qemu has "module_hotfixes=true", otherwise
-    # the packages will be shadowed by qemu from the virt module
-    dnf -y update qemu-kvm
-
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
