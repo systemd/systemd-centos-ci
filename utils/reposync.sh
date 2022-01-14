@@ -1,29 +1,18 @@
 #!/bin/bash
 
 DOWNLOAD_LOCATION="${1:-.}"
-
-if [[ ! -v CICO_API_KEY ]]; then
-    echo >&2 "Missing \$CICO_API_KEY env variable, can't continue"
-    exit 1
-fi
+# JOB_URL is exported by Jenkins
+# See: https://jenkins-systemd.apps.ocp.ci.centos.org/env-vars.html/
+ARTIFACT_BASE_DIR="${JOB_URL:?}/lastSuccessfulBuild/artifact/$DOWNLOAD_LOCATION"
 
 at_exit() {
-    # Clean up before exiting (either successfully or on an error)
-    [[ -n "${WORK_DIR:-}" ]] && rm -fr "$WORK_DIR"
-    [[ -n "${PASSWORD_FILE:-}" ]] && rm -f "$PASSWORD_FILE"
+    rm -f repo-config.repo
 }
 
 set -eu
 set -o pipefail
 
 trap at_exit EXIT
-
-# CentOS CI rsync password is the first 13 characters of the duffy key
-PASSWORD_FILE="$(mktemp)"
-echo "${CICO_API_KEY:0:13}" >"$PASSWORD_FILE"
-
-WORK_DIR="$(mktemp -d)"
-pushd "$WORK_DIR"
 
 sync_repo() {
     local repo_link="${1:?}"
@@ -56,7 +45,7 @@ sync_repo() {
     cat >"$DOWNLOAD_LOCATION/$local_repo_id/$local_repo_id.repo" << EOF
 [$local_repo_id]
 name=Mirror of $repo_id Copr repo (\$basearch)
-baseurl=http://artifacts.ci.centos.org/systemd/repos/$local_repo_id/\$basearch/
+baseurl=$ARTIFACT_BASE_DIR/$local_repo_id/\$basearch/
 skip_if_unavailable=False
 enabled=1
 # Disable modular filtering for this repository, so we can override certain
@@ -66,19 +55,9 @@ EOF
     # Copy over the downloaded GPG key, if any
     if [[ -f "$gpg_key_name" ]]; then
         mv "$gpg_key_name" "$DOWNLOAD_LOCATION/$local_repo_id/$gpg_key_name"
-        echo "gpgkey=http://artifacts.ci.centos.org/systemd/repos/$local_repo_id/$gpg_key_name" >>"$DOWNLOAD_LOCATION/$local_repo_id/$local_repo_id.repo"
+        echo "gpgkey=$ARTIFACT_BASE_DIR/$local_repo_id/$gpg_key_name" >>"$DOWNLOAD_LOCATION/$local_repo_id/$local_repo_id.repo"
     fi
-
-    # Sync the repo to the CentOS CI artifacts server
-    rsync --password-file="$PASSWORD_FILE" --delete -av "$DOWNLOAD_LOCATION/$local_repo_id" systemd@artifacts.ci.centos.org::systemd/repos/
-    echo "Mirror url: http://artifacts.ci.centos.org/systemd/repos/$local_repo_id"
 }
-
-# EPEL-8
-ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/repo/epel-8/mrc0mmand-systemd-centos-ci-centos8-epel-8.repo"
-ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos8"
-LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos8-epel8"
-sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 ppc64le"
 
 # centos-8-stream
 ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/repo/centos-stream-8/mrc0mmand-systemd-centos-ci-centos8-centos-stream-8.repo"
