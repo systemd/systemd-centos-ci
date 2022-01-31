@@ -117,6 +117,8 @@ SKIP_LIST=(
 if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     # This test explicitly requires unified cgroup hierarchy
     SKIP_LIST+=("test/TEST-19-DELEGATE")
+    # See: https://github.com/systemd/systemd/issues/22320
+    SKIP_LIST+=("test/TEST-56-EXIT-TYPE")
 fi
 
 [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
