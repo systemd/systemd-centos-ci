@@ -38,16 +38,16 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-# C9S job with legacy cgroup hierarchy
-./agent-control.py --no-index --version 9-stream \
-                   --bootstrap-script="bootstrap-rhel9.sh" \
-                   --bootstrap-args="-h legacy" \
-                   --testsuite-script="testsuite-rhel9.sh" \
-                   ${ARGS:+"${ARGS[@]}"}
-
 # C9S job with unified cgroup hierarchy
 ./agent-control.py --no-index --version 9-stream \
                    --bootstrap-script="bootstrap-rhel9.sh" \
                    --bootstrap-args="-h unified" \
+                   --testsuite-script="testsuite-rhel9.sh" \
+                   ${ARGS:+"${ARGS[@]}"}
+
+# C9S job with legacy cgroup hierarchy
+./agent-control.py --no-index --version 9-stream \
+                   --bootstrap-script="bootstrap-rhel9.sh" \
+                   --bootstrap-args="-h legacy" \
                    --testsuite-script="testsuite-rhel9.sh" \
                    ${ARGS:+"${ARGS[@]}"}
