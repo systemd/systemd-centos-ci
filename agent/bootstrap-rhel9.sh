@@ -59,6 +59,7 @@ ADDITIONAL_DEPS=(
     elfutils
     elfutils-devel
     gcc-c++
+    integritysetup
     iproute-tc
     kernel-modules-extra
     libfdisk-devel
