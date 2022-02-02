@@ -191,7 +191,7 @@ ninja-build -C build install
     # (for QEMU tests)
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
+    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console systemd.default_standard_output=journal+console"
     # Set timeout for QEMU tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
