@@ -31,6 +31,8 @@ at_exit() {
 trap at_exit EXIT
 
 ARGS=()
+PASSED=()
+FAILED=()
 EC=0
 
 git clone https://github.com/systemd/systemd-centos-ci
@@ -53,7 +55,12 @@ set +e
     # to do that
     utils/artifacts-copy-file.sh vagrant_boxes/archlinux_systemd-new vagrant_boxes/archlinux_systemd
 )
-[[ $? -ne 0 ]] && EC=$((EC + 1))
+if [[ $? -ne 0 ]]; then
+    EC=$((EC + 1))
+    FAILED+=("archlinux_systemd")
+else
+    PASSED+=("archlinux_systemd")
+fi
 
 (
     set -e
@@ -66,6 +73,18 @@ set +e
     # to do that
     utils/artifacts-copy-file.sh vagrant_boxes/rawhide_selinux-new vagrant_boxes/rawhide_selinux
 )
-[[ $? -ne 0 ]] && EC=$((EC + 1))
+if [[ $? -ne 0 ]]; then
+    EC=$((EC + 1))
+    FAILED+=("rawhide_selinux")
+else
+
+    PASSED+=("rawhide_selinux")
+fi
+
+echo "PASSED TASKS:"
+printf "    %s\n" "${PASSED[@]}"
+echo
+echo "FAILED TASKS:"
+printf "    %s\n" "${FAILED[@]}"
 
 exit $EC
