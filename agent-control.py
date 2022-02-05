@@ -3,17 +3,19 @@
 # pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
 from __future__ import absolute_import, print_function, with_statement
-from collections import OrderedDict
+
 import argparse
 import json
 import logging
 import os
+import signal
 import subprocess
 import sys
-import time
 import tempfile
+import time
+from collections import OrderedDict
+
 import requests
-import signal
 
 API_BASE = "http://admin.ci.centos.org:8080"
 GITHUB_BASE = "https://github.com/systemd/"
