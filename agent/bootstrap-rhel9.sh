@@ -10,6 +10,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 REPO_URL="${REPO_URL:-https://github.com/redhat-plumbers/systemd-rhel9}"
 CGROUP_HIERARCHY="unified"
 REMOTE_REF=""
+SANITIZE=0
 
 # EXIT signal handler
 at_exit() {
@@ -26,7 +27,7 @@ set -o pipefail
 trap at_exit EXIT
 
 # Parse optional script arguments
-while getopts "r:h:" opt; do
+while getopts "r:h:z" opt; do
     case "$opt" in
         h)
             CGROUP_HIERARCHY="$OPTARG"
@@ -38,11 +39,16 @@ while getopts "r:h:" opt; do
         r)
             REMOTE_REF="$OPTARG"
             ;;
+        z)
+            # Use -z instead of -s for sanitized runs to avoid confusion with
+            # the -s option in the upstream jobs which refers to the stable repo
+            SANITIZE=1
+            ;;
         ?)
             exit 1
             ;;
         *)
-            echo "Usage: $0 [-h CGROUP_HIERARCHY] [-r REMOTE_REF]"
+            echo "Usage: $0 [-h CGROUP_HIERARCHY] [-r REMOTE_REF] [-z]"
             exit 1
     esac
 done
@@ -62,8 +68,10 @@ ADDITIONAL_DEPS=(
     integritysetup
     iproute-tc
     kernel-modules-extra
+    libasan
     libfdisk-devel
     libpwquality-devel
+    libubsan
     libzstd-devel
     llvm
     make
@@ -128,7 +136,7 @@ fi
     trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
     # shellcheck disable=SC2191
     CONFIGURE_OPTS=(
-            -Dmode=release
+            -Dmode=developer
             -Dsysvinit-path=/etc/rc.d/init.d
             -Drc-local=/etc/rc.d/rc.local
             -Dntp-servers='0.rhel.pool.ntp.org 1.rhel.pool.ntp.org 2.rhel.pool.ntp.org 3.rhel.pool.ntp.org'
@@ -174,7 +182,6 @@ fi
             -Dsysusers=true
             -Dstandalone-binaries=true
             -Ddefault-kill-user-processes=false
-            -Dtests=unsafe
             -Dinstall-tests=false
             -Dtty-gid=5
             -Dusers-gid=100
@@ -185,7 +192,6 @@ fi
             -Dsplit-bin=true
             -Db_lto=true
             -Db_ndebug=false
-            -Dman=true
             #-Dversion-tag=v%{version}-%{release}
             -Dfallback-hostname=localhost
             -Ddefault-dnssec=no
@@ -204,118 +210,134 @@ fi
             -Dtests=unsafe
             -Dfuzz-tests=true
             -Dinstall-tests=true
-            -Dc_args='-g -O0 -ftrapv'
             --werror
+    )
+    if [[ $SANITIZE -ne 0 ]]; then
+        CONFIGURE_OPTS+=(
+            "-Db_sanitize=address,undefined"
+            -Dc_args='-g -Og -ftrapv -fno-omit-frame-pointer'
+        )
+    else
+        CONFIGURE_OPTS+=(
+            -Dc_args='-g -O0 -ftrapv'
             -Dman=true
             -Dhtml=true
-    )
+        )
+    fi
     meson build "${CONFIGURE_OPTS[@]}"
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
-# Install the compiled systemd
-ninja-build -C build install
-
-# Configure the selected cgroup hierarchy for both the host machine and each
-# integration test VM
-if [[ "$CGROUP_HIERARCHY" == unified ]]; then
-    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=1" "systemd.legacy_systemd_cgroup_controller=0")
+# Following stuff is relevant only to unsanitized builds, since we don't install
+# the resulting build nor reboot the machine when built with sanitizers
+if [[ $SANITIZE -ne 0 ]]; then
+    echo "\$SANITIZE is set, skipping the build installation"
+    exit 0
 else
-    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=0" "systemd.legacy_systemd_cgroup_controller=1")
-fi
+    # Install the compiled systemd
+    ninja-build -C build install
 
-# Let's check if the new systemd at least boots before rebooting the system
-# As the CentOS' systemd-nspawn version is too old, we have to use QEMU
-(
-    # Ensure the initrd contains the same systemd version as the one we're
-    # trying to test
-    # Also, rebuild the original initrd without the multipath module, see
-    # comments in `testsuite.sh` for the explanation
-    export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
-    cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
+    # Configure the selected cgroup hierarchy for both the host machine and each
+    # integration test VM
+    if [[ "$CGROUP_HIERARCHY" == unified ]]; then
+        CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=1" "systemd.legacy_systemd_cgroup_controller=0")
+    else
+        CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=0" "systemd.legacy_systemd_cgroup_controller=1")
+    fi
 
-    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    # Let's check if the new systemd at least boots before rebooting the system
+    # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
+    (
+        # Ensure the initrd contains the same systemd version as the one we're
+        # trying to test
+        # Also, rebuild the original initrd without the multipath module, see
+        # comments in `testsuite.sh` for the explanation
+        export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
+        cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
+        dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
 
-    ## Configure test environment
-    # Explicitly set paths to initramfs (see above) and kernel images
-    # (for QEMU tests)
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console ${CGROUP_KERNEL_ARGS[*]}"
-    # Set timeout for QEMU tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    # Disable nspawn version of the test
-    export TEST_NO_NSPAWN=1
+        [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
 
-    make -C test/TEST-01-BASIC clean setup run clean-again
+        ## Configure test environment
+        # Explicitly set paths to initramfs (see above) and kernel images
+        # (for QEMU tests)
+        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+        # Enable kernel debug output for easier debugging when something goes south
+        export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console ${CGROUP_KERNEL_ARGS[*]}"
+        # Set timeout for QEMU tests to kill them in case they get stuck
+        export QEMU_TIMEOUT=600
+        # Disable nspawn version of the test
+        export TEST_NO_NSPAWN=1
 
-    rm -fv "$INITRD"
-) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
+        make -C test/TEST-01-BASIC clean setup run clean-again
 
-# The new systemd binary boots, so let's issue a daemon-reexec to use it.
-# This is necessary, since at least once we got into a situation where
-# the old systemd binary was incompatible with the unit files on disk and
-# prevented the system from reboot
-SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
-SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
+        rm -fv "$INITRD"
+    ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
-dracut -f --regenerate-all --filesystems ext4
+    # The new systemd binary boots, so let's issue a daemon-reexec to use it.
+    # This is necessary, since at least once we got into a situation where
+    # the old systemd binary was incompatible with the unit files on disk and
+    # prevented the system from reboot
+    SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+    SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-# Check if the new dracut image contains the systemd module to avoid issues
-# like systemd/systemd#11330
-if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
-    echo >&2 "Missing systemd module in the initramfs image, can't continue..."
-    lsinitrd "/boot/initramfs-$(uname -r).img"
-    exit 1
-fi
+    dracut -f --regenerate-all --filesystems ext4
 
-# Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
-echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS[*]}'"
-
-GRUBBY_ARGS=(
-    "${CGROUP_KERNEL_ARGS[@]}"
-    # Needed for systemd-nspawn -U
-    "user_namespace.enable=1"
-    # As the RTC on CentOS CI machines is notoriously incorrect, let's override
-    # it early in the boot process to properly execute units using
-    # ConditionNeedsUpdate=
-    # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
-    # Update: if the original time difference is too big, the mtime of
-    # /etc/.updated is already too far in the future, so it doesn't matter if
-    # we correct the time during the next boot, since it's still going to be
-    # in the past. Let's just explicitly override all ConditionNeedsUpdate=
-    # directives to true to fix this once and for all
-    "systemd.condition-needs-update=1"
-    # Also, store & reuse the current (and corrected) time & date, as it doesn't
-    # persist across reboots without this kludge and can (actually it does)
-    # interfere with running tests
-    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
-    # Reboot the machine on kernel panic
-    "panic=3"
-)
-grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
-# Check if the $GRUBBY_ARGS were applied correctly
-for arg in "${GRUBBY_ARGS[@]}"; do
-    if ! grep -q -r "$arg" /boot/loader/entries/; then
-        echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
+    # Check if the new dracut image contains the systemd module to avoid issues
+    # like systemd/systemd#11330
+    if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
+        echo >&2 "Missing systemd module in the initramfs image, can't continue..."
+        lsinitrd "/boot/initramfs-$(uname -r).img"
         exit 1
     fi
-done
 
-# coredumpctl_collect takes an optional argument, which upsets shellcheck
-# shellcheck disable=SC2119
-coredumpctl_collect
+    # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
+    echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS[*]}'"
 
-# Let's leave this here for a while for debugging purposes
-echo "Current date:         $(date)"
-echo "RTC:                  $(hwclock --show)"
-echo "/usr mtime:           $(date -r /usr)"
-echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
+    GRUBBY_ARGS=(
+        "${CGROUP_KERNEL_ARGS[@]}"
+        # Needed for systemd-nspawn -U
+        "user_namespace.enable=1"
+        # As the RTC on CentOS CI machines is notoriously incorrect, let's override
+        # it early in the boot process to properly execute units using
+        # ConditionNeedsUpdate=
+        # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
+        # Update: if the original time difference is too big, the mtime of
+        # /etc/.updated is already too far in the future, so it doesn't matter if
+        # we correct the time during the next boot, since it's still going to be
+        # in the past. Let's just explicitly override all ConditionNeedsUpdate=
+        # directives to true to fix this once and for all
+        "systemd.condition-needs-update=1"
+        # Also, store & reuse the current (and corrected) time & date, as it doesn't
+        # persist across reboots without this kludge and can (actually it does)
+        # interfere with running tests
+        "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+        # Reboot the machine on kernel panic
+        "panic=3"
+    )
+    grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
+    # Check if the $GRUBBY_ARGS were applied correctly
+    for arg in "${GRUBBY_ARGS[@]}"; do
+        if ! grep -q -r "$arg" /boot/loader/entries/; then
+            echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
+            exit 1
+        fi
+    done
 
-echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+    # coredumpctl_collect takes an optional argument, which upsets shellcheck
+    # shellcheck disable=SC2119
+    coredumpctl_collect
 
-echo "-----------------------------"
-echo "- REBOOT THE MACHINE BEFORE -"
-echo "-         CONTINUING        -"
-echo "-----------------------------"
+    # Let's leave this here for a while for debugging purposes
+    echo "Current date:         $(date)"
+    echo "RTC:                  $(hwclock --show)"
+    echo "/usr mtime:           $(date -r /usr)"
+    echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
+
+    echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
+
+    echo "-----------------------------"
+    echo "- REBOOT THE MACHINE BEFORE -"
+    echo "-         CONTINUING        -"
+    echo "-----------------------------"
+fi
