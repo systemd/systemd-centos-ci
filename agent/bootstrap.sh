@@ -14,7 +14,6 @@ REMOTE_REF=""
 at_exit() {
     # Let's collect some build-related logs
     set +e
-    rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" &>/dev/null || :
     exectask "journalctl-bootstrap" "journalctl -b --no-pager"
     exectask "list-of-installed-packages" "rpm -qa"
 }
@@ -197,7 +196,10 @@ ninja-build -C build install
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
 
-    make -C test/TEST-01-BASIC clean setup run clean-again
+    if ! make -C test/TEST-01-BASIC clean setup run clean-again; then
+        rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" >/dev/null || :
+        exit 1
+    fi
 
     rm -fv "$INITRD"
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
