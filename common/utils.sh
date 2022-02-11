@@ -97,7 +97,7 @@ meson_get_bool() {
     get_bool "$value"
 }
 
-# Retry specified commands if it fails. The default # of retries is 3, this
+# Retry specified commands if it fails. The default # of retries is 5, this
 # value can be overridden via the $RETRIES env variable
 #
 # Arguments:
@@ -111,13 +111,19 @@ cmd_retry() {
         return 1
     fi
 
-    local retries="${RETRIES:-3}"
+    local retries="${RETRIES:-5}"
+    local delay=10
     local ec i
 
     for ((i = 1; i <= retries; i++)); do
-        eval "$@" && return 0 || ec=$?
+        "$@" && return 0 || ec=$?
         _log "Command '$*' failed (EC: $ec) [try $i/$retries]"
-        [[ $i -eq $retries ]] || sleep 5
+        # Skip sleep on the last iteration
+        if [[ $i -lt $retries ]]; then
+            # Make the delay multiplicative, to give mirrors a bit of time
+            # in case we hit one of the mirror sync related issues
+            sleep $((delay *= 2))
+        fi
     done
 
     return $ec
