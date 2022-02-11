@@ -51,7 +51,6 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d
 ninja -C "$BUILD_DIR"
-ninja -C "$BUILD_DIR" install
 
 # Install cpp-coveralls to generate the Coveralls-compatible report
 # See: https://github.com/eddyxu/cpp-coveralls
@@ -60,6 +59,16 @@ python3 -m ensurepip
 # https://github.com/eddyxu/cpp-coveralls/pull/165 is merged/resolved
 python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@send-correct-ids
 #python3 -m pip install cpp-coveralls
+
+# Manually install upstream D-Bus config file for org.freedesktop.network1
+# so systemd-networkd testsuite can use potentially new/updated methods
+cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
+
+# Manually install upstream systemd-networkd service unit files in case a PR
+# introduces a change in them
+# See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
+cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
+cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
 
 # In order to be able to collect all coverage reports, we need to run
 # the systemd-networkd test suite from the build dir, which means we need to
