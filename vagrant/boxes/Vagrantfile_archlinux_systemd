@@ -54,6 +54,8 @@ Vagrant.configure("2") do |config|
 
     # Enable GDM by default (to catch certain systemd-logind related issues)
     systemctl enable gdm.service
+    systemctl set-default graphical.target
+    systemctl get-default
 
     # Compile & install libbpf-next
     pacman --needed --noconfirm -S elfutils libelf
