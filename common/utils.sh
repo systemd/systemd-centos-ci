@@ -116,7 +116,7 @@ cmd_retry() {
     local ec i
 
     for ((i = 1; i <= retries; i++)); do
-        eval "$@" && return 0 || ec=$?
+        "$@" && return 0 || ec=$?
         _log "Command '$*' failed (EC: $ec) [try $i/$retries]"
         # Skip sleep on the last iteration
         if [[ $i -lt $retries ]]; then
