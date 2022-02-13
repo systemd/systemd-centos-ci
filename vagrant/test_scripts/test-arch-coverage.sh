@@ -210,6 +210,26 @@ exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf
 # in vagrant/vagrant-ci-wrapper.sh
 exectask "coveralls_upload" "coveralls --no-gcov --lcov-file integration-tests.coverage-info"
 
+# If the test logs contain lines like:
+#
+# ...systemd-resolved[735885]: profiling:/systemd-meson-build/src/shared/libsystemd-shared-250.a.p/base-filesystem.c.gcda:Cannot open
+#
+# it means we're possibly missing some coverage since gcov can't write the stats,
+# usually due to the sandbox being too restrictive (e.g. ProtectSystem=yes,
+# ProtectHome=yes) or the $BUILD_DIR being inaccessible to non-root users - see
+# `setfacl` stuff above.
+_check_for_missing_coverage() {
+    local ec=0
+
+    while read -r file; do
+        echo "*** Processing file $file ***"
+        ! grep -E "profiling:.+?gcda:[Cc]annot open" "$file" || ec=1
+    done < <(find "$LOGDIR" -maxdepth 1 -name "*.log" ! -name "check_for_missing_coverage*.log")
+
+    return $ec
+}
+exectask "check_for_missing_coverage" "_check_for_missing_coverage"
+
 # Summary
 echo
 echo "TEST SUMMARY:"
