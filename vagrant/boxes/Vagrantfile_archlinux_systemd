@@ -77,6 +77,16 @@ Vagrant.configure("2") do |config|
     popd
     rm -fr tgt
 
+    # Compile & install dfuzzer
+    pacman --needed --noconfirm -S glib2 libffi make pkg-config
+    git clone https://github.com/matusmarhefka/dfuzzer dfuzzer
+    pushd dfuzzer/src
+    make
+    install -pm 0755 dfuzzer /usr/bin/dfuzzer
+    install -pm 0644 dfuzzer.conf /etc/dfuzzer.conf
+    popd
+    rm -fr dfuzzer
+
     # Disable 'quiet' mode on the kernel command line and forward everything
     # to ttyS0 instead of just tty0, so we can collect it using QEMU's
     # -serial file:xxx feature. Also, explicitly enable unified cgroups, since
