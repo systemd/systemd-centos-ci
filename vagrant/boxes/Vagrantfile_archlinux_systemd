@@ -40,7 +40,7 @@ Vagrant.configure("2") do |config|
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S coreutils busybox dhclient dhcp dhcpcd diffutils dnsmasq dosfstools e2fsprogs \
         gdb inetutils lcov libdwarf libelf net-tools openbsd-netcat open-iscsi python-pexpect qemu rsync screen socat \
-        squashfs-tools strace vi wireguard-tools
+        squashfs-tools strace tpm2-tools swtpm vi wireguard-tools
 
     # Unlock root account and set its password to 'vagrant' to allow root login
     # via ssh
