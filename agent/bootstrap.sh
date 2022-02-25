@@ -78,6 +78,8 @@ ADDITIONAL_DEPS=(
     socat
     squashfs-tools
     strace
+    swtpm
+    tpm2-tools
     tpm2-tss-devel
     veritysetup
     wget
