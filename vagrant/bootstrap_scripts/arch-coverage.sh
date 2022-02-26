@@ -57,7 +57,7 @@ ninja -C "$BUILD_DIR"
 python3 -m ensurepip
 # Temporarily install cpp-coveralls from a custom fork until
 # https://github.com/eddyxu/cpp-coveralls/pull/165 is merged/resolved
-python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@send-correct-ids
+python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@centos-ci
 #python3 -m pip install cpp-coveralls
 
 # Manually install upstream D-Bus config file for org.freedesktop.network1
