@@ -62,6 +62,9 @@ fedpkg local
 dnf install -y noarch/selinux-policy-*
 popd
 
+# Force relabel on next boot
+fixfiles -v -F onboot
+
 dracut -f --regenerate-all
 
 systemd-analyze set-log-level debug
