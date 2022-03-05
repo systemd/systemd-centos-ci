@@ -40,7 +40,8 @@ if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
     git fetch -fu origin "refs/pull/$ghprbPullId/head:pr"
     git checkout pr
     SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d|rules|src|test|units))'
-    if ! git diff "$(git merge-base main pr)" --name-only | grep -E "$SCOPE_RX" ; then
+    MAIN_BRANCH="$(git rev-parse --abbrev-ref origin/HEAD)"
+    if ! git diff "$(git merge-base "$MAIN_BRANCH" pr)" --name-only | grep -E "$SCOPE_RX" ; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
