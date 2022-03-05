@@ -7,7 +7,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
-REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
+REPO_URL="https://github.com/systemd/systemd.git"
 REMOTE_REF=""
 
 # EXIT signal handler
@@ -24,16 +24,20 @@ set -o pipefail
 trap at_exit EXIT
 
 # Parse optional script arguments
-while getopts "r:" opt; do
+while getopts "r:s" opt; do
     case "$opt" in
         r)
             REMOTE_REF="$OPTARG"
+            ;;
+        s)
+            # Work on the systemd-stable repo instead
+            REPO_URL="https://github.com/systemd/systemd-stable.git"
             ;;
         ?)
             exit 1
             ;;
         *)
-            echo "Usage: $0 [-r REMOTE_REF]"
+            echo "Usage: $0 [-r REMOTE_REF] [-s]"
             exit 1
     esac
 done
@@ -119,6 +123,7 @@ fi
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
+echo "Cloning repo: $REPO_URL"
 git clone "$REPO_URL" systemd
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
