@@ -27,7 +27,7 @@ at_exit() {
     cp /tmp/vagrant-*-console.log "$LOGDIR"
 }
 
-REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
+REPO_URL="https://github.com/systemd/systemd.git"
 SCRIPT_ROOT="$(dirname "$0")"
 # Supported distros:
 #
@@ -45,7 +45,7 @@ REMOTE_REF=""
 set -eu
 set -o pipefail
 
-while getopts "d:r:" opt; do
+while getopts "d:r:s" opt; do
     case "$opt" in
         d)
             DISTRO="$OPTARG"
@@ -53,11 +53,15 @@ while getopts "d:r:" opt; do
         r)
             REMOTE_REF="$OPTARG"
             ;;
+        s)
+            # Work on the systemd-stable repo instead
+            REPO_URL="https://github.com/systemd/systemd-stable.git"
+            ;;
         ?)
             exit 1
             ;;
         *)
-            echo "Usage: $0 -d DISTRO_TAG [-c] [-r REMOTE_REF]"
+            echo "Usage: $0 -d DISTRO_TAG [-r REMOTE_REF] [-s]"
             exit 1
     esac
 done
@@ -68,6 +72,7 @@ fi
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
+echo "Cloning repo: $REPO_URL"
 git clone "$REPO_URL" systemd
 export SYSTEMD_ROOT="$PWD/systemd"
 
