@@ -97,14 +97,7 @@ cmd_retry dnf -y install centos-release-kmods
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/centos8-reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
 cmd_retry dnf -y update
-# Get the build dependencies from the systemd specfile instead of using the source
-# repositories, since they're ATTOW under a heavy load
-# See: https://pagure.io/centos-infra/issue/680
-#cmd_retry dnf -y builddep systemd
-git clone -b c8s --depth=1 https://git.centos.org/rpms/systemd systemd-centos-git
-cmd_retry dnf -y builddep -D '_topdir systemd-centos-git' systemd-centos-git/SPECS/systemd.spec
-rm -fr systemd-centos-git
-
+cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
