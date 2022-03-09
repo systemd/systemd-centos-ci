@@ -232,6 +232,16 @@ fi
 # the resulting build nor reboot the machine when built with sanitizers
 if [[ $SANITIZE -ne 0 ]]; then
     echo "\$SANITIZE is set, skipping the build installation"
+
+    # Support udevadm/systemd-udevd merge efforts from
+    # https://github.com/systemd/systemd/pull/15918
+    # The udevadm -> systemd-udevd symlink is created in the install phase which
+    # we don't execute in sanitizer runs, so let's create it manually where
+    # we need it
+    if [[ -x "build/udevadm" && ! -x "build/systemd-udevd" ]]; then
+        ln -frsv "build/udevadm" "build/systemd-udevd"
+    fi
+
     exit 0
 else
     # Install the compiled systemd
