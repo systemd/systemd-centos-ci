@@ -97,7 +97,7 @@ cmd_retry dnf -y config-manager --enable crb
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped since RHEL 8/CentOS 8 anymore, we need to get it
+# As busybox is not shipped since RHEL 9/CentOS 9 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
 cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
 
