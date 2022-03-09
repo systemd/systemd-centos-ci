@@ -97,7 +97,7 @@ cmd_retry dnf -y config-manager --enable crb
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped since RHEL 8/CentOS 8 anymore, we need to get it
+# As busybox is not shipped since RHEL 9/CentOS 9 anymore, we need to get it
 # using a different way. Needed by TEST-13-NSPAWN-SMOKE
 cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
 
@@ -232,6 +232,16 @@ fi
 # the resulting build nor reboot the machine when built with sanitizers
 if [[ $SANITIZE -ne 0 ]]; then
     echo "\$SANITIZE is set, skipping the build installation"
+
+    # Support udevadm/systemd-udevd merge efforts from
+    # https://github.com/systemd/systemd/pull/15918
+    # The udevadm -> systemd-udevd symlink is created in the install phase which
+    # we don't execute in sanitizer runs, so let's create it manually where
+    # we need it
+    if [[ -x "build/udevadm" && ! -x "build/systemd-udevd" ]]; then
+        ln -frsv "build/udevadm" "build/systemd-udevd"
+    fi
+
     exit 0
 else
     # Install the compiled systemd
