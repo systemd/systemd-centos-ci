@@ -48,6 +48,7 @@ ADDITIONAL_DEPS=(
     clang
     device-mapper-event
     device-mapper-multipath
+    dhcp-client
     dhcp-server
     dnsmasq
     dosfstools
