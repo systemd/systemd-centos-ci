@@ -78,7 +78,8 @@ SKIP_LIST=(
     "${FLAKE_LIST[@]}"
 )
 
-for t in test/TEST-??-*; do
+for i in {0..32}; do
+    t="test/TEST-64-UDEV-STORAGE"
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
@@ -106,37 +107,13 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    EC=0
+    if ! exectask "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"; then
+        EC=1
+    fi
     EXECUTED_LIST+=("$t")
-done
 
-# Wait for remaining running tasks
-exectask_p_finish
-
-for t in "${FLAKE_LIST[@]}"; do
-    ## Configure test environment
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$(nproc)
-    # Enforce nested KVM
-    export TEST_NESTED_KVM=1
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
-
-    # Suffix the $TESTDIR of each retry with an index to tell them apart
-    export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
-
-    # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
-    # array accordingly to correctly find the respective journals
-    for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
-        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
-    done
+    if [[ $EC -ne 0 ]]; then break; fi
 done
 
 # Save journals created by integration tests
@@ -166,7 +143,6 @@ done
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
 )
 
 # Prepare environment for the systemd-networkd testsuite
