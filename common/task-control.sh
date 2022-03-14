@@ -226,7 +226,6 @@ exectask_p() {
     touch "$logfile"
 
     echo "[PARALLEL TASK] $task_name ($task_command)"
-    echo "[TASK START] $(date)" >>"$logfile"
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
@@ -249,6 +248,7 @@ exectask_p() {
         sleep 0.01
     done
 
+    echo "[TASK START] $(date)" >>"$logfile"
     # shellcheck disable=SC2086
     eval $task_command &>>"$logfile" &
     TASK_QUEUE[$task_name]=$!
