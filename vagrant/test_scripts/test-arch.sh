@@ -44,8 +44,28 @@ echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 
+git apply <<\EOF
+diff --git a/test/test-functions b/test/test-functions
+index e815ce1c58..bd62966e52 100644
+--- a/test/test-functions
++++ b/test/test-functions
+@@ -2769,6 +2769,7 @@ test_cleanup() {
+ 
+ test_cleanup_again() {
+     [ -n "$TESTDIR" ] || return
++    [ -n "$IMAGE_PRIVATE" ] && rm -fv "$IMAGE_PRIVATE"
+     rm -rf "$TESTDIR/unprivileged-nspawn-root"
+     [[ -n "$initdir" ]] && _umount_dir "$initdir"
+ }
+EOF
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
+
+# Mount /var/tmp as tmpfs in attempt to make the tests faster (since they store
+# their backing images in /var/tmp). All CentOS CI machines have at least 16G
+# of RAM, so we shouldn't run into OOM situations.
+mount -v -t tmpfs tmpfs /var/tmp
 
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -61,6 +81,34 @@ fi
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
+
+# Save journals created by integration tests
+process_test_results() {
+    set -x
+    local testname="${1:?Missing argument: test name}"
+    local testdir="/var/tmp/systemd-test-$testname"
+    if [[ -f "$testdir/system.journal" ]]; then
+#        # Filter out test-specific coredumps which are usually intentional
+#        # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
+#        if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$testname]" ]]; then
+#            export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$testname]}"
+#        fi
+#        # Attempt to collect coredumps from test-specific journals as well
+#        exectask "${testname}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
+#        # Make sure to not propagate the custom coredumpctl filter override
+#        [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
+
+        rsync -aq "$testdir/system.journal" "$LOGDIR/$testname/"
+    fi
+
+    # Clean the no longer necessary test artifacts
+    [[ -d "$testdir" ]] && make -C "test/$testname" clean-again TESTDIR="$testdir"
+    du -h -d 1 /var/tmp
+    df -h /var/tmp
+    set +x
+}
+
+export EXECTASK_POST_HANDLER="process_test_results"
 
 # Parallelized tasks
 EXECUTED_LIST=()
@@ -137,27 +185,6 @@ for t in "${FLAKE_LIST[@]}"; do
     for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
         [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
     done
-done
-
-# Save journals created by integration tests
-for t in "${EXECUTED_LIST[@]}"; do
-    testdir="/var/tmp/systemd-test-${t##*/}"
-    if [[ -f "$testdir/system.journal" ]]; then
-        # Filter out test-specific coredumps which are usually intentional
-        # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
-        if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$t]" ]]; then
-            export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$t]}"
-        fi
-        # Attempt to collect coredumps from test-specific journals as well
-        exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
-        # Make sure to not propagate the custom coredumpctl filter override
-        [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
-
-        rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
-    fi
-
-    # Clean the no longer necessary test artifacts
-    [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
 done
 
 ## Other integration tests ##

@@ -117,6 +117,10 @@ printresult() {
     else
         echo "[IGNORED RESULT] $task_name - EC: $task_ec (log file: $task_logfile)"
     fi
+
+    if [[ -v EXECTASK_POST_HANDLER && -n "$EXECTASK_POST_HANDLER" ]]; then
+        "$EXECTASK_POST_HANDLER" "$task_name"
+    fi
 }
 
 # Execute given task "silently":
