@@ -153,10 +153,7 @@ for t in "${EXECUTED_LIST[@]}"; do
         # Make sure to not propagate the custom coredumpctl filter override
         [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
 
-        # Keep the journal files only if the associated test case failed
-        if [[ ! -f "$testdir/pass" ]]; then
-            rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
-        fi
+        rsync -aq "$testdir/system.journal" "$LOGDIR/${t##*/}/"
     fi
 
     # Clean the no longer necessary test artifacts
@@ -166,7 +163,6 @@ done
 ## Other integration tests ##
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
 )
 
 # Prepare environment for the systemd-networkd testsuite
