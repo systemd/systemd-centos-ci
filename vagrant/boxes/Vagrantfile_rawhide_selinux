@@ -19,6 +19,8 @@ Vagrant.configure("2") do |config|
     libvirt.random :model => 'random'
   end
 
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+
   config.vm.provision "shell", privileged: true, inline: <<-SHELL
     set -e
 
