@@ -34,6 +34,12 @@ rpm -qa > vagrant-rawhide-installed-pkgs.txt
     cat /proc/version
 } > vagrant-rawhide-osinfo.txt
 
+# Switch SELinux to permissive mode after reboot, so we catch all possible
+# AVCs, not just the first one
+setenforce 0
+sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
+cat /etc/selinux/config
+
 rm -fr "$BUILD_DIR"
 # Build phase
 meson "$BUILD_DIR" \
@@ -56,11 +62,8 @@ fedpkg local
 dnf install -y noarch/selinux-policy-*
 popd
 
-# Switch SELinux to permissive mode after reboot, so we catch all possible
-# AVCs, not just the first one
-setenforce 0
-sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
-cat /etc/selinux/config
+# Force relabel on next boot
+fixfiles -v -F onboot
 
 dracut -f --regenerate-all
 
