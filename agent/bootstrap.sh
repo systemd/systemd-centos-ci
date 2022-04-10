@@ -67,6 +67,7 @@ ADDITIONAL_DEPS=(
     libzstd-devel
     llvm
     make
+    mdadm
     net-tools
     nmap-ncat
     openssl-devel
