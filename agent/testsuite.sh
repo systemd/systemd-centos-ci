@@ -78,9 +78,6 @@ fi
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
-    "test/TEST-29-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-58-REPART"         # flaky test, see below (yet another instance of systemd/systemd#17469)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
