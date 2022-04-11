@@ -34,14 +34,6 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
-
 ## FIXME: systemd-networkd testsuite: skip test_macsec
 # Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
 # dereference (and since 5.8.0 an additional oops). Since the issue hasn't been
@@ -74,10 +66,6 @@ FLAKE_LIST=(
     "test/TEST-10-ISSUE-2467"     # flaky test
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
     "test/TEST-25-IMPORT"         # flaky when paralellized (systemd/systemd#13973)
-    "test/TEST-29-PORTABLE"       # flaky test (systemd/systemd#17469)
-    "test/TEST-50-DISSECT"        # flaky test (systemd/systemd#17469)
-    "test/TEST-55-OOMD"           # flaky test (systemd/systemd#21146)
-    "test/TEST-58-REPART"         # flaky test, see below (systemd/systemd#19442)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)

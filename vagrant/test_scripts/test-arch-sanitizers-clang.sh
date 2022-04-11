@@ -29,14 +29,6 @@ export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}help=1" "$BUILD_DIR/systemctl" is-system-running &>"$LOGDIR/asan_config.txt"
 
 ## Disable certain flaky tests
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
-
 # FIXME: test-execute
 # This test occasionally timeouts when running under sanitizers. Until the root
 # cause is figured out, let's temporarily skip this test to not disturb CI runs.

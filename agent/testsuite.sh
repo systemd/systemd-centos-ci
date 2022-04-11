@@ -39,14 +39,6 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
-
 # FIXME: test-seccomp
 # This test became flaky once again, so disable it temporarily until the reason
 # is found out.
@@ -86,9 +78,6 @@ fi
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
-    "test/TEST-29-PORTABLE"       # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-58-REPART"         # flaky test, see below (yet another instance of systemd/systemd#17469)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
