@@ -28,14 +28,6 @@ fi
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
-
 ## FIXME: systemd-networkd testsuite: skip test_macsec
 # Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
 # dereference (and since 5.8.0 an additional oops). Since the issue hasn't been

@@ -39,14 +39,6 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
-
 # FIXME: test-seccomp
 # This test became flaky once again, so disable it temporarily until the reason
 # is found out.
