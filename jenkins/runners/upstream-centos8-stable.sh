@@ -41,7 +41,8 @@ if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
 
     # We're not testing the main branch, so let's see if the PR scope
     # is something we should indeed test
-    git clone https://github.com/systemd/systemd-stable systemd-tmp && cd systemd-tmp
+    git clone https://github.com/systemd/systemd-stable systemd-tmp
+    cd systemd-tmp
     git fetch -fu origin "refs/pull/$ghprbPullId/head:pr"
     git checkout pr
     # Let's make the regex here less strict, so we can, for example, test man page
