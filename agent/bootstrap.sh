@@ -44,6 +44,7 @@ done
 
 ADDITIONAL_DEPS=(
     attr
+    bind-utils
     bpftool
     clang
     device-mapper-event
@@ -61,6 +62,7 @@ ADDITIONAL_DEPS=(
     iscsi-initiator-utils
     kernel-modules-extra
     kmod-wireguard # Kmods SIG
+    knot
     libasan
     libfdisk-devel
     libpwquality-devel
