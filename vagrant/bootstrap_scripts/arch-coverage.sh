@@ -60,28 +60,24 @@ python3 -m ensurepip
 python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@centos-ci
 #python3 -m pip install cpp-coveralls
 
-# Manually install upstream D-Bus config file for org.freedesktop.network1
-# so systemd-networkd testsuite can use potentially new/updated methods
-cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
+# Make sure the revision we just compiled is actually bootable
+(
+  # We need a custom initrd (with the systemd module) for integration tests
+  # See vagrant-test.sh for reasoning
+  export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
+  mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
+  # Enable as much debug logging as we can to make debugging easier
+  # (especially for boot issues)
+  export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
+  export QEMU_TIMEOUT=600
+  # Skip the nspawn version of the test
+  export TEST_NO_NSPAWN=1
+  # Enforce nested KVM
+  export TEST_NESTED_KVM=1
 
-# Manually install upstream systemd-networkd service unit files in case a PR
-# introduces a change in them
-# See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
-cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
-cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
+  make -C test/TEST-01-BASIC clean setup run clean-again
 
-# In order to be able to collect all coverage reports, we need to run
-# the systemd-networkd test suite from the build dir, which means we need to
-# create certain symlinks manually (since usually they're created by meson
-# during the 'install' step).
-
-# Support udevadm/systemd-udevd merge efforts from
-# https://github.com/systemd/systemd/pull/15918
-# The udevadm -> systemd-udevd symlink is created in the install phase which
-# we don't execute in sanitizer runs, so let's create it manually where
-# we need it
-if [[ -x "$BUILD_DIR/udevadm" && ! -x "$BUILD_DIR/systemd-udevd" ]]; then
-    ln -frsv "$BUILD_DIR/udevadm" "$BUILD_DIR/systemd-udevd"
-fi
+  rm -f "$INITRD"
+) 2>&1 | grep --text --line-buffered '^' | tee vagrant-arch-sanity-boot-check.log
 
 popd
