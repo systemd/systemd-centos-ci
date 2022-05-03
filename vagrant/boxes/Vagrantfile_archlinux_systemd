@@ -49,6 +49,9 @@ Vagrant.configure("2") do |config|
     echo -e 'vagrant\nvagrant' | passwd
     passwd -S root
 
+    # Create /etc/localtime
+    systemd-firstboot --timezone=UTC
+
     # Configure NTP (chronyd)
     pacman --needed --noconfirm -S chrony
     systemctl enable --now chronyd
