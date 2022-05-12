@@ -119,6 +119,13 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
+        # Some of the newer tests might not be available in stable branches,
+        # so let's skip them instead of failing
+        if [[ ! -d "$t" ]]; then
+            echo "Test '$t' is not available, skipping..."
+            continue
+        fi
+
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
