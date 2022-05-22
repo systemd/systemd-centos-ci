@@ -83,12 +83,11 @@ Vagrant.configure("2") do |config|
     rm -fr tgt
 
     # Compile & install dfuzzer
-    pacman --needed --noconfirm -S glib2 libffi make pkg-config
-    git clone https://github.com/matusmarhefka/dfuzzer dfuzzer
-    pushd dfuzzer/src
-    make
-    install -pm 0755 dfuzzer /usr/bin/dfuzzer
-    install -pm 0644 dfuzzer.conf /etc/dfuzzer.conf
+    pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
+    git clone https://github.com/dbus-fuzzer/dfuzzer dfuzzer
+    pushd dfuzzer
+    meson build
+    ninja -C build install
     popd
     rm -fr dfuzzer
 
