@@ -91,17 +91,6 @@ Vagrant.configure("2") do |config|
     popd
     rm -fr dfuzzer
 
-    # FIXME: downgrade QEMU to 6.2.0
-    # See: https://bugs.archlinux.org/task/74716
-    useradd makepkg
-    pacman --needed --noconfirm -S binutils fakeroot fzf pacman-contrib make
-    pacman -Syy
-    su makepkg -c 'cd /tmp && git clone https://aur.archlinux.org/downgrade.git && cd downgrade && makepkg'
-    pacman --noconfirm -U /tmp/downgrade/*.zst
-    pacman --noconfirm -R qemu-base
-    echo y | downgrade --maxdepth 2 --ala-only 'qemu=6.2.0-4' -- --noconfirm --overwrite \*
-    userdel -rf makepkg
-
     # Disable 'quiet' mode on the kernel command line and forward everything
     # to ttyS0 instead of just tty0, so we can collect it using QEMU's
     # -serial file:xxx feature. Also, explicitly enable unified cgroups, since
