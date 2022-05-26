@@ -53,7 +53,7 @@ exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/test
 # the kernel command line.
 # The exported INITRD variable is picked up by all following integration tests
 export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-if ! mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,sd-encrypt,fsck -g "$INITRD"; then
+if ! mkinitcpio -c /dev/null -A base,systemd,sd-encrypt,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
     echo >&2 "Failed to generate initrd, can't continue"
     exit 1
 fi
