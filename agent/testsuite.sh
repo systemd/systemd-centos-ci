@@ -99,8 +99,8 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 # files we installed during the bootstrap phase (i.e. we want to keep the
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-# Rebuild the original initrd without the multipath module
-dracut -o multipath --rebuild "$INITRD"
+# Rebuild the original initrd with the dm-crypt modules and without the multipath module
+dracut -a crypt -o multipath --rebuild "$INITRD"
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
