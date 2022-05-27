@@ -140,7 +140,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
         export MANGLE_TESTDIR=1
-        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+        exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
 
         # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
         # array accordingly to correctly find the respective journals
@@ -201,7 +201,7 @@ systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
 exectask "systemd-networkd_sanitizers" \
-            "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+            "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
 exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -o short-monotonic --no-hostname -b | check_for_sanitizer_errors"

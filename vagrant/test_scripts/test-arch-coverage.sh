@@ -101,7 +101,7 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
     EXECUTED_LIST+=("$t")
 done
 
@@ -125,7 +125,7 @@ for t in "${FLAKE_LIST[@]}"; do
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+    exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
 
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
@@ -183,7 +183,7 @@ exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage
 # users and wouldn't be able to generate coverage reports
 setfacl -R -m 'd:o:rwX' -m 'o:rwX' "$BUILD_DIR"
 exectask "systemd-networkd" \
-         "timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
+         "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
 exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 
 # Collect coredumps using the coredumpctl utility, if any
