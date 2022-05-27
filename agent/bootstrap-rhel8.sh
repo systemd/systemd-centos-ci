@@ -63,6 +63,7 @@ ADDITIONAL_DEPS=(
     quota
     socat
     strace
+    time
     wget
 )
 

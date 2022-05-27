@@ -87,6 +87,7 @@ ADDITIONAL_DEPS=(
     squashfs-tools
     strace
     swtpm
+    time
     tpm2-tools
     tpm2-tss-devel
     veritysetup
