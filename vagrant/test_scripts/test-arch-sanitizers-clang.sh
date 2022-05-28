@@ -74,6 +74,9 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
+# Disable swap, since it seems to cause CPU soft lock-ups in some cases
+swapoff -av
+
 # As running integration tests with broken systemd can be quite time consuming
 # (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
 # $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running

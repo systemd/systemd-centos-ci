@@ -26,6 +26,9 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
+# Disable swap, since it seems to cause CPU soft lock-ups in some cases
+swapoff -av
+
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## FIXME: systemd-networkd testsuite: skip test_macsec
