@@ -77,10 +77,11 @@ fi
 ## Integration test suite ##
 EXECUTED_LIST=()
 FLAKE_LIST=(
-    "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
+    "test/TEST-16-EXTEND-TIMEOUT"  # flaky test, see below
+    "test/TEST-60-MOUNT-RATELIMIT" # flaky test (systemd/systemd#23424)
 )
 SKIP_LIST=(
-    "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
+    "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
     "${FLAKE_LIST[@]}"
 )
 
