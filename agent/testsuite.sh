@@ -77,10 +77,11 @@ fi
 ## Integration test suite ##
 EXECUTED_LIST=()
 FLAKE_LIST=(
-    "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
+    "test/TEST-16-EXTEND-TIMEOUT"  # flaky test, see below
+    "test/TEST-60-MOUNT-RATELIMIT" # flaky test (systemd/systemd#23424)
 )
 SKIP_LIST=(
-    "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
+    "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
     "${FLAKE_LIST[@]}"
 )
 
@@ -137,7 +138,7 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "make -C $t setup run && touch $TESTDIR/pass"
+    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
     EXECUTED_LIST+=("$t")
 done
 
@@ -164,7 +165,7 @@ for t in "${FLAKE_LIST[@]}"; do
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+    exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
 
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
@@ -203,7 +204,7 @@ TEST_LIST=(
 )
 
 for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "timeout -k 60s 60m ./$t"
+    exectask "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any
