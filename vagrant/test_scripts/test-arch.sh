@@ -71,6 +71,30 @@ SKIP_LIST=(
     "${FLAKE_LIST[@]}"
 )
 
+## Other integration tests ##
+# Enqueue the "other" tests first. The networkd testsuite has quite a long
+# runtime without requiring too much resources, hence it can run in parallel
+# with the "standard" integration tests, saving ~30 minutes ATTOW (this excludes
+# dusty nodes, where any kind of parallelism leads to unstable tests)
+TEST_LIST=(
+    "test/test-exec-deserialization.py"
+    "test/test-network/systemd-networkd-tests.py"
+)
+
+# Prepare environment for the systemd-networkd testsuite
+systemctl disable --now dhcpcd dnsmasq
+systemctl reload dbus.service
+# FIXME
+# As the DHCP lease time in libvirt is quite short, and it's not configurable,
+# yet, let's start a DHCP daemon _only_ for the "master" network device to
+# keep it up during the systemd-networkd testsuite
+systemctl enable --now dhcpcd@eth0.service
+systemctl status dhcpcd@eth0.service
+
+for t in "${TEST_LIST[@]}"; do
+    exectask_p "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
+done
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
@@ -154,26 +178,6 @@ for t in "${EXECUTED_LIST[@]}"; do
 
     # Clean the no longer necessary test artifacts
     [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
-done
-
-## Other integration tests ##
-TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
-)
-
-# Prepare environment for the systemd-networkd testsuite
-systemctl disable --now dhcpcd dnsmasq
-systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
-
-for t in "${TEST_LIST[@]}"; do
-    exectask "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
 done
 
 # Collect coredumps using the coredumpctl utility, if any
