@@ -31,22 +31,8 @@ exectask "selinux-status" "sestatus -v -b"
 exectask "avc-check" "! ausearch -m avc -i --start boot | audit2why"
 
 # Summary
-echo
-echo "TEST SUMMARY:"
-echo "-------------"
-echo "PASSED: $PASSED"
-echo "FAILED: $FAILED"
-echo "TOTAL:  $((PASSED + FAILED))"
-
-if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
-    echo
-    echo "FAILED TASKS:"
-    echo "-------------"
-    for task in "${FAILED_LIST[@]}"; do
-        echo "$task"
-    done
-fi
+show_task_summary
 
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
-exit $FAILED
+[[ $FAILED -eq 0 ]] && exit 0 || exit 1

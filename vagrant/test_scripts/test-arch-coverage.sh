@@ -223,23 +223,9 @@ _check_for_missing_coverage() {
 exectask "check_for_missing_coverage" "_check_for_missing_coverage"
 
 # Summary
-echo
-echo "TEST SUMMARY:"
-echo "-------------"
-echo "PASSED: $PASSED"
-echo "FAILED: $FAILED"
-echo "TOTAL:  $((PASSED + FAILED))"
-
-if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
-    echo
-    echo "FAILED TASKS:"
-    echo "-------------"
-    for task in "${FAILED_LIST[@]}"; do
-        echo "$task"
-    done
-fi
+show_task_summary
 
 [[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
-exit $FAILED
+[[ $FAILED -eq 0 ]] && exit 0 || exit 1
