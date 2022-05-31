@@ -48,6 +48,7 @@ while getopts "r:h:" opt; do
 done
 
 ADDITIONAL_DEPS=(
+    busybox
     dhclient
     dnsmasq
     e2fsprogs
@@ -68,16 +69,13 @@ ADDITIONAL_DEPS=(
 )
 
 # Install and enable EPEL
-cmd_retry dnf -y install epel-release dnf-plugins-core
+cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core
 cmd_retry dnf config-manager --enable epel --enable powertools
 # Upgrade the machine to get the most recent environment
 cmd_retry dnf -y upgrade
 # Install systemd's build dependencies
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
-# using a different way. Needed by TEST-13-NSPAWN-SMOKE
-cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
 # Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
 # with the OpenBSD version present on CentOS 8
 if alternatives --display nmap; then
