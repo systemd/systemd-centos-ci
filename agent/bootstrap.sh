@@ -46,6 +46,7 @@ ADDITIONAL_DEPS=(
     attr
     bind-utils
     bpftool
+    busybox
     clang
     device-mapper-event
     device-mapper-multipath
@@ -94,7 +95,7 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install epel-release dnf-plugins-core gdb
+cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core gdb
 cmd_retry dnf -y config-manager --enable epel --enable powertools
 # Install the Kmods SIG repository for certain kernel modules
 # See: https://sigs.centos.org/kmods/repositories/
@@ -104,9 +105,6 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped in RHEL 8/CentOS 8 anymore, we need to get it
-# using a different way. Needed by TEST-13-NSPAWN-SMOKE
-cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
 # Remove setroubleshoot-server if it's installed, since we don't use it anyway
 # and it's causing some weird performance issues
 if rpm -q setroubleshoot-server; then
