@@ -281,3 +281,24 @@ exectask_p_finish() {
         unset "TASK_QUEUE[$key]"
     done
 }
+
+# Show summary about executed tasks
+show_task_summary() {
+    local task
+
+    echo
+    echo "TEST SUMMARY:"
+    echo "-------------"
+    echo "PASSED: $PASSED"
+    echo "FAILED: $FAILED"
+    echo "TOTAL:  $((PASSED + FAILED))"
+
+    if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
+        echo
+        echo "FAILED TASKS:"
+        echo "-------------"
+        for task in "${FAILED_LIST[@]}"; do
+            echo "$task"
+        done
+    fi
+}

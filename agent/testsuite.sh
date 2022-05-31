@@ -211,20 +211,6 @@ done
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
-echo
-echo "TEST SUMMARY:"
-echo "-------------"
-echo "PASSED: $PASSED"
-echo "FAILED: $FAILED"
-echo "TOTAL:  $((PASSED + FAILED))"
+show_task_summary
 
-if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
-    echo
-    echo "FAILED TASKS:"
-    echo "-------------"
-    for task in "${FAILED_LIST[@]}"; do
-        echo "$task"
-    done
-fi
-
-exit $FAILED
+[[ $FAILED -eq 0 ]] && exit 0 || exit 1
