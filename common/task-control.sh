@@ -28,7 +28,7 @@ if NPROC=$(nproc); then
     MAX_QUEUE_SIZE=$((NPROC / OPTIMAL_QEMU_SMP))
     if [[ $MAX_QUEUE_SIZE -lt 1 ]]; then
         # We have enough CPUs for only one concurrent task
-        OPTIMAL_QEMU_SMP=1
+        OPTIMAL_QEMU_SMP=$NPROC
         MAX_QUEUE_SIZE=1
     fi
 else
