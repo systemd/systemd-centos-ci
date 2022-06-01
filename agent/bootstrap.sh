@@ -56,6 +56,7 @@ ADDITIONAL_DEPS=(
     e2fsprogs
     elfutils
     elfutils-devel
+    evemu
     gcc-c++
     integritysetup
     iproute-tc
