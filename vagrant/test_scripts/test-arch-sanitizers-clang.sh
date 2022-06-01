@@ -134,6 +134,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-55-OOMD           # systemd-oomd
         test/TEST-58-REPART         # systemd-repart
         test/TEST-65-ANALYZE        # systemd-analyze
+        test/TEST-70-TPM2           # systemd-cryptenroll
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
     )
 
