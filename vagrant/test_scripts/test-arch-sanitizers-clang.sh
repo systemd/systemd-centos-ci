@@ -99,6 +99,22 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
+    # Prepare environment for the systemd-networkd testsuite
+    systemctl disable --now dhcpcd dnsmasq
+    systemctl reload dbus.service
+    # As the DHCP lease time in libvirt is quite short, and it's not configurable,
+    # yet, let's start a DHCP daemon _only_ for the "master" network device to
+    # keep it up during the systemd-networkd testsuite
+    systemctl enable --now dhcpcd@eth0.service
+    systemctl status dhcpcd@eth0.service
+
+    # Run the systemd-networkd testsuite "in the background" while we run other
+    # integration tests, since it doesn't require much resources and should not
+    # interfere with them (and vice versa), saving a non-insignificant amount
+    # of time
+    exectask_p "systemd-networkd_sanitizers" \
+               "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
+
     # Run certain other integration tests under sanitizers to cover bigger
     # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     # be somewhat sure the 'base' systemd components work).
@@ -176,6 +192,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
             fi
         fi
     done
+
+    exectask_p_finish
+    exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 fi
 
 # Check the test logs for sanitizer errors as well, since some tests may
@@ -191,22 +210,6 @@ _check_test_logs_for_sanitizer_errors() {
     return $ec
 }
 exectask "test_logs_sanitizer_errors" "_check_test_logs_for_sanitizer_errors"
-
-## systemd-networkd testsuite
-# Prepare environment for the systemd-networkd testsuite
-systemctl disable --now dhcpcd dnsmasq
-systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
-
-exectask "systemd-networkd_sanitizers" \
-            "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
-
-exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 exectask "check-journal-for-sanitizer-errors" "journalctl -o short-monotonic --no-hostname -b | check_for_sanitizer_errors"
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
