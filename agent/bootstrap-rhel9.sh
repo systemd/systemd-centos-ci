@@ -65,6 +65,7 @@ ADDITIONAL_DEPS=(
     elfutils
     elfutils-devel
     gcc-c++
+    gdb
     integritysetup
     iproute-tc
     kernel-modules-extra
@@ -93,14 +94,14 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install dnf-plugins-core gdb
+cmd_retry dnf -y install epel-release dnf-plugins-core
 cmd_retry dnf -y config-manager --enable crb
+cmd_retry dnf -y config-manager --disable epel --disable epel-next
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# As busybox is not shipped since RHEL 9/CentOS 9 anymore, we need to get it
-# using a different way. Needed by TEST-13-NSPAWN-SMOKE
-cmd_retry wget -O /usr/bin/busybox https://www.busybox.net/downloads/binaries/1.31.0-defconfig-multiarch-musl/busybox-x86_64 && chmod +x /usr/bin/busybox
+# Install busybox without enabling epel system-wide
+cmd_retry dnf -y install --enablerepo epel busybox
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
