@@ -56,6 +56,8 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Installing btrfs-aware packages"
     dnf -y install centos-release-hyperscale-experimental
     dnf -y install btrfs-progs kernel libguestfs-tools-c
+    # Add the btrfs-progs package to the guestfs image
+    echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 fi
 
 # Start a VM described in the Vagrantfile with all provision steps
