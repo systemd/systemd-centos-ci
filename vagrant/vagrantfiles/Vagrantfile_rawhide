@@ -27,6 +27,10 @@ Vagrant.configure("2") do |config|
     mount_options: ["rw", "async", "fsc", "rsize=32768", "wsize=32768",
                     "hard", "noatime", "actimeo=2"]
 
+  # Bump the boot timeout from 5 to 10 minutes, since the filesystem relabeling
+  # can take (slightly) longer than that
+  config.vm.boot_timeout = 600
+
   # Set the default user for `vagrant ssh` to root and insert the Vagrant's
   # SSH key to allow passwordless SSH login. This requires the SSH account
   # to be unlocked, have its password set to 'vagrant', and the PermitRootLogin=
