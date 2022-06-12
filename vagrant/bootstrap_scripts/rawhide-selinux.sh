@@ -47,6 +47,8 @@ meson "$BUILD_DIR" \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
       --optimization=g \
+      -Dsysvinit-path=/etc/rc.d/init.d \
+      -Drc-local=/etc/rc.d/rc.local \
       -Dtests=true \
       -Dinstall-tests=true
 ninja -C "$BUILD_DIR" install
