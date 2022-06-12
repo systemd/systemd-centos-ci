@@ -52,7 +52,7 @@ run_coverage() {
 
 run_ppc64le_sanitizers() {
     # Run the integration test suite on C8S ppc64le with sanitizers
-    ./agent-control.py --version 8-stream --arch ppc64le --flavor medium --skip-reboot \
+    ./agent-control.py --version 8-stream --arch ppc64le --flavor medium --skip-reboot --no-index \
                        --bootstrap-script="bootstrap-alt.sh" --testsuite-script="testsuite-alt.sh" \
                        ${ARGS:+"${ARGS[@]}"}
 }
