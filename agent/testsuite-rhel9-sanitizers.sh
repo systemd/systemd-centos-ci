@@ -167,12 +167,17 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-22-TMPFILES       # systemd-tmpfiles
-        # We don't ship portabled and homed on RHEL
+        test/TEST-23-TYPE-EXEC
+        # We don't ship portabled in RHEL
         #test/TEST-29-PORTABLE       # systemd-portabled
+        test/TEST-34-DYNAMICUSERMIGRATE
+        # We don't ship homed in RHEL
         #test/TEST-46-HOMED          # systemd-homed
         test/TEST-50-DISSECT        # systemd-dissect
+        test/TEST-54-CREDS          # credentials & stuff
         test/TEST-55-OOMD           # systemd-oomd
         test/TEST-58-REPART         # systemd-repart
+        test/TEST-65-ANALYZE        # systemd-analyze
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
