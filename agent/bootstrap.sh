@@ -50,6 +50,7 @@ ADDITIONAL_DEPS=(
     clang
     device-mapper-event
     device-mapper-multipath
+    dfuzzer
     dhcp-client
     dhcp-server
     dnsmasq
