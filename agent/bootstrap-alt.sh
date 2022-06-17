@@ -43,40 +43,57 @@ set -o pipefail
 
 ADDITIONAL_DEPS=(
     attr
+    bind-utils
+    bpftool
     busybox
     clang
-    compiler-rt
+    device-mapper-event
+    device-mapper-multipath
+    dfuzzer
     dhcp-client
     dhcp-server
     dnsmasq
     dosfstools
     e2fsprogs
-    gdb
+    elfutils
+    elfutils-devel
+    evemu
+    gcc-c++
+    integritysetup
     iproute-tc
+    iscsi-initiator-utils
     kernel-modules-extra
     kmod-wireguard # Kmods SIG
+    knot
     libasan
     libfdisk-devel
-    libidn2-devel
     libpwquality-devel
     libubsan
     libzstd-devel
     llvm
     make
+    mdadm
     net-tools
     nmap-ncat
     openssl-devel
-    perl-IPC-SysV
-    perl-Time-HiRes
+    pcre2-devel
     python3-jinja2
+    python3-pexpect
     qemu-kvm
     qrencode-devel
     quota
+    rust
+    screen
+    scsi-target-utils
+    selinux-policy-devel
     socat
     squashfs-tools
     strace
     systemd-networkd # EPEL
+    swtpm
     time
+    tpm2-tools
+    tpm2-tss-devel
     veritysetup
     wget
 )
