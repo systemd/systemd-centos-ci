@@ -103,13 +103,17 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-23-TYPE-EXEC
         test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
+        test/TEST-45-TIMEDATE       # systemd-timedated
         test/TEST-46-HOMED          # systemd-homed
         test/TEST-50-DISSECT        # systemd-dissect
         test/TEST-54-CREDS          # credentials & stuff
         test/TEST-55-OOMD           # systemd-oomd
         test/TEST-58-REPART         # systemd-repart
         test/TEST-65-ANALYZE        # systemd-analyze
+        test/TEST-70-TPM2           # systemd-cryptenroll
+        test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
+        test/TEST-73-LOCALE         # systemd-localed
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
