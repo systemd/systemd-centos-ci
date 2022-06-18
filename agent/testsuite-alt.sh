@@ -28,9 +28,9 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-if [[ ! -f /usr/bin/ninja ]]; then
-    ln -s /usr/bin/ninja-build /usr/bin/ninja
-fi
+[[ ! -f /usr/bin/ninja ]] && ln -s /usr/bin/ninja-build /usr/bin/ninja
+[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+qemu-kvm --version
 
 set +e
 
