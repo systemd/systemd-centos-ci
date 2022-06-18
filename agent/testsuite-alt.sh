@@ -57,9 +57,30 @@ echo 'int main(void) { return 77; }' > src/test/test-execute.c
 # no longer block the CI image updates.
 # See: systemd/systemd#16199
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
-
 exectask "ninja-test_sanitizers_$(uname -m)" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
+
+# Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+export QEMU_TIMEOUT=1200
+export NSPAWN_TIMEOUT=1200
+# Set QEMU_SMP to speed things up
+export QEMU_SMP=$(nproc)
+export SKIP_INITRD=no
+export QEMU_BIN=/usr/bin/qemu-kvm
+
+## Generate a custom-tailored initrd for the integration tests
+# The host initrd contains multipath modules & services which are unused
+# in the integration tests and sometimes cause unexpected failures. Let's build
+# a custom initrd used solely by the integration tests
+#
+# Set a path to the custom initrd into the INITRD variable which is read by
+# the integration test suite "framework"
+export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
+cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
+# Rebuild the original initrd with the dm-crypt modules and without the multipath module
+# Note: we need to built the initrd with --no-hostonly, otherwise the resulting
+#       initrd lacks certain drivers for the qemu's virt hdd
+dracut --no-hostonly --filesystems ext4 -a crypt -o multipath --rebuild "$INITRD"
 
 # As running integration tests with broken systemd can be quite time consuming
 # (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
@@ -126,15 +147,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-
-        # Disable nested KVM for TEST-13-NSPAWN-SMOKE, which keeps randomly
-        # failing due to time outs caused by CPU soft locks. Also, bump the
-        # QEMU timeout, since the test is much slower without KVM.
-        export TEST_NESTED_KVM=yes
-        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
-            unset TEST_NESTED_KVM
-            export QEMU_TIMEOUT=1200
-        fi
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
         export MANGLE_TESTDIR=1
