@@ -67,6 +67,9 @@ export NSPAWN_TIMEOUT=1200
 export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
 export QEMU_BIN=/usr/bin/qemu-kvm
+# Since QEMU without accel is extremely slow on the alt-arch machines, let's use
+# it only when we don't have a choice (i.e. with QEMU-only test)
+export TEST_PREFER_NSPAWN=yes
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
