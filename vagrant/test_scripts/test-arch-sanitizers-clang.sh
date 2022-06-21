@@ -67,6 +67,8 @@ export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
 # Enforce nested KVM
 export TEST_NESTED_KVM=yes
+# Bump the SUT memory to 4G, mainly for dfuzzer
+export QEMU_MEM=4G
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then
