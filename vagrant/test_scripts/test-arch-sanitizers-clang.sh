@@ -67,6 +67,8 @@ export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
 # Enforce nested KVM
 export TEST_NESTED_KVM=yes
+# Bump the SUT memory to 4G, mainly for dfuzzer
+export QEMU_MEM=4G
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then
@@ -124,6 +126,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
+        test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
         test/TEST-29-PORTABLE       # systemd-portabled
@@ -158,7 +161,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         export TEST_NESTED_KVM=yes
         if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
             unset TEST_NESTED_KVM
-            export QEMU_TIMEOUT=1200
         fi
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
