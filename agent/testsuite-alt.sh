@@ -120,7 +120,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     EXECUTED_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
-        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        # FIXME: This test gets stuck on C8S when calling `sysctl, possibly
+        #        related to https://bugzilla.redhat.com/show_bug.cgi?id=2098125
+        #test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-22-TMPFILES       # systemd-tmpfiles
