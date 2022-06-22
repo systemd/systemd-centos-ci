@@ -166,6 +166,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
+        test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
         # We don't ship portabled in RHEL
@@ -181,6 +182,11 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
+        if [[ ! -d "$t" ]]; then
+            echo "Test '$t' is not present in this branch, skipping..."
+            continue
+        fi
+
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
