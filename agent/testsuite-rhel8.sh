@@ -81,7 +81,7 @@ echo 'int main(void) { return 77; }' > src/test/test-barrier.c
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
-[[ -d "build/meson-logs" ]] && rsync -aq "build/meson-logs" "$LOGDIR"
+[[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
 SKIP_LIST=(

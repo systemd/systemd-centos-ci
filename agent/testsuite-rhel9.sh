@@ -92,7 +92,7 @@ echo 'int main(void) { return 77; }' > src/test/test-barrier.c
 [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]] && MESON_NUM_PROCESSES=4
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3 ${MESON_NUM_PROCESSES:+--num-processes "$MESON_NUM_PROCESSES"}"
 # Copy over meson test artifacts
-[[ -d "build/meson-logs" ]] && rsync -aq "build/meson-logs" "$LOGDIR"
+[[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
 
 # If we're not testing the main branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration

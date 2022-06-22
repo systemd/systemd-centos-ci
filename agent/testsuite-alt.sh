@@ -13,7 +13,6 @@ LIB_ROOT="$(dirname "$0")/../common"
 at_exit() {
     set +e
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
-    [[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 }
 
 trap at_exit EXIT
@@ -59,6 +58,7 @@ echo 'int main(void) { return 77; }' > src/test/test-execute.c
 sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
 exectask "ninja-test_sanitizers_$(uname -m)" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
+[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1200

@@ -45,6 +45,7 @@ sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test
 # Run the internal unit tests (make check)
 exectask "ninja-test_sanitizers" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
+[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Run TEST-01-BASIC under sanitizers
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -223,7 +224,6 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 # Summary
 show_task_summary
 
-[[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 [[ $FAILED -eq 0 ]] && exit 0 || exit 1
