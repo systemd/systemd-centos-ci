@@ -104,7 +104,7 @@ echo 'int main(void) { return 77; }' > src/test/test-barrier.c
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3 ${MESON_NUM_PROCESSES:+--num-processes "$MESON_NUM_PROCESSES"}"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 # Copy over meson test artifacts
-[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -aq "$BUILD_DIR/meson-logs" "$LOGDIR"
+[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused

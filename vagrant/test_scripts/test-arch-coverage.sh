@@ -47,6 +47,7 @@ sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test
 
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
 # Prepare a custom-tailored initrd image (with the systemd module included).
@@ -225,7 +226,6 @@ exectask "check_for_missing_coverage" "_check_for_missing_coverage"
 # Summary
 show_task_summary
 
-[[ -d "$BUILD_DIR/meson-logs" ]] && cp -r "$BUILD_DIR/meson-logs" "$LOGDIR"
 exectask "journalctl-testsuite" "journalctl -b --no-pager"
 
 [[ $FAILED -eq 0 ]] && exit 0 || exit 1
