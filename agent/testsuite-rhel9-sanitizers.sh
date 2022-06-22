@@ -134,6 +134,8 @@ export QEMU_SMP=$(nproc)
 # are compiled in as modules
 export SKIP_INITRD=no
 export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
+# Bump the SUT memory to 4G, mainly for dfuzzer
+export QEMU_MEM=4G
 
 # As running integration tests with broken systemd can be quite time consuming
 # (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
