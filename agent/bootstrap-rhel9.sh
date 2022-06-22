@@ -101,7 +101,7 @@ cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Install busybox without enabling epel system-wide
-cmd_retry dnf -y install --enablerepo epel busybox
+cmd_retry dnf -y install --enablerepo epel busybox dfuzzer
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
