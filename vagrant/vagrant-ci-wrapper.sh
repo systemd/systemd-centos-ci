@@ -5,9 +5,6 @@
 # repository, installs & configures Vagrant, and runs the configured test suite
 # in the Vagrant container on given distributions.
 
-# TODO: argument parsing, so we can properly distinguish between branch/commit
-#       and distro tag
-
 LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/task-control.sh
 . "$LIB_ROOT/task-control.sh" "vagrant-logs" || exit 1
