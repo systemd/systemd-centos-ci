@@ -70,6 +70,8 @@ export QEMU_BIN=/usr/bin/qemu-kvm
 # Since QEMU without accel is extremely slow on the alt-arch machines, let's use
 # it only when we don't have a choice (i.e. with QEMU-only test)
 export TEST_PREFER_NSPAWN=yes
+# Bump the SUT memory to 4G, mainly for dfuzzer
+export QEMU_MEM=4G
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
