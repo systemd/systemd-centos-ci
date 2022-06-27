@@ -70,6 +70,8 @@ export QEMU_BIN=/usr/bin/qemu-kvm
 # Since QEMU without accel is extremely slow on the alt-arch machines, let's use
 # it only when we don't have a choice (i.e. with QEMU-only test)
 export TEST_PREFER_NSPAWN=yes
+# Bump the SUT memory to 4G, mainly for dfuzzer
+export QEMU_MEM=4G
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
@@ -125,6 +127,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         #test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
+        test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
         test/TEST-29-PORTABLE       # systemd-portabled
