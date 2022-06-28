@@ -182,6 +182,8 @@ fi
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
+coredumpctl_set_ts
+
 # Install the compiled systemd
 ninja-build -C build install
 
