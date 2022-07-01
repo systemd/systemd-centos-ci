@@ -58,6 +58,7 @@ ADDITIONAL_DEPS=(
     elfutils
     elfutils-devel
     evemu
+    expect
     gcc-c++
     integritysetup
     iproute-tc
