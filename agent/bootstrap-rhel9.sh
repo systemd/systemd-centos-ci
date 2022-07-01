@@ -64,6 +64,7 @@ ADDITIONAL_DEPS=(
     e2fsprogs
     elfutils
     elfutils-devel
+    expect
     gcc-c++
     gdb
     integritysetup

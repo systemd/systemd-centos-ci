@@ -52,6 +52,7 @@ ADDITIONAL_DEPS=(
     dhclient
     dnsmasq
     e2fsprogs
+    expect
     gdb
     libasan
     libubsan
