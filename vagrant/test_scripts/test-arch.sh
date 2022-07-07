@@ -65,6 +65,7 @@ FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test
     "test/TEST-25-IMPORT"          # flaky when paralellized (systemd/systemd#13973)
     "test/TEST-46-HOMED"           # flaky test (systemd/systemd#21589)
+    "test/TEST-50-DISSECT"         # flaky test (systemd/systemd#23866)
     "test/TEST-60-MOUNT-RATELIMIT" # flaky test (systemd/systemd#23424)
 )
 SKIP_LIST=(
