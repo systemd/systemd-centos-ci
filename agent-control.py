@@ -103,8 +103,8 @@ class AgentControl():
         # an error (Insufficient Nodes in READY State) which is not a valid
         # JSON object. Let's attempt to handle that and give Duffy some breathing
         # time to allocate more machines.
-        # The last value (0) is there to allow one last try after the last wait
-        for timeout in [60, 300, 600, 1800, 3600, 0]:
+        tries = 30
+        for _try in xrange(1, tries):
             try:
                 res = self._execute_api_command("/Node/get", payload)
                 jroot = json.loads(res)
@@ -117,7 +117,7 @@ class AgentControl():
                 logging.error("Received unexpected response from the server: %s", res)
                 logging.info("Waiting %d seconds before another retry", timeout)
 
-            time.sleep(timeout)
+            time.sleep(120)
 
         host = None
         ssid = None
