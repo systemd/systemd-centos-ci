@@ -104,7 +104,8 @@ class AgentControl():
         # JSON object. Let's attempt to handle that and give Duffy some breathing
         # time to allocate more machines.
         tries = 30
-        for _try in xrange(1, tries):
+        timeout = 120
+        for _try in range(1, tries):
             try:
                 res = self._execute_api_command("/Node/get", payload)
                 jroot = json.loads(res)
@@ -117,7 +118,7 @@ class AgentControl():
                 logging.error("Received unexpected response from the server: %s", res)
                 logging.info("Waiting %d seconds before another retry", timeout)
 
-            time.sleep(120)
+            time.sleep(timeout)
 
         host = None
         ssid = None
