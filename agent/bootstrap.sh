@@ -257,6 +257,8 @@ GRUBBY_ARGS=(
     # Reboot the machine on kernel panic
     "panic=3"
 )
+# Make sure the latest kernel is the one we're going to boot into
+grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
