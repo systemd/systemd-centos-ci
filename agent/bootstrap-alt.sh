@@ -63,7 +63,9 @@ ADDITIONAL_DEPS=(
     integritysetup
     iproute-tc
     iscsi-initiator-utils
-    kernel-modules-extra
+    "kernel-modules-$(uname -r)"
+    "kernel-modules-extra-$(uname -r)"
+    "kernel-tools-$(uname -r)"
     kmod-wireguard # Kmods SIG
     knot
     libasan
