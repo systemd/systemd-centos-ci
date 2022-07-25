@@ -67,7 +67,7 @@ fi
     echo "Updating the systemd/selinux Fedora Rawhide image"
 
     # Generate a new image with '-new' suffix
-    ./agent-control.py --version 8-stream --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --version 8-stream --no-index --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
     # Overwrite the production image with the just tested one. Since the CentOS CI
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that
