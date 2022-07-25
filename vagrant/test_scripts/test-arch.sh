@@ -114,10 +114,17 @@ for t in test/TEST-??-*; do
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
-    # Enforce nested KVM
-    export TEST_NESTED_KVM=1
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
+
+    # Disable nested KVM for TEST-13-NSPAWN-SMOKE, which keeps randomly
+    # failing due to time outs caused by CPU soft locks. Also, bump the
+    # QEMU timeout, since the test is a bit slower without KVM.
+    export TEST_NESTED_KVM=1
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        unset TEST_NESTED_KVM
+        export QEMU_TIMEOUT=1200
+    fi
 
     # Skipped test don't create the $TESTDIR automatically, so do it explicitly
     # otherwise the `touch` command would fail
