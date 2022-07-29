@@ -77,7 +77,6 @@ fi
 ## Integration test suite ##
 EXECUTED_LIST=()
 FLAKE_LIST=(
-    "test/TEST-16-EXTEND-TIMEOUT"  # flaky test, see below
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
@@ -110,16 +109,9 @@ exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=
 # runtime without requiring too much resources, hence it can run in parallel
 # with the "standard" integration tests, saving ~30 minutes ATTOW (this excludes
 # dusty nodes, where any kind of parallelism leads to unstable tests)
-TEST_LIST=(
-    "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
-)
 
-for t in "${TEST_LIST[@]}"; do
-    exectask_p "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
-done
-
-for t in test/TEST-??-*; do
+for ((i = 0; i < 100; i++)); do
+    t="test/TEST-35-LOGIN"
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
@@ -151,12 +143,11 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
+    exectask "${t##*/}_$i" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
     EXECUTED_LIST+=("$t")
+    [[ $FAILED -ne 0 ]] && break
 done
 
-# Wait for remaining running tasks
-exectask_p_finish
 
 for t in "${FLAKE_LIST[@]}"; do
     ## Configure test environment
