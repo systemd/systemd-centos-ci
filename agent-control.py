@@ -12,7 +12,7 @@ import tempfile
 import time
 
 from duffy.client import DuffyClient
-from duffy.client.formatter import DuffyFormatter
+from duffy.client.main import DuffyAPIErrorModel
 
 API_BASE = "https://duffy.ci.centos.org/api/v1"
 GITHUB_BASE = "https://github.com/systemd/"
@@ -37,7 +37,6 @@ class AgentControl():
             sys.exit(1)
 
         self._client = DuffyClient(API_BASE, "systemd", self.duffy_key)
-        self._formatter = DuffyFormatter.new_for_format("json")
 
     def __del__(self):
         # Deallocate the allocated node on script exit, if not requested otherwise
@@ -45,18 +44,26 @@ class AgentControl():
             self.free_session()
 
     def allocate_node(self, pool):
+        result = None
         payload = {
             "pool"     : pool,
             "quantity" : 1,
         }
 
         logging.info("Attempting to allocate a node from pool %s", pool)
-        result = self._client.request_session([payload])
 
-        # TODO: error handling
+        tries = 30
+        for _try in range(1, tries):
+            result = self._client.request_session([payload])
+            if isinstance(result, DuffyAPIErrorModel):
+                logging.error("Received an API error from the server: %s", result.error)
+                logging.info("Retrying in 120 sec [try %d/%d]", _try, tries)
+                time.sleep(120)
+            else:
+                break
+
         self._session_id = result.session.id
         self._node_hostname = result.session.nodes[0].hostname
-
         logging.info("Allocated node %s with session id %s", self._node_hostname, self._session_id)
 
         return self._node_hostname
