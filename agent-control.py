@@ -52,7 +52,7 @@ class AgentControl():
 
         logging.info("Attempting to allocate a node from pool %s", pool)
 
-        tries = 30
+        tries = 60
         for _try in range(1, tries):
             result = self._client.request_session([payload])
             if isinstance(result, DuffyAPIErrorModel):
