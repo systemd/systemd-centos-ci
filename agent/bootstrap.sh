@@ -182,6 +182,7 @@ fi
     ninja-build -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
+# shellcheck disable=SC2119
 coredumpctl_set_ts
 
 # Install the compiled systemd
