@@ -53,5 +53,5 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # Run both jobs, since we don't run the other-half-of-this-job in cron in this case
-./agent-control.py --version 8-stream --bootstrap-args='-s' --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
-./agent-control.py --version 8-stream --bootstrap-args='-s' --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --bootstrap-args='-s' --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --bootstrap-args='-s' --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}

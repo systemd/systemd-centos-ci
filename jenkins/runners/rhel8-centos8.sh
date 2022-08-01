@@ -40,7 +40,7 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # RHEL 8 job with legacy cgroup hierarchy
-./agent-control.py --no-index --version 8-stream \
+./agent-control.py --no-index --pool metal-seamicro-large-centos-8s-x86_64 \
                    --bootstrap-script="bootstrap-rhel8.sh" \
                    --bootstrap-args="-h legacy" \
                    --testsuite-script="testsuite-rhel8.sh" \
@@ -50,7 +50,7 @@ cd systemd-centos-ci
 # RHEL 8.1 branches
 if [[ "$TARGET_BRANCH" != "rhel-8.0.0" && "$TARGET_BRANCH" != "rhel-8.1.0" ]]; then
     # RHEL 8 job with unified cgroup hierarchy
-    ./agent-control.py --no-index --version 8-stream \
+    ./agent-control.py --no-index --pool metal-seamicro-large-centos-8s-x86_64 \
                        --bootstrap-script="bootstrap-rhel8.sh" \
                        --bootstrap-args="-h unified" \
                        --testsuite-script="testsuite-rhel8.sh" \
