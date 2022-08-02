@@ -52,7 +52,7 @@ run_coverage() {
 
 run_ppc64le_sanitizers() {
     # Run the integration test suite on C8S ppc64le with sanitizers
-    ./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --arch ppc64le --flavor medium --skip-reboot --no-index \
+    ./agent-control.py --pool virt-one-medium-centos-8s-ppc64le --skip-reboot --no-index \
                        --bootstrap-script="bootstrap-alt.sh" --testsuite-script="testsuite-alt.sh" \
                        ${ARGS:+"${ARGS[@]}"}
 }
