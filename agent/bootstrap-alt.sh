@@ -143,7 +143,7 @@ if setenforce 0; then
 fi
 
 # Disable firewalld (needed for systemd-networkd tests)
-systemctl disable firewalld
+systemctl -q is-enabled firewalld && systemctl disable firewalld
 
 # Unlike gcc's ASan, clang's ASan DSO is in a non-standard path, thus any binary
 # compiled with -shared-libasan using clang will fail to start. Let's add the
