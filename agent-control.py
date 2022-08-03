@@ -385,7 +385,7 @@ def main():
         logging.info("Ignoring received signal...")
 
     except Exception:
-        if args.kdump_collect:
+        if node and args.kdump_collect:
             logging.info("Trying to collect kernel dumps from %s:/var/crash", node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
             time.sleep(10)
