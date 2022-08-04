@@ -99,7 +99,7 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd with the dm-crypt modules and without the multipath module
-dracut -a crypt -o multipath --rebuild "$INITRD"
+dracut -a crypt -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"

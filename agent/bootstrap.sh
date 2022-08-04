@@ -198,7 +198,7 @@ ninja-build -C build install
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
+    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
