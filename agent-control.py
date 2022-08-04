@@ -256,7 +256,7 @@ class AgentControl():
 class SignalException(Exception):
     pass
 
-def handle_signal(signum, frame):
+def handle_signal(signum, _frame):
     """Signal handler"""
     print(f"handle_signal: got signal {signum}")
     raise SignalException()
