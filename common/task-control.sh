@@ -30,6 +30,11 @@ if NPROC=$(nproc); then
         # We have enough CPUs for only one concurrent task
         OPTIMAL_QEMU_SMP=$NPROC
         MAX_QUEUE_SIZE=1
+    elif [[ $MAX_QUEUE_SIZE -gt 4 ]]; then
+        # Cap the max # of parallel jobs, otherwise we start hitting I/O limits
+        # causing unexpected test fails
+        MAX_QUEUE_SIZE=4
+        OPTIMAL_QEMU_SMP=$((NPROC / MAX_QUEUE_SIZE))
     fi
 else
     # Using nproc failed, let's fall back to defaults, which can be overridden
