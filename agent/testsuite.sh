@@ -34,6 +34,8 @@ if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     exit 1
 fi
 
+centos_ensure_qemu_symlink
+
 set +e
 
 ### TEST PHASE ###
@@ -83,9 +85,6 @@ SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
     "${FLAKE_LIST[@]}"
 )
-
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
