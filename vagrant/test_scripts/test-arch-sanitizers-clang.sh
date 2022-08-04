@@ -130,7 +130,8 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
-        test/TEST-29-PORTABLE       # systemd-portabled
+        # Skip TEST-29 until systemd/systemd#24147 is resolved
+        #test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
         test/TEST-45-TIMEDATE       # systemd-timedated
         test/TEST-46-HOMED          # systemd-homed
