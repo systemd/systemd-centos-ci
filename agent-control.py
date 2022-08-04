@@ -251,7 +251,8 @@ class AgentControl():
 
         logging.info("Uploading file %s to node %s as %s", local_source, node, remote_target)
 
-        return self.execute_local_command(command)
+        if self.execute_local_command(command) != 0:
+            raise Exception(f"Failed to upload file {local_source} to {node}")
 
 class SignalException(Exception):
     pass
