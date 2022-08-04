@@ -52,9 +52,9 @@ class AgentControl():
 
         logging.info("Attempting to allocate a node from pool %s", pool)
 
-        # Wait up to an 1 hour with a try every 5 seconds
+        # Wait up to an 2 hours with a try every 5 seconds
         wait_delay = 5
-        tries = int(3600 / wait_delay)
+        tries = int(7200 / wait_delay)
         for _try in range(1, tries):
             result = self._client.request_session([payload])
             if isinstance(result, DuffyAPIErrorModel):
