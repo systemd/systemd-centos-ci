@@ -1,5 +1,5 @@
 #!/bin/env python3.8
-# pylint: disable=line-too-long,invalid-name,too-many-branches,too-many-statements,too-many-arguments
+# pylint: disable=line-too-long,invalid-name,too-many-branches,too-many-statements,too-many-arguments,too-many-instance-attributes
 # pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
 import argparse
@@ -305,6 +305,7 @@ def main():
     node = None
     rc = 0
 
+    # pylint: disable=W0703
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
         signal.signal(signal.SIGTERM, handle_signal)
