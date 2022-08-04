@@ -54,7 +54,7 @@ class AgentControl():
 
         # Wait up to an 1 hour with a try every 5 seconds
         wait_delay = 5
-        tries = 3600 / wait_delay
+        tries = int(3600 / wait_delay)
         for _try in range(1, tries):
             result = self._client.request_session([payload])
             if isinstance(result, DuffyAPIErrorModel):
