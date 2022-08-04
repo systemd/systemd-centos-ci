@@ -228,68 +228,18 @@ ninja-build -C build install
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-# The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
-# However, the ext4 module is not included in initramfs by default, because
-# CentOS uses xfs as the default filesystem
-dracut -f --regenerate-all --filesystems ext4
-
-# Check if the new dracut image contains the systemd module to avoid issues
-# like systemd/systemd#11330
-if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
-    echo >&2 "Missing systemd module in the initramfs image, can't continue..."
-    lsinitrd "/boot/initramfs-$(uname -r).img"
-    exit 1
-fi
-
-GRUBBY_ARGS=(
-    # Needed for systemd-nspawn -U
-    "user_namespace.enable=1"
-    # As the RTC on CentOS CI machines is notoriously incorrect, let's override
-    # it early in the boot process to properly execute units using
-    # ConditionNeedsUpdate=
-    # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
-    # Update: if the original time difference is too big, the mtime of
-    # /etc/.updated is already too far in the future, so it doesn't matter if
-    # we correct the time during the next boot, since it's still going to be
-    # in the past. Let's just explicitly override all ConditionNeedsUpdate=
-    # directives to true to fix this once and for all
-    "systemd.condition-needs-update=1"
-    # Also, store & reuse the current (and corrected) time & date, as it doesn't
-    # persist across reboots without this kludge and can (actually it does)
-    # interfere with running tests
-    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
-    # Reboot the machine on kernel panic
-    "panic=3"
-)
-# Make sure the latest kernel is the one we're going to boot into
-grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
-grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
-# Check if the $GRUBBY_ARGS were applied correctly
-for arg in "${GRUBBY_ARGS[@]}"; do
-    if ! grep -q -r "$arg" /boot/loader/entries/; then
-        echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
-        exit 1
-    fi
-done
-
 # coredumpctl_collect takes an optional argument, which upsets shellcheck
 # shellcheck disable=SC2119
 coredumpctl_collect
 
-# Configure kdump
-kdumpctl status || kdumpctl restart
-kdumpctl showmem
-kdumpctl rebuild
+echo "user.max_user_namespaces=10000" >>/etc/sysctl.conf
+sysctl -p /etc/sysctl.conf
 
-# Let's leave this here for a while for debugging purposes
-echo "Current date:         $(date)"
-echo "RTC:                  $(hwclock --show)"
-echo "/usr mtime:           $(date -r /usr)"
-echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
-
-echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
-
-echo "-----------------------------"
-echo "- REBOOT THE MACHINE BEFORE -"
-echo "-         CONTINUING        -"
-echo "-----------------------------"
+# Since we can't reboot the machine (implying this job runs on the EC2 metal)
+# let's do some shenanigans to make certain tests work
+# Create any newly introduced groups/users
+systemd-sysusers
+# Create any missing systemd service symlinks
+systemctl preset-all
+# Reload D-Bus rules
+systemctl reload dbus
