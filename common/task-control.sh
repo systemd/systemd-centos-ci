@@ -273,6 +273,7 @@ exectask_p_finish() {
     echo "[INFO] Waiting for remaining running parallel tasks"
 
     for key in "${!TASK_QUEUE[@]}"; do
+        echo "[INFO] Waiting for task '$key' to finish..."
         wait ${TASK_QUEUE[$key]}
         ec=$?
         logfile="$LOGDIR/$key.log"
