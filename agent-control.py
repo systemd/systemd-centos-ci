@@ -52,13 +52,16 @@ class AgentControl():
 
         logging.info("Attempting to allocate a node from pool %s", pool)
 
-        tries = 60
+        # Wait up to an 1 hour with a try every 5 seconds
+        wait_delay = 5
+        tries = 3600 / wait_delay
         for _try in range(1, tries):
             result = self._client.request_session([payload])
             if isinstance(result, DuffyAPIErrorModel):
-                logging.error("Received an API error from the server: %s", result.error)
-                logging.info("Retrying in 120 sec [try %d/%d]", _try, tries)
-                time.sleep(120)
+                # Print the error only every minute to not unnecessarily spam the console
+                if tries % 12 == 0:
+                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, result.error)
+                time.sleep(wait_delay)
             else:
                 break
 
