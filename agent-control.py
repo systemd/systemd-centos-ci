@@ -243,7 +243,7 @@ class AgentControl():
             "-o UserKnownHostsFile=/dev/null",
             "-o StrictHostKeyChecking=no",
             local_source,
-            "root@{node}:{remote_target}"
+            f"root@{node}:{remote_target}"
         ]
 
         logging.info("Uploading file %s to node %s as %s", local_source, node, remote_target)
