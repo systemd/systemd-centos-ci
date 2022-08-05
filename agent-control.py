@@ -57,15 +57,21 @@ class AgentControl():
         wait_delay = 5
         tries = int(7200 / wait_delay)
         for _try in range(1, tries):
+            error = None
+
             try:
                 result = self._client.request_session([payload])
-            except HTTPStatusError:
-                result = None
+            except HTTPStatusError as e:
+                error = f"Error response {e.response.status_code} while requesting {e.request.url!r}."
 
-            if result is None or isinstance(result, DuffyAPIErrorModel):
+            if isinstance(result, DuffyAPIErrorModel):
+                error = result.error
+
+            if error:
                 # Print the error only every minute to not unnecessarily spam the console
                 if _try % 12 == 0:
-                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, result.error if result else "http error")
+                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, error)
+
                 time.sleep(wait_delay)
             else:
                 break
