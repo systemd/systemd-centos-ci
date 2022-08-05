@@ -106,9 +106,8 @@ class AgentControl():
 
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
         proc.communicate()
-        proc.wait()
 
-        return proc.returncode
+        return proc.wait()
 
     def execute_remote_command(self, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
         """Execute a command on a remote host
