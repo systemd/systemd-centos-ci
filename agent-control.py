@@ -65,7 +65,7 @@ class AgentControl():
             if result is None or isinstance(result, DuffyAPIErrorModel):
                 # Print the error only every minute to not unnecessarily spam the console
                 if _try % 12 == 0:
-                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, result.error)
+                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, result.error if result else "http error")
                 time.sleep(wait_delay)
             else:
                 break
