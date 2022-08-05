@@ -104,6 +104,7 @@ class AgentControl():
 
         logging.info("Executing a LOCAL command: %s", " ".join(command))
 
+        # pylint: disable=R1732
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
         proc.communicate()
 
@@ -359,11 +360,10 @@ def main():
         if args.vagrant_sync:
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
-            key_file = tempfile.NamedTemporaryFile(mode="w")
-            key_file.write(ac.duffy_key)
-            key_file.flush()
-            ac.upload_file(key_file.name, "/duffy.key")
-            key_file.close()
+            with tempfile.NamedTemporaryFile(mode="w") as key_file:
+                key_file.write(ac.duffy_key)
+                key_file.flush()
+                ac.upload_file(key_file.name, "/duffy.key")
 
             command = f"{GITHUB_CI_REPO}/vagrant/vagrant-make-cache.sh '{args.vagrant_sync}'"
             ac.execute_remote_command(command)
@@ -371,11 +371,10 @@ def main():
             # If the Coveralls token is set, upload it to the node, so it can
             # be consumed by relevant tools
             if ac.coveralls_token:
-                token_file = tempfile.NamedTemporaryFile(mode="w")
-                token_file.write(ac.coveralls_token)
-                token_file.flush()
-                ac.upload_file(token_file.name, "/.coveralls.token")
-                token_file.close()
+                with tempfile.NamedTemporaryFile(mode="w") as token_file:
+                    token_file.write(ac.coveralls_token)
+                    token_file.flush()
+                    ac.upload_file(token_file.name, "/.coveralls.token")
 
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
