@@ -44,7 +44,11 @@ class AgentControl():
         if not self.keep_node:
             self.free_session()
         else:
-            logging.info("Not returning the node %s back to the pool", self._node_hostname)
+            logging.info("Not returning the node %s back to the pool", self.node)
+
+    @property
+    def node(self):
+        return self._node_hostname
 
     def allocate_node(self, pool):
         result = None
@@ -80,9 +84,8 @@ class AgentControl():
 
         self._session_id = result.session.id
         self._node_hostname = result.session.nodes[0].hostname
-        logging.info("Allocated node %s with session id %s", self._node_hostname, self._session_id)
-
-        return self._node_hostname
+        assert self.node, "Can't continue without a valid node"
+        logging.info("Allocated node %s with session id %s", self.node, self._session_id)
 
     def execute_local_command(self, command):
         """Execute a command on the local machine
@@ -97,15 +100,17 @@ class AgentControl():
         --------
         Exit code of the command
         """
+        assert self.node, "Can't continue without a valid node"
+
         logging.info("Executing a LOCAL command: %s", " ".join(command))
 
+        # pylint: disable=R1732
         proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False, bufsize=1)
         proc.communicate()
-        proc.wait()
 
-        return proc.returncode
+        return proc.wait()
 
-    def execute_remote_command(self, node, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
+    def execute_remote_command(self, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
         """Execute a command on a remote host
 
         Technically the function wraps the command in an ssh command and executes
@@ -113,8 +118,6 @@ class AgentControl():
 
         Params:
         -------
-        node : str
-            Hostname of the node
         command : str
             Command to execute on the remote host
         expected_rc : int (default: 0)
@@ -136,6 +139,8 @@ class AgentControl():
         -------
         An exception if the `ignore_rc` is False and the return code != `expected_rc`
         """
+        assert self.node, "Can't continue without a valid node"
+
         command_wrapper = [
             "/usr/bin/ssh", "-t",
             "-o", "UserKnownHostsFile=/dev/null",
@@ -144,30 +149,28 @@ class AgentControl():
             "-o", "TCPKeepAlive=yes",
             "-o", "ServerAliveInterval=2",
             "-l", "root",
-            node, command
+            self.node, command
         ]
 
-        logging.info("Executing a REMOTE command on node '%s': %s", node, command)
+        logging.info("Executing a REMOTE command on node '%s': %s", self.node, command)
         rc = self.execute_local_command(command_wrapper)
 
         # Fetch artifacts if both remote and local dirs are set
         if artifacts_dir is not None and self.artifacts_storage is not None:
-            arc = self.fetch_artifacts(node, artifacts_dir, self.artifacts_storage)
+            arc = self.fetch_artifacts(artifacts_dir, self.artifacts_storage)
             if arc != 0:
                 logging.warning("Fetching artifacts failed")
 
         if not ignore_rc and rc != expected_rc:
-            raise Exception("Remote command exited with an unexpected return code "
-                            f"(got: {rc}, expected: {expected_rc}), bailing out")
+            raise RuntimeError("Remote command exited with an unexpected return code "
+                               f"(got: {rc}, expected: {expected_rc}), bailing out")
         return rc
 
-    def fetch_artifacts(self, node, remote_dir, local_dir):
+    def fetch_artifacts(self, remote_dir, local_dir):
         """Fetch artifacts from remote host to a local directory
 
         Params:
         -------
-        node : str
-            Hostname of the node
         remote_dir : str
             Path of a remote (source) directory
         local_dir : str
@@ -177,16 +180,18 @@ class AgentControl():
         --------
         Return code of the underlying `scp` command
         """
+        assert self.node, "Can't continue without a valid node"
+
         command = [
             "/usr/bin/scp", "-r",
             "-o UserKnownHostsFile=/dev/null",
             "-o StrictHostKeyChecking=no",
-            f"root@{node}:{remote_dir}",
+            f"root@{self.node}:{remote_dir}",
             local_dir
         ]
 
         logging.info("Fetching artifacts from node %s: (remote: %s, local: %s)",
-                     node, remote_dir, local_dir)
+                     self.node, remote_dir, local_dir)
 
         return self.execute_local_command(command)
 
@@ -194,40 +199,38 @@ class AgentControl():
         if not self._session_id:
             return
 
-        logging.info("Freeing session %s (with node %s)", self._session_id, self._node_hostname)
+        logging.info("Freeing session %s (with node %s)", self._session_id, self.node)
         self._client.retire_session(self._session_id)
         # TODO: error handling?
         self._session_id = None
 
-    def reboot_node(self, node):
-        """Reboot a node
-
-        Params:
-        -------
-        node : str
-            Hostname of the node
+    def reboot_node(self):
+        """Reboot the node
 
         Throws:
         -------
         An exception if the waiting timeout is reached
         """
-        logging.info("Rebooting node %s", node)
+        assert self.node, "Can't continue without a valid node"
+
+        logging.info("Rebooting node %s", self.node)
         self.execute_remote_command(
-                node,
                 "systemd-analyze set-log-level debug; systemd-analyze set-log-target console; systemctl reboot",
                 255,
                 ignore_rc=True)
         time.sleep(30)
 
-        self.wait_for_node(node, 10)
+        self.wait_for_node(10)
 
         # Give the node time to finish the booting process
         time.sleep(30)
 
-    def wait_for_node(self, node, attempts):
-        ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", node]
+    def wait_for_node(self, attempts):
+        assert self.node, "Can't continue without a valid node"
+
+        ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", self.node]
         for i in range(attempts):
-            logging.info("Checking if the node %s is alive (try #%d)", node, i)
+            logging.info("Checking if the node %s is alive (try #%d)", self.node, i)
             rc = self.execute_local_command(ping_command)
             if rc == 0:
                 break
@@ -236,15 +239,13 @@ class AgentControl():
         if rc != 0:
             raise Exception("Timeout reached when waiting for node to become online")
 
-        logging.info("Node %s appears reachable again", node)
+        logging.info("Node %s appears reachable again", self.node)
 
-    def upload_file(self, node, local_source, remote_target):
+    def upload_file(self, local_source, remote_target):
         """Upload a file (or a directory) to a remote host
 
         Params:
         -------
-        node : str
-            Hostname of the node
         local_source : str
             Path of a local (local) directory
         remote_target : str
@@ -254,18 +255,20 @@ class AgentControl():
         --------
         Return code of the underlying `scp` command
         """
+        assert self.node, "Can't continue without a valid node"
+
         command = [
             "/usr/bin/scp", "-r",
             "-o UserKnownHostsFile=/dev/null",
             "-o StrictHostKeyChecking=no",
             local_source,
-            f"root@{node}:{remote_target}"
+            f"root@{self.node}:{remote_target}"
         ]
 
-        logging.info("Uploading file %s to node %s as %s", local_source, node, remote_target)
+        logging.info("Uploading file %s to node %s as %s", local_source, self.node, remote_target)
 
         if self.execute_local_command(command) != 0:
-            raise Exception(f"Failed to upload file {local_source} to {node}")
+            raise RuntimeError(f"Failed to upload file {local_source} to {self.node}")
 
 class SignalException(Exception):
     pass
@@ -316,7 +319,6 @@ def main():
     ac.keep_node = args.keep
 
     artifacts_dir = None
-    node = None
     rc = 0
 
     # pylint: disable=W0703
@@ -325,11 +327,7 @@ def main():
         signal.signal(signal.SIGTERM, handle_signal)
         signal.signal(signal.SIGHUP, handle_signal)
 
-        node = ac.allocate_node(args.pool)
-
-        if node is None:
-            logging.critical("Can't continue without a valid node")
-            return 1
+        ac.allocate_node(args.pool)
 
         # Figure out a systemd branch to compile
         if args.pr:
@@ -352,50 +350,48 @@ def main():
         # Actual testing process
         logging.info("PHASE 1: Setting up basic dependencies to configure CI repository")
         command = f"{dep_cmd} && rm -fr {GITHUB_CI_REPO} && git clone {GITHUB_BASE}{GITHUB_CI_REPO}"
-        ac.execute_remote_command(node, command)
+        ac.execute_remote_command(command)
 
         if args.ci_pr:
             logging.info("PHASE 1.5: Using a custom CI repository ref (PR#%s)", args.ci_pr)
             command = f"cd {GITHUB_CI_REPO} && git fetch -fu origin 'refs/pull/{args.ci_pr}/merge:pr' && git checkout pr"
-            ac.execute_remote_command(node, command)
+            ac.execute_remote_command(command)
 
         if args.vagrant_sync:
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
             # We need the Duffy key to be able to upload to the CentOS CI artifact server
-            key_file = tempfile.NamedTemporaryFile(mode="w")
-            key_file.write(ac.duffy_key)
-            key_file.flush()
-            ac.upload_file(node, key_file.name, "/duffy.key")
-            key_file.close()
+            with tempfile.NamedTemporaryFile(mode="w") as key_file:
+                key_file.write(ac.duffy_key)
+                key_file.flush()
+                ac.upload_file(key_file.name, "/duffy.key")
 
             command = f"{GITHUB_CI_REPO}/vagrant/vagrant-make-cache.sh '{args.vagrant_sync}'"
-            ac.execute_remote_command(node, command)
+            ac.execute_remote_command(command)
         elif args.vagrant:
             # If the Coveralls token is set, upload it to the node, so it can
             # be consumed by relevant tools
             if ac.coveralls_token:
-                token_file = tempfile.NamedTemporaryFile(mode="w")
-                token_file.write(ac.coveralls_token)
-                token_file.flush()
-                ac.upload_file(node, token_file.name, "/.coveralls.token")
-                token_file.close()
+                with tempfile.NamedTemporaryFile(mode="w") as token_file:
+                    token_file.write(ac.coveralls_token)
+                    token_file.flush()
+                    ac.upload_file(token_file.name, "/.coveralls.token")
 
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
             command = f"{GITHUB_CI_REPO}/vagrant/vagrant-ci-wrapper.sh -d '{args.vagrant}' -r '{remote_ref}' {args.bootstrap_args}"
-            ac.execute_remote_command(node, command, artifacts_dir="~/vagrant-logs*")
+            ac.execute_remote_command(command, artifacts_dir="~/vagrant-logs*")
         else:
             # Run tests directly on the provisioned machine
             logging.info("PHASE 2: Bootstrap (ref: %s)", remote_ref)
             command = f"{GITHUB_CI_REPO}/agent/{args.bootstrap_script} -r '{remote_ref}' {args.bootstrap_args}"
-            ac.execute_remote_command(node, command, artifacts_dir="~/bootstrap-logs*")
+            ac.execute_remote_command(command, artifacts_dir="~/bootstrap-logs*")
 
             if not args.skip_reboot:
-                ac.reboot_node(node)
+                ac.reboot_node()
 
             logging.info("PHASE 3: Upstream testsuite")
             command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script}"
-            ac.execute_remote_command(node, command, artifacts_dir="~/testsuite-logs*")
+            ac.execute_remote_command(command, artifacts_dir="~/testsuite-logs*")
 
     except SignalException:
         # Do a proper cleanup on certain signals
@@ -403,16 +399,16 @@ def main():
         logging.info("Ignoring received signal...")
 
     except Exception:
-        if node and args.kdump_collect:
-            logging.info("Trying to collect kernel dumps from %s:/var/crash", node)
+        if ac.node and args.kdump_collect:
+            logging.info("Trying to collect kernel dumps from %s:/var/crash", ac.node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
             time.sleep(10)
 
             try:
-                ac.wait_for_node(node, 10)
+                ac.wait_for_node(10)
 
-                if ac.fetch_artifacts(node, "/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
-                    logging.warning("Failed to collect kernel dumps from %s", node)
+                if ac.fetch_artifacts("/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
+                    logging.warning("Failed to collect kernel dumps from %s", ac.node)
             except Exception:
                 # Fetching the kdumps is a best-effort thing, there's not much
                 # we can do if the machine is FUBAR
