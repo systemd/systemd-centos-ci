@@ -13,6 +13,7 @@ import time
 
 from duffy.client import DuffyClient
 from duffy.client.main import DuffyAPIErrorModel
+from httpx import HTTPStatusError
 
 API_BASE = "https://duffy.ci.centos.org/api/v1"
 GITHUB_BASE = "https://github.com/systemd/"
@@ -56,8 +57,12 @@ class AgentControl():
         wait_delay = 5
         tries = int(7200 / wait_delay)
         for _try in range(1, tries):
-            result = self._client.request_session([payload])
-            if isinstance(result, DuffyAPIErrorModel):
+            try:
+                result = self._client.request_session([payload])
+            except HTTPStatusError:
+                result = None
+
+            if result is None or isinstance(result, DuffyAPIErrorModel):
                 # Print the error only every minute to not unnecessarily spam the console
                 if _try % 12 == 0:
                     logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, result.error)
