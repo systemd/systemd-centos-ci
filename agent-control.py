@@ -43,6 +43,8 @@ class AgentControl():
         # Deallocate the allocated node on script exit, if not requested otherwise
         if not self.keep_node:
             self.free_session()
+        else:
+            logging.info("Not returning the node %s back to the pool", self._node_hostname)
 
     def allocate_node(self, pool):
         result = None
