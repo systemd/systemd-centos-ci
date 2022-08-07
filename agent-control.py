@@ -439,7 +439,6 @@ def main():
             command = ["utils/generate-index.sh", artifacts_dir, "index.html"]
             ac.execute_local_command(command)
 
-
     return rc
 
 if __name__ == "__main__":
