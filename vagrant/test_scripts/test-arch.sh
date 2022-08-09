@@ -29,6 +29,10 @@ fi
 # Disable swap, since it seems to cause CPU soft lock-ups in some cases
 swapoff -av
 
+# Mount /var/tmp as tmpfs, since we should have enough memory to run all integration
+# tests in-memory
+mount -v -t tmpfs tmpfs /var/tmp
+
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## FIXME: systemd-networkd testsuite: skip test_macsec
