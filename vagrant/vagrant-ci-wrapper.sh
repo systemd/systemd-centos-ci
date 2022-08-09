@@ -91,7 +91,7 @@ sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 "$SCRIPT_ROOT/vagrant-setup.sh"
 
 # Disable firewalld to avoid issues with NFS
-systemctl stop firewalld
+systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 systemctl restart libvirtd
 
 "$SCRIPT_ROOT/vagrant-build.sh" "$DISTRO" 2>&1 | tee "$LOGDIR/console-$DISTRO.log"

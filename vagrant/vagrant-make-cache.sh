@@ -33,7 +33,7 @@ sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 "$VAGRANT_ROOT"/vagrant-setup.sh
 
 # Stop firewalld
-systemctl stop firewalld
+systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 systemctl restart libvirtd
 
 TEMP_DIR="$(mktemp -d vagrant-cache-XXXXX)"

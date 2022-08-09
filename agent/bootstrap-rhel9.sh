@@ -120,7 +120,7 @@ if setenforce 0; then
 fi
 
 # Disable firewalld (needed for systemd-networkd tests)
-systemctl disable firewalld
+systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then
