@@ -24,7 +24,7 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --version --pool metal-seamicro-large-centos-9s-x86_64 \
+./agent-control.py --pool metal-seamicro-large-centos-9s-x86_64 \
                    --bootstrap-script="bootstrap-rhel9.sh" \
                    --bootstrap-args="-h unified -z" \
                    --testsuite-script="testsuite-rhel9-sanitizers.sh" \
