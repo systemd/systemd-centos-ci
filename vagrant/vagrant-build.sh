@@ -94,7 +94,7 @@ if [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]]; then
     # same HW, let's manually override the # of CPUs for the VM to 4.
     export VAGRANT_CPUS=4
 else
-    export VAGRANT_CPUS="${VAGRANT_CPUS:-8}"
+    export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 fi
 export VAGRANT_BOOTSTRAP_SCRIPT="$BOOTSTRAP_SCRIPT"
 
