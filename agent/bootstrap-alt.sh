@@ -93,6 +93,7 @@ ADDITIONAL_DEPS=(
     squashfs-tools
     strace
     systemd-networkd # EPEL
+    systemd-timesyncd # EPEL
     swtpm
     time
     tpm2-tools
