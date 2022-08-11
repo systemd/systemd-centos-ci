@@ -341,6 +341,9 @@ def main():
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
         ac.artifacts_storage = artifacts_dir
 
+        logging.info("Wait until the machine is fully initialized")
+        ac.execute_remote_command("systemd-run --wait -p Wants=cloud-init.target -p After=cloud-init.target true")
+
         # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
         pkg_man = "yum" if "centos-7-" in args.pool else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
