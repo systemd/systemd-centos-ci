@@ -86,7 +86,7 @@ fi
 # Vagrantfile)
 export SYSTEMD_ROOT="${SYSTEMD_ROOT:-$HOME/systemd}"
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
-export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
+export VAGRANT_MEMORY="${VAGRANT_MEMORY:-184320}"
 if [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]]; then
     # All dusty machines have Intel Xeon CPUs with 4 cores and HT enabled,
     # which causes issues when the HT cores are counted as "real" ones, namely

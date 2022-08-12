@@ -341,6 +341,13 @@ def main():
         artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
         ac.artifacts_storage = artifacts_dir
 
+        # Note: re-execute the user session, as the package update triggered by cloud-init
+        # might have pulled a newer systemd package with some incompatible changes
+        # for the user sessions.
+        # See: https://pagure.io/centos-infra/issue/865#comment-810347
+        logging.info("Wait until the machine is fully initialized")
+        ac.execute_remote_command("systemd-run --user --wait -t -p Wants=cloud-init.target -p After=cloud-init.target systemctl --user daemon-reexec")
+
         # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
         pkg_man = "yum" if "centos-7-" in args.pool else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
