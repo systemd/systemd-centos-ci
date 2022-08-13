@@ -41,13 +41,13 @@ cd systemd-centos-ci
 run_remaining_sanitizer_job() {
     # Run the "leftover" ASan/UBSan job (i.e. the one which is not run by
     # the `upstream-vagrant-archlinux-sanitizers` job for each PR)
-    ./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
-    #./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
+    #./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
 }
 
 run_coverage() {
     # Collect test coverage & upload it to Coveralls
-    ./agent-control.py --pool metal-seamicro-large-centos-8s-x86_64 --no-index --vagrant arch-coverage ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-coverage ${ARGS:+"${ARGS[@]}"}
 }
 
 run_ppc64le_sanitizers() {
