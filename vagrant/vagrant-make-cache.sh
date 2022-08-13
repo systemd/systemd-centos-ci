@@ -32,6 +32,8 @@ sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 # Install vagrant if not already installed
 "$VAGRANT_ROOT"/vagrant-setup.sh
 
+dnf install -y https://koji.mbox.centos.org/pkgs/packages/rsync/3.1.3/14.el8/x86_64/rsync-3.1.3-14.el8.x86_64.rpm
+
 # Stop firewalld
 systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 systemctl restart libvirtd
