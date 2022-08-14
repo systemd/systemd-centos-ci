@@ -68,10 +68,10 @@ waitforpid() {
 
     echo "Waiting for PID $pid to finish"
     while kill -0 "$pid" 2>/dev/null; do
-        if ((SECONDS % 10 == 0)); then
+        if ((SECONDS % 100 == 0)); then
             echo -n "."
         fi
-        sleep 1
+        sleep .1
     done
 
     wait "$pid"
