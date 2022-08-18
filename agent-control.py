@@ -147,7 +147,7 @@ class AgentControl():
             "-o", "StrictHostKeyChecking=no",
             "-o", "ConnectTimeout=180",
             "-o", "TCPKeepAlive=yes",
-            "-o", "ServerAliveInterval=2",
+            "-o", "ServerAliveInterval=30",
             "-l", "root",
             self.node, command
         ]

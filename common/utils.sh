@@ -171,6 +171,23 @@ git_checkout_pr() {
     git log -1
 }
 
+centos_ensure_qemu_symlink() {
+    local source="/usr/libexec/qemu-kvm"
+    local target
+
+    if [[ ! -x "$source" ]]; then
+        _err "Missing /usr/libexec/qemu-kvm binary, can't continue"
+        return 1
+    fi
+
+    systemd-detect-virt -q && target=/bin/qemu-system-x86_64 || target=/bin/qemu-kvm
+    if [[ ! -x "${target:?}" ]]; then
+        ln -svf "${source:?}" "${target:?}"
+    fi
+
+    "$target" --version
+}
+
 # Check input from stdin for sanitizer errors/warnings
 # Takes no arguments, reads input directly from stdin to allow piping, like:
 #   journalctl -b | check_for_sanitizer_errors
