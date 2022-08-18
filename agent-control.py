@@ -205,6 +205,7 @@ class AgentControl():
         self._client.retire_session(self._session_id)
         # TODO: error handling?
         self._session_id = None
+        self._node_hostname = None
 
     def reboot_node(self):
         """Reboot the node
