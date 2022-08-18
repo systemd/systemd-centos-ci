@@ -13,7 +13,7 @@ import time
 
 from duffy.client import DuffyClient
 from duffy.client.main import DuffyAPIErrorModel
-from httpx import HTTPStatusError
+from httpx import HTTPStatusError, TimeoutException
 
 API_BASE = "https://duffy.ci.centos.org/api/v1"
 GITHUB_BASE = "https://github.com/systemd/"
@@ -69,6 +69,8 @@ class AgentControl():
                 result = self._client.request_session([payload])
             except HTTPStatusError as e:
                 error = f"Error response {e.response.status_code} while requesting {e.request.url!r}."
+            except TimeoutException:
+                error = f"Timeout while requesting {e.request.url!r}"
 
             if isinstance(result, DuffyAPIErrorModel):
                 error = result.error
