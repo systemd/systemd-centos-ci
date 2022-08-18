@@ -102,8 +102,6 @@ class AgentControl():
         --------
         Exit code of the command
         """
-        assert self.node, "Can't continue without a valid node"
-
         logging.info("Executing a LOCAL command: %s", " ".join(command))
 
         # pylint: disable=R1732
@@ -182,6 +180,8 @@ class AgentControl():
         --------
         Return code of the underlying `scp` command
         """
+        assert self.node, "Can't continue without a valid node"
+
         command = [
             "/usr/bin/scp", "-r",
             "-o UserKnownHostsFile=/dev/null",
