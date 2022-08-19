@@ -200,8 +200,19 @@ class AgentControl():
             return
 
         logging.info("Freeing session %s (with node %s)", self._session_id, self.node)
-        self._client.retire_session(self._session_id)
-        # TODO: error handling?
+        # Try a bit harder when retiring the session, since the API might return an error
+        # when attempting to do so, leaving orphaned sessions laying around taking
+        # precious resources
+        for _ in range(10):
+            # pylint: disable=W0703
+            try:
+                self._client.retire_session(self._session_id)
+                break
+            except Exception:
+                logging.debug("Got an exception when trying to free a session, ignoring...", exc_info=True)
+
+            time.sleep(2)
+
         self._session_id = None
         self._node_hostname = None
 
