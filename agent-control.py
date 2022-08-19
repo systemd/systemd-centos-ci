@@ -69,7 +69,7 @@ class AgentControl():
                 result = self._client.request_session([payload])
             except HTTPStatusError as e:
                 error = f"Error response {e.response.status_code} while requesting {e.request.url!r}."
-            except TimeoutException:
+            except TimeoutException as e:
                 error = f"Timeout while requesting {e.request.url!r}"
 
             if isinstance(result, DuffyAPIErrorModel):
