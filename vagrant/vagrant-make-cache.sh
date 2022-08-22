@@ -39,9 +39,6 @@ systemctl restart libvirtd
 TEMP_DIR="$(mktemp -d vagrant-cache-XXXXX)"
 pushd "$TEMP_DIR" || { echo >&2 "Can't pushd to $TEMP_DIR"; exit 1; }
 
-wget --no-check-certificate https://koji.mbox.centos.org/pkgs/packages/rsync/3.1.3/17.el8/x86_64/rsync-3.1.3-17.el8.x86_64.rpm
-dnf -y install ./rsync-3.1.3-17.el8.x86_64.rpm
-
 # The URL for Fedora Rawhide Vagrant box changes over time, so let's attempt
 # to get the latest one
 if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
