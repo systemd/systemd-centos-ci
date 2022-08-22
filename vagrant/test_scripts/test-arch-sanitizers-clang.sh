@@ -70,7 +70,7 @@ export SKIP_INITRD=no
 export TEST_NESTED_KVM=yes
 # Bump the SUT memory to 4G, mainly for dfuzzer
 export QEMU_MEM=4G
-export KERNEL_APPEND="oops=panic kernel.softlockup_panic=1 kernel.softlockup_all_cpu_backtrace=1 panic=1"
+export KERNEL_APPEND="kernel.nmi_watchdog=1 kernel.softlockup_panic=1 kernel.softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
 export QEMU_OPTIONS="-device i6300esb -watchdog-action poweroff"
 
 # Enable systemd-coredump

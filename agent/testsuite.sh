@@ -125,7 +125,7 @@ for t in test/TEST-??-*; do
     fi
 
     ## Configure test environment
-    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 oops=panic softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1"
+    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 oops=panic nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1"
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
     export TEST_PARALLELIZE=1
@@ -164,7 +164,7 @@ for t in "${FLAKE_LIST[@]}"; do
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1"
+    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
