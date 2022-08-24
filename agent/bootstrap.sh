@@ -228,10 +228,7 @@ ninja-build -C build install
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-# The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
-# However, the ext4 module is not included in initramfs by default, because
-# CentOS uses xfs as the default filesystem
-dracut -f --regenerate-all --filesystems ext4
+dracut -f --regenerate-all
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
