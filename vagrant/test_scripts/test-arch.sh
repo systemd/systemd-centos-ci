@@ -116,7 +116,6 @@ for t in test/TEST-??-*; do
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
-    export QEMU_OPTIONS="-device i6300esb -watchdog-action poweroff"
 
     # Disable nested KVM for TEST-13-NSPAWN-SMOKE, which keeps randomly
     # failing due to time outs caused by CPU soft locks. Also, bump the
