@@ -118,6 +118,15 @@ for t in test/TEST-??-*; do
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
     export QEMU_OPTIONS="-device i6300esb -watchdog-action poweroff"
 
+    # Disable nested KVM for TEST-13-NSPAWN-SMOKE, which keeps randomly
+    # failing due to time outs caused by CPU soft locks. Also, bump the
+    # QEMU timeout, since the test is a bit slower without KVM.
+    export TEST_NESTED_KVM=1
+    if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
+        unset TEST_NESTED_KVM
+        export QEMU_TIMEOUT=1200
+    fi
+
     # Skipped test don't create the $TESTDIR automatically, so do it explicitly
     # otherwise the `touch` command would fail
     mkdir -p "$TESTDIR"
