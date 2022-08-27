@@ -135,7 +135,7 @@ for t in test/TEST-??-*; do
     # Explicitly enable user namespaces and default SELinux to permissive
     # for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
+    export QEMU_TIMEOUT=1800
     export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
@@ -150,7 +150,7 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
+    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass && rm -fv $TESTDIR/*.img"
     EXECUTED_LIST+=("$t")
 done
 
@@ -165,7 +165,7 @@ for t in "${FLAKE_LIST[@]}"; do
     # Explicitly enable user namespaces
     export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
+    export QEMU_TIMEOUT=1200
     export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
@@ -177,7 +177,7 @@ for t in "${FLAKE_LIST[@]}"; do
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
+    exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass && rm -fv \$TESTDIR/*.img"
 
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
