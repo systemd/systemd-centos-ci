@@ -88,6 +88,17 @@ Vagrant.configure("2") do |config|
     popd
     rm -fr tgt
 
+    # Compile & install netlabel_tools
+    pacman --needed --noconfirm -S autoconf automake gcc libtool make pkg-config
+    git clone https://github.com/netlabel/netlabel_tools netlabel_tools
+    pushd netlabel_tools
+    ./autogen.sh
+    ./configure --prefix=/usr
+    make -j
+    make install
+    popd
+    rm -fr netlabel_tools
+
     # Compile & install dfuzzer
     pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
     git clone https://github.com/dbus-fuzzer/dfuzzer dfuzzer
