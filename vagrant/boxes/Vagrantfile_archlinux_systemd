@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
     # Install build dependencies
     # Package groups: base, base-devel
     pacman --needed --noconfirm -S base base-devel bpf btrfs-progs acl audit bash-completion clang compiler-rt docbook-xsl \
-        ethtool gdm git gnu-efi-libs gperf intltool iptables kexec-tools kmod libcap libelf libfido2 libgcrypt libidn2 \
+        ethtool gdm git gnu-efi-libs gperf intltool iptables kexec-tools kmod libbpf libcap libelf libfido2 libgcrypt libidn2 \
         libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lvm2 lz4 \
         meson multipath-tools ninja p11-kit pam pcre2 python-jinja python-lxml qrencode quota-tools rust tpm2-pkcs11 xz
     # Install test dependencies
@@ -61,16 +61,6 @@ Vagrant.configure("2") do |config|
     systemctl enable gdm.service
     systemctl set-default graphical.target
     systemctl get-default
-
-    # Compile & install libbpf-next
-    pacman --needed --noconfirm -S elfutils libelf
-    git clone https://github.com/libbpf/libbpf libbpf
-    pushd libbpf/src
-    LD_FLAGS="-Wl,--no-as-needed" NO_PKG_CONFIG=1 make
-    make install
-    ldconfig
-    popd
-    rm -fr libbpf
 
     # Compile & install tgt (iSCSI target utils)
     pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
