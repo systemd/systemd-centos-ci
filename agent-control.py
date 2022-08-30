@@ -379,11 +379,13 @@ def main():
 
         if args.vagrant_sync:
             logging.info("PHASE 2: update & rebuild Vagrant images used by systemd CentOS CI")
-            # We need the Duffy key to be able to upload to the CentOS CI artifact server
-            with tempfile.NamedTemporaryFile(mode="w") as key_file:
-                key_file.write(ac.duffy_key)
-                key_file.flush()
-                ac.upload_file(key_file.name, "/duffy.key")
+            # We need the Duffy SSH key to be able to upload to the CentOS CI artifact server
+            if os.path.isfile("/duffy-ssh-key/ssh-privatekey"):
+                ac.upload_file("/duffy-ssh-key/ssh-privatekey", "/root/.ssh/duffy.key")
+            else:
+                ac.upload_file(os.path.expanduser("~/.ssh/id_rsa"), "/root/.ssh/duffy.key")
+
+            ac.execute_remote_command("chmod 0600 /root/.ssh/duffy.key")
 
             command = f"{GITHUB_CI_REPO}/vagrant/vagrant-make-cache.sh '{args.vagrant_sync}'"
             ac.execute_remote_command(command)
