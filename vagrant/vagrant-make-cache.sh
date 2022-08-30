@@ -17,9 +17,14 @@ set -o pipefail
 EC=0
 # CentOS CI specific thing - a part of the duffy key is necessary to
 # authenticate against the CentOS CI rsync server
-DUFFY_KEY_FILE="/duffy.key"
+DUFFY_SSH_KEY="/root/.ssh/duffy.key"
 VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"
 VAGRANT_FILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
+
+if [[ ! -e "$DUFFY_SSH_KEY" ]]; then
+    echo >&2 "Missing Duffy SSH key, can't continue"
+    exit 1
+fi
 
 if [[ ! -f "$VAGRANT_FILE" ]]; then
     echo >&2 "Couldn't find Vagrantfile '$VAGRANT_FILE'"
@@ -130,15 +135,12 @@ vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"
 )
 
 # Upload the box to the CentOS CI artifact storage
-# CentOS CI rsync password is the first 13 characters of the duffy key
-PASSWORD_FILE="$(mktemp .rsync-passwd.XXX)"
-cut -b-13 "$DUFFY_KEY_FILE" > "$PASSWORD_FILE"
 
 # Little workaround to create a proper directory hierarchy on the server
 mkdir vagrant_boxes
 mv "$BOX_NAME" vagrant_boxes
 
-rsync --password-file="$PASSWORD_FILE" -av "vagrant_boxes" systemd@artifacts.ci.centos.org::systemd/
-echo "Box URL: http://artifacts.ci.centos.org/systemd/vagrant_boxes/$BOX_NAME"
+rsync -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $DUFFY_SSH_KEY" -av "vagrant_boxes" systemd@artifacts.ci.aws.centos.org:/srv/artifacts/systemd/
+echo "Box URL: https://artifacts.ci.aws.centos.org/systemd/vagrant_boxes/$BOX_NAME"
 
 exit $EC
