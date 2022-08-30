@@ -1,6 +1,6 @@
 #!/bin/bash
 # Single purpose script to copy a file from one place to another using rsync,
-# since the CentOS CI artifact server supports only rsync.
+# since the CentOS CI artifact server supports only rsync/sftp.
 # Disclaimer: this doesn't work in all cases - it was written to "simply" rename
 #             a file using the rsync protocol, so please bear that in mind.
 set -eu

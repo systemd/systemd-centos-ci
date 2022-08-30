@@ -22,7 +22,6 @@ GITHUB_CI_REPO = "systemd-centos-ci"
 
 class AgentControl():
     def __init__(self, artifacts_storage=None):
-        # Should probably use a setter/getter in the future
         self.artifacts_storage = artifacts_storage
         self.keep_node = False
         self._node_hostname = None
@@ -59,7 +58,7 @@ class AgentControl():
 
         logging.info("Attempting to allocate a node from pool %s", pool)
 
-        # Wait up to an 2 hours with a try every 5 seconds
+        # Wait up to 2 hours with a try every 5 seconds
         wait_delay = 5
         tries = int(7200 / wait_delay)
         for _try in range(1, tries):
