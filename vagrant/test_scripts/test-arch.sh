@@ -95,7 +95,8 @@ for t in "${TEST_LIST[@]}"; do
     exectask_p "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
 done
 
-for t in test/TEST-??-*; do
+for i in {0..99}; do
+    t="test/TEST-50-DISSECT"
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
@@ -131,37 +132,8 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
+    exectask "${t##*/}" "/bin/time -v -- make -C $t clean setup run && touch $TESTDIR/pass"
     EXECUTED_LIST+=("$t")
-done
-
-# Wait for remaining running tasks
-exectask_p_finish
-
-for t in "${FLAKE_LIST[@]}"; do
-    ## Configure test environment
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
-    # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
-    # Set QEMU_SMP appropriately (regarding the parallelism)
-    # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
-    export QEMU_SMP=$(nproc)
-    # Enforce nested KVM
-    export TEST_NESTED_KVM=1
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
-
-    # Suffix the $TESTDIR of each retry with an index to tell them apart
-    export MANGLE_TESTDIR=1
-    exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
-
-    # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
-    # array accordingly to correctly find the respective journals
-    for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
-        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
-    done
 done
 
 # Save journals created by integration tests
