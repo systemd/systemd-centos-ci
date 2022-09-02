@@ -144,6 +144,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
+        test/TEST-75-RESOLVED       # systemd-resolved
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
