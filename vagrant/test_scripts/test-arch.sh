@@ -103,6 +103,9 @@ export QEMU_TIMEOUT=900
 export NSPAWN_TIMEOUT=900
 # Enforce nested KVM
 export TEST_NESTED_KVM=1
+# Don't strip systemd binaries installed into test images, so we can get nice
+# stack traces when something crashes
+export STRIP_BINARIES=no
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
