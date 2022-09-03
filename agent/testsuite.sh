@@ -118,6 +118,21 @@ for t in "${TEST_LIST[@]}"; do
     exectask_p "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"
 done
 
+# Shared test env variables
+#
+# Explicitly enable user namespaces and default SELinux to permissive
+# for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
+export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 oops=panic nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1"
+# Explicitly set paths to initramfs and kernel images (for QEMU tests)
+# See $INITRD above
+export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+# Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+export QEMU_TIMEOUT=1800
+export NSPAWN_TIMEOUT=600
+# Don't strip systemd binaries installed into test images, so we can get nice
+# stack traces when something crashes
+export STRIP_BINARIES=no
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
@@ -125,18 +140,9 @@ for t in test/TEST-??-*; do
     fi
 
     ## Configure test environment
-    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 oops=panic nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1"
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
     export TEST_PARALLELIZE=1
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces and default SELinux to permissive
-    # for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=1800
-    export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -159,14 +165,6 @@ exectask_p_finish
 
 for t in "${FLAKE_LIST[@]}"; do
     ## Configure test environment
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 nmi_watchdog=1 softlockup_panic=1 softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=1200
-    export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
