@@ -64,6 +64,7 @@ ADDITIONAL_DEPS=(
     integritysetup
     iproute-tc
     iscsi-initiator-utils
+    jq
     kernel-modules-extra
     kmod-wireguard # Kmods SIG
     knot
