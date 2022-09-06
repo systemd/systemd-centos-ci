@@ -9,12 +9,11 @@ Vagrant.configure("2") do |config|
   # Use our updated & cached Vagrant box (see vagrant/vagrant-make-cache.sh)
   if ENV["VAGRANT_TEST_IMAGE"] then
     config.vm.box = "rawhide_selinux-new"
-    config.vm.box_url = "https://artifacts.ci.aws.centos.org/systemd/vagrant_boxes/rawhide_selinux-new"
+    config.vm.box_url = "https://artifacts.ci.centos.org/systemd/vagrant_boxes/rawhide_selinux-new"
   else
     config.vm.box = "rawhide_selinux"
-    config.vm.box_url = "http://artifacts.ci.aws.centos.org/systemd/vagrant_boxes/rawhide_selinux"
+    config.vm.box_url = "https://artifacts.ci.centos.org/systemd/vagrant_boxes/rawhide_selinux"
   end
-  config.vm.box_download_insecure = true
 
   # Disable the default /vagrant share, since we don't use it anyway
   config.vm.synced_folder ".", "/vagrant", disabled: true

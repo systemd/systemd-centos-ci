@@ -20,9 +20,9 @@ mkdir -p "$SRC_DIR" "$DEST_DIR"
 # Crucial line, otherwise we won't be able to access the web directory listing
 chmod -R o+rx .
 
-rsync -av "systemd@artifacts.ci.aws.centos.org:/srv/artifacts/systemd/$SRC" "$SRC_DIR"
+rsync -av "systemd@artifacts.ci.centos.org:/srv/artifacts/systemd/$SRC" "$SRC_DIR"
 mv -v "$SRC" "$DEST"
 rm -fr "$SRC"
-rsync -av . "systemd@artifacts.ci.aws.centos.org:/srv/artifacts/systemd/"
+rsync -av . "systemd@artifacts.ci.centos.org:/srv/artifacts/systemd/"
 
 popd

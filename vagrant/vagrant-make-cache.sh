@@ -138,7 +138,7 @@ vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"
 mkdir vagrant_boxes
 mv "$BOX_NAME" vagrant_boxes
 
-rsync -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $DUFFY_SSH_KEY" -av "vagrant_boxes" systemd@artifacts.ci.aws.centos.org:/srv/artifacts/systemd/
-echo "Box URL: https://artifacts.ci.aws.centos.org/systemd/vagrant_boxes/$BOX_NAME"
+rsync -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $DUFFY_SSH_KEY" -av "vagrant_boxes" systemd@artifacts.ci.centos.org:/srv/artifacts/systemd/
+echo "Box URL: https://artifacts.ci.centos.org/systemd/vagrant_boxes/$BOX_NAME"
 
 exit $EC
