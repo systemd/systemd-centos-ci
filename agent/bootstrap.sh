@@ -77,6 +77,7 @@ ADDITIONAL_DEPS=(
     mdadm
     net-tools
     netlabel_tools
+    nftables
     nmap-ncat
     openssl-devel
     pcre2-devel
