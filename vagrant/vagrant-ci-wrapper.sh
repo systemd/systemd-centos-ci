@@ -42,7 +42,7 @@ REMOTE_REF=""
 set -eu
 set -o pipefail
 
-while getopts "d:r:s" opt; do
+while getopts "d:r:s:" opt; do
     case "$opt" in
         d)
             DISTRO="$OPTARG"
@@ -51,14 +51,13 @@ while getopts "d:r:s" opt; do
             REMOTE_REF="$OPTARG"
             ;;
         s)
-            # Work on the systemd-stable repo instead
-            REPO_URL="https://github.com/systemd/systemd-stable.git"
+            REPO_URL="$OPTARG"
             ;;
         ?)
             exit 1
             ;;
         *)
-            echo "Usage: $0 -d DISTRO_TAG [-r REMOTE_REF] [-s]"
+            echo "Usage: $0 -d DISTRO_TAG [-r REMOTE_REF] [-s SOURCE_REPO_URL]"
             exit 1
     esac
 done

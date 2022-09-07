@@ -24,20 +24,19 @@ set -o pipefail
 trap at_exit EXIT
 
 # Parse optional script arguments
-while getopts "r:s" opt; do
+while getopts "r:s:" opt; do
     case "$opt" in
         r)
             REMOTE_REF="$OPTARG"
             ;;
         s)
-            # Work on the systemd-stable repo instead
-            REPO_URL="https://github.com/systemd/systemd-stable.git"
+            REPO_URL="$OPTARG"
             ;;
         ?)
             exit 1
             ;;
         *)
-            echo "Usage: $0 [-r REMOTE_REF] [-s]"
+            echo "Usage: $0 [-r REMOTE_REF] [-s SOURCE_REPO_URL]"
             exit 1
     esac
 done
