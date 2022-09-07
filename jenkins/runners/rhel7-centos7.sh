@@ -24,4 +24,7 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --pool metal-seamicro-large-centos-7-x86_64 --bootstrap-script="bootstrap-rhel7.sh" --testsuite-script="testsuite-rhel7.sh" ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --pool metal-seamicro-large-centos-7-x86_64 \
+                   --bootstrap-script="bootstrap-rhel7.sh" \
+                   --testsuite-script="testsuite-rhel7.sh" \
+                   ${ARGS:+"${ARGS[@]}"}

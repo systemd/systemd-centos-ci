@@ -51,5 +51,12 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-#./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-gcc ${ARGS:+"${ARGS[@]}"}
-./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-clang ${ARGS:+"${ARGS[@]}"}
+#./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+#                   --vagrant arch-sanitizers-gcc \
+#                   --no-index \
+#                   ${ARGS:+"${ARGS[@]}"}
+
+./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+                   --vagrant arch-sanitizers-clang \
+                   --no-index \
+                   ${ARGS:+"${ARGS[@]}"}
