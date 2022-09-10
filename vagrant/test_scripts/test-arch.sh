@@ -97,7 +97,6 @@ done
 
 # Shared test env variables
 #
-export KERNEL_APPEND="kernel.nmi_watchdog=1 kernel.softlockup_panic=1 kernel.softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=900
 export NSPAWN_TIMEOUT=900

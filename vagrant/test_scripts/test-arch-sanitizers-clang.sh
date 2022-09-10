@@ -70,7 +70,6 @@ export SKIP_INITRD=no
 export TEST_NESTED_KVM=1
 # Bump the SUT memory to 4G, mainly for dfuzzer
 export QEMU_MEM=4G
-export KERNEL_APPEND="kernel.nmi_watchdog=1 kernel.softlockup_panic=1 kernel.softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
