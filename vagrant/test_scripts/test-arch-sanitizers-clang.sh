@@ -70,7 +70,6 @@ export SKIP_INITRD=no
 export TEST_NESTED_KVM=1
 # Bump the SUT memory to 4G, mainly for dfuzzer
 export QEMU_MEM=4G
-export KERNEL_APPEND="kernel.nmi_watchdog=1 kernel.softlockup_panic=1 kernel.softlockup_all_cpu_backtrace=1 panic=1 oops=panic"
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
@@ -134,8 +133,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
-        # Skip TEST-29 until systemd/systemd#24147 is resolved
-        #test/TEST-29-PORTABLE       # systemd-portabled
+        test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
         test/TEST-45-TIMEDATE       # systemd-timedated
         test/TEST-46-HOMED          # systemd-homed
@@ -157,15 +155,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         if [[ ! -d "$t" ]]; then
             echo "Test '$t' is not available, skipping..."
             continue
-        fi
-
-        # Disable nested KVM for TEST-13-NSPAWN-SMOKE, which keeps randomly
-        # failing due to time outs caused by CPU soft locks. Also, bump the
-        # QEMU timeout, since the test is a bit slower without KVM.
-        export TEST_NESTED_KVM=1
-        if [[ "$t" == "test/TEST-13-NSPAWN-SMOKE" ]]; then
-            unset TEST_NESTED_KVM
-            export QEMU_TIMEOUT=1200
         fi
 
         # Set the test dir to something predictable so we can refer to it later
