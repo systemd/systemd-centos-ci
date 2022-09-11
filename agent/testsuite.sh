@@ -41,13 +41,6 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# FIXME: test-seccomp
-# This test became flaky once again, so disable it temporarily until the reason
-# is found out.
-#
-# See: systemd/systemd#17078
-echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
-
 # FIXME: test-barrier
 # This test is flaky on systems under load, which happens intermittently due
 # to how meson runs the tests (in parallel).
