@@ -122,7 +122,7 @@ done
 #
 # Explicitly enable user namespaces and default SELinux to permissive
 # for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
-export KERNEL_APPEND="user_namespace.enable=1 enforcing=0"
+export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 watchdog_tresh=60 workqueue.watchdog_tresh=120"
 # Explicitly set paths to initramfs and kernel images (for QEMU tests)
 # See $INITRD above
 export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
