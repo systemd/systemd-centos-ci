@@ -63,6 +63,7 @@ ADDITIONAL_DEPS=(
     integritysetup
     iproute-tc
     iscsi-initiator-utils
+    jq
     "kernel-modules-$(uname -r)"
     "kernel-modules-extra-$(uname -r)"
     "kernel-tools-$(uname -r)"
