@@ -4,6 +4,10 @@
 # vagrant-libvirt module to support "proper" virtualization (kvm/qemu) instead
 # of default containers.
 
+LIB_ROOT="$(dirname "$0")/../common"
+# shellcheck source=common/utils.sh
+. "$LIB_ROOT/utils.sh" || exit 1
+
 VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.3.0/vagrant-2.3.0-1.x86_64.rpm"
 WORKAROUNDS_DIR="$(dirname "$(readlink -f "$0")")/workarounds"
 
@@ -36,7 +40,7 @@ fi
 
 # Configure NTP (chronyd)
 if ! rpm -q chrony; then
-    dnf -y install chrony
+    cmd_retry dnf -y install chrony
 fi
 
 systemctl enable --now chronyd
@@ -45,7 +49,7 @@ systemctl status --no-pager chronyd
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
-    dnf -y install "$VAGRANT_PKG_URL"
+    cmd_retry dnf -y install "$VAGRANT_PKG_URL"
 fi
 
 # To speed up Vagrant jobs, let's use a pre-compiled bundle with the necessary
@@ -58,7 +62,7 @@ fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
+    cmd_retry dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
@@ -71,14 +75,14 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     export GEM_HOME=~/.vagrant.d/gems
     export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
     export PATH=/opt/vagrant/embedded/bin:$PATH
-    vagrant plugin install vagrant-libvirt
+    cmd_retry vagrant plugin install vagrant-libvirt
 fi
 
 vagrant --version
 vagrant plugin list
 
 # Configure NFS for Vagrant's shared folders
-rpm -q nfs-utils || dnf -y install nfs-utils
+rpm -q nfs-utils || cmd_retry dnf -y install nfs-utils
 systemctl stop nfs-server
 systemctl start proc-fs-nfsd.mount
 lsmod | grep -E '^nfs$' || modprobe -v nfs
