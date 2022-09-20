@@ -129,6 +129,30 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
+# FIXME: drop once the patches are backported
+# Optionally backport necessary patches to make the tests work/stable
+# See: https://github.com/redhat-plumbers/systemd-rhel9/pull/108
+COMMITS=(
+    6a9c4977683a30fcd36baf64e35255e9846028c6 # test: bump the base VM memory to 768M
+    761b1d83145a6f9f41ad9aafcb5f28d452582864 # test: don't overwrite existing $QEMU_OPTIONS
+    03f5e9b2210e012060261efb734ea62c782fd465 # test: optionally wait a bit when checking the mount unit
+    1678bd2f81096b3b2b7c09f335e9c5cc8da96dca # test: lower the # of mpath devices to 16
+    cde09b07dfdc132a31672693c037bfc0b5879331 # test: check for other hypervisors as well
+    12ee072db571d5d3aca37fbf9b9261441ac9aeff # test: make the virt detection quiet
+    092499b9f69b89f7afb392ddc733edb87e1503ca # test: require KVM only for specific sub-tests
+    ed1cbdc347aeca077a7f6e88eda590340c004c34 # Revert "test: temporary workaround for systemd#21819"
+    d9e1cb288f9f2b76b281c163070a3083231b0792 # test: support open-iscsi >= 2.1.2
+)
+
+git remote add upstream "https://github.com/systemd/systemd"
+git fetch upstream
+for commit in "${COMMITS[@]}"; do
+    # Use `git show xxx | git apply` instead of cherry-pick, since apply is atomic
+    # (i.e. it either applies the patch or don't without leaving the tree in some
+    # "in-between" state
+    git show "$commit" | git apply --verbose --recount || :
+done
+
 # Compile systemd
 #   - slow-tests=true: enables slow tests
 #   - fuzz-tests=true: enables fuzzy tests using libasan installed above
