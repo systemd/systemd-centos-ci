@@ -283,6 +283,14 @@ else
         # Disable nspawn version of the test
         export TEST_NO_NSPAWN=1
 
+        if systemd-detect-virt -qv; then
+            # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
+            # See: https://access.redhat.com/solutions/6833751
+            # Do this conditionally here, since the same bootstrap phase is used
+            # in VMs as well as on bare metal machines
+            export QEMU_OPTIONS="-cpu max"
+        fi
+
         make -C test/TEST-01-BASIC clean setup run clean-again
 
         rm -fv "$INITRD"

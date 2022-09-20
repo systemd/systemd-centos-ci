@@ -150,6 +150,9 @@ export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
+# Work around 'Fatal glibc error: CPU does not support x86-64-v2'
+# See: https://access.redhat.com/solutions/6833751
+export QEMU_OPTIONS="-cpu max"
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
