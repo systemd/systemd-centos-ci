@@ -120,8 +120,7 @@ if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     SKIP_LIST+=("test/TEST-19-DELEGATE")
 fi
 
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
@@ -136,10 +135,21 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
-dracut -o multipath --rebuild "$INITRD"
+dracut -a crypt -o "multipath rngd" --rebuild "$INITRD"
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
+
+# Shared test env variables
+#
+# Explicitly set paths to initramfs and kernel images (for QEMU tests)
+# See $INITRD above
+export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+# Explicitly enable user namespaces
+export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
+# Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
+export QEMU_TIMEOUT=1800
+export NSPAWN_TIMEOUT=600
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
@@ -151,14 +161,6 @@ for t in test/TEST-??-*; do
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
     export TEST_PARALLELIZE=1
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
@@ -181,14 +183,6 @@ exectask_p_finish
 
 for t in "${FLAKE_LIST[@]}"; do
     ## Configure test environment
-    # Explicitly set paths to initramfs and kernel images (for QEMU tests)
-    # See $INITRD above
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
-    # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
-    export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)

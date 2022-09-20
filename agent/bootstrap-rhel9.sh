@@ -57,6 +57,7 @@ ADDITIONAL_DEPS=(
     attr
     bpftool
     clang
+    cryptsetup
     device-mapper-event
     dhcp-client
     dnsmasq
@@ -267,9 +268,9 @@ else
         # comments in `testsuite.sh` for the explanation
         export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
         cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-        dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
+        dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
-        [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+        centos_ensure_qemu_symlink
 
         ## Configure test environment
         # Explicitly set paths to initramfs (see above) and kernel images
@@ -294,7 +295,7 @@ else
     SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
     SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-    dracut -f --regenerate-all --filesystems ext4
+    dracut -f --regenerate-all
 
     # Check if the new dracut image contains the systemd module to avoid issues
     # like systemd/systemd#11330
