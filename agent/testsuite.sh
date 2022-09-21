@@ -41,15 +41,6 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# FIXME: test-barrier
-# This test is flaky on systems under load, which happens intermittently due
-# to how meson runs the tests (in parallel).
-#
-# See:
-#   https://github.com/systemd/systemd/commit/fd23f9c9a70e1214507641d327da40d1688b74d7
-#   https://github.com/systemd/systemd/commit/a1e3f0f38b43e68ff9ea33ab1935aed4edf6ed7f
-echo 'int main(void) { return 77; }' > src/test/test-barrier.c
-
 # Run the internal unit tests (make check)
 # Note: All .dusty.* servers have Intel Xeon CPUs with 4 cores and HT enabled
 #       which causes issues when the machine is under heavy load (in this case
