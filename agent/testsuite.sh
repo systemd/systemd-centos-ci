@@ -122,6 +122,7 @@ export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
+export QEMU_OPTIONS="-cpu max"
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
