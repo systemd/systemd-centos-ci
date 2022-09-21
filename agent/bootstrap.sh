@@ -215,6 +215,7 @@ ninja-build -C build install
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
+    export QEMU_OPTIONS="-cpu max"
 
     if ! make -C test/TEST-01-BASIC clean setup run clean-again; then
         rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" >/dev/null || :
