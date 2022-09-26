@@ -47,6 +47,7 @@ ADDITIONAL_DEPS=(
     bpftool
     busybox
     clang
+    cryptsetup
     device-mapper-event
     device-mapper-multipath
     dfuzzer
@@ -57,22 +58,25 @@ ADDITIONAL_DEPS=(
     e2fsprogs
     elfutils
     elfutils-devel
-    evemu
+    evemu # Copr
     expect
     gcc-c++
+    gdb
+    gnu-efi-devel
     integritysetup
     iproute-tc
     iscsi-initiator-utils
     jq
     kernel-modules-extra
-    kmod-wireguard # Kmods SIG
     knot
     knot-dnssecutils
     libasan
     libfdisk-devel
+    libfido2-devel
     libpwquality-devel
     libzstd-devel
     llvm
+    lvm2
     make
     mdadm
     net-tools
@@ -89,7 +93,7 @@ ADDITIONAL_DEPS=(
     quota
     rust
     screen
-    scsi-target-utils
+    scsi-target-utils # Copr
     selinux-policy-devel
     socat
     squashfs-tools
@@ -102,16 +106,18 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core gdb
-cmd_retry dnf -y config-manager --enable epel --enable powertools
-# Install the Kmods SIG repository for certain kernel modules
-# See: https://sigs.centos.org/kmods/repositories/
-cmd_retry dnf -y install centos-release-kmods
-# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
+cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core
+cmd_retry dnf -y config-manager --enable epel-next --enable crb
+# FIXME: drop this once Copr supports SHA-2 RPM signatures
+# See: https://www.redhat.com/en/blog/rhel-security-sha-1-package-signatures-distrusted-rhel-9
+update-crypto-policies --set DEFAULT:SHA1
+# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
+cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
+# FIXME: also drop once Copr supports SHA-2 RPM signatures
+update-crypto-policies --set DEFAULT
 # Remove setroubleshoot-server if it's installed, since we don't use it anyway
 # and it's causing some weird performance issues
 if rpm -q setroubleshoot-server; then
