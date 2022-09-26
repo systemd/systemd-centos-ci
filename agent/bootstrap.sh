@@ -138,6 +138,24 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "$REMOTE_REF"
 
+git apply <<EOF
+diff --git a/src/nspawn/nspawn.c b/src/nspawn/nspawn.c
+index 056d4f1bc5..a4a7942cd3 100644
+--- a/src/nspawn/nspawn.c
++++ b/src/nspawn/nspawn.c
+@@ -3806,7 +3806,7 @@ static int outer_child(
+             arg_uid_shift != 0) {
+ 
+                 r = remount_idmap(directory, arg_uid_shift, arg_uid_range, UID_INVALID, REMOUNT_IDMAPPING_HOST_ROOT);
+-                if (r == -EINVAL || ERRNO_IS_NOT_SUPPORTED(r)) {
++                if (IN_SET(r, -EINVAL, -EPERM) || ERRNO_IS_NOT_SUPPORTED(r)) {
+                         /* This might fail because the kernel or file system doesn't support idmapping. We
+                          * can't really distinguish this nicely, nor do we have any guarantees about the
+                          * error codes we see, could be EOPNOTSUPP or EINVAL. */
+EOF
+
+curl -s https://github.com/mrc0mmand/systemd/commit/2723aeedb8fd8470d183f1d382df6605a8edb236.patch | git apply -v
+
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Set SELinux to permissive on the test hosts to avoid false positives, but
