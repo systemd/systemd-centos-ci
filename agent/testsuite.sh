@@ -103,10 +103,7 @@ for t in "${TEST_LIST[@]}"; do
 done
 
 # Shared test env variables
-#
-# Explicitly enable user namespaces and default SELinux to permissive
-# for TEST-06-SELINUX (since we use CentOS 8 policy with the upstream systemd)
-export KERNEL_APPEND="user_namespace.enable=1 enforcing=0 watchdog_thresh=60 workqueue.watchdog_thresh=120"
+export KERNEL_APPEND="enforcing=0 watchdog_thresh=60 workqueue.watchdog_thresh=120"
 # Explicitly set paths to initramfs and kernel images (for QEMU tests)
 # See $INITRD above
 export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
