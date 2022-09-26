@@ -68,5 +68,5 @@ sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 
 # centos-9-stream (+epel-next-9)
 ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/repo/centos-stream%2Bepel-next-9/mrc0mmand-systemd-centos-ci-centos9-centos-stream%2Bepel-next-9.repo"
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos9"
-LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos8-stream9"
+LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos9-stream9"
 sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 ppc64le s390x"
