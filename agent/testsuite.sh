@@ -110,7 +110,15 @@ export QEMU_OPTIONS="-cpu max"
 # stack traces when something crashes
 export STRIP_BINARIES=no
 
-for t in test/TEST-??-*; do
+# Let's re-shuffle the test list a bit by placing the most expensive tests
+# in the front, so they can run in background while we go through the rest
+# of the list
+readarray -t INTEGRATION_TESTS < <(
+    echo test/TEST-64-UDEV-STORAGE
+    find test/ -maxdepth 1 -type d -name "TEST-??-*" ! -name "TEST-64-UDEV-STORAGE"
+)
+
+for t in "${INTEGRATION_TESTS[@]}"; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
