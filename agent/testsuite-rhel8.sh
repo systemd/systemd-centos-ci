@@ -50,11 +50,6 @@ if [[ ! -f /usr/bin/ninja ]]; then
     ln -s /usr/bin/ninja-build /usr/bin/ninja
 fi
 
-if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
-    echo >&2 "user.max_user_namespaces must be > 0"
-    exit 1
-fi
-
 set +e
 
 ### TEST PHASE ###
@@ -121,8 +116,7 @@ for t in test/TEST-??-*; do
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Explicitly enable user namespaces
-    export KERNEL_APPEND="user_namespace.enable=1 $CGROUP_KERNEL_ARGS"
+    export KERNEL_APPEND="$CGROUP_KERNEL_ARGS"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
