@@ -73,6 +73,7 @@ ADDITIONAL_DEPS=(
     libpwquality-devel
     libzstd-devel
     llvm
+    lvm2
     make
     mdadm
     net-tools
