@@ -250,12 +250,9 @@ fi
 # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
 echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
-# Set user_namespace.enable=1 (needed for systemd-nspawn -U to work correctly)
-grubby --args="user_namespace.enable=1 $CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
+grubby --args="$CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
-grep -r "user_namespace.enable=1" /boot/loader/entries/
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
-echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 # coredumpctl_collect takes an optional argument, which upsets shellcheck
 # shellcheck disable=SC2119
