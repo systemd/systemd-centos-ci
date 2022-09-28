@@ -37,7 +37,8 @@ if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
     # We're not testing the main branch, so let's see if the PR scope
     # is something we should indeed test
     SCOPE_RX='(^(catalog|factory|hwdb|meson.*|network|[^\.].*\.d|rules|src|test|units))'
-    if ! git diff "origin/${ghprbTargetBranch:?}" --name-only | grep -E "$SCOPE_RX" ; then
+    git fetch -fu origin "refs/pull/${ghprbPullId:?}/head"
+    if ! git diff --name-only "origin/${ghprbTargetBranch:?}" FETCH_HEAD | grep -E "$SCOPE_RX"; then
         echo "Changes in this PR don't seem relevant, skipping..."
         exit 0
     fi
