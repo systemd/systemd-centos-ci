@@ -19,7 +19,7 @@ FAILED_LIST=()
 # Variables for parallel tasks
 declare -A TASK_QUEUE=()
 # Default number of retries for exectask_retry()
-declare -ri EXECTASK_RETRY_DEFAULT=3
+declare -ri TASK_RETRY_DEFAULT=3
 # Try to determine the optimal values for parallel execution using the nproc
 # utility. If that fails, fall back to using default values for necessary
 # variables.
@@ -180,7 +180,7 @@ exectask() {
 exectask_retry() {
     local task_name="${1:?Missing task name}"
     local task_command="${2:?Missing task command}"
-    local retries="${3:-$EXECTASK_RETRY_DEFAULT}"
+    local retries="${3:-$TASK_RETRY_DEFAULT}"
     local ec=0
     local orig_testdir
 

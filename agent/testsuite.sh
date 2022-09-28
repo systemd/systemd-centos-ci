@@ -164,7 +164,7 @@ for t in "${FLAKE_LIST[@]}"; do
 
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
-    for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
+    for ((i = 1; i <= TASK_RETRY_DEFAULT; i++)); do
         [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
     done
 done
