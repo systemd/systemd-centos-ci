@@ -7,6 +7,7 @@ set -o pipefail
 # the function name of the caller
 _log() { echo "[${FUNCNAME[1]}] $1"; }
 _err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
+_echo() { [[ "${TASK_LOG_LEVEL:-0}" -ne 0 ]] && echo "$@"; }
 
 if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
@@ -66,10 +67,10 @@ waitforpid() {
     local ec
     SECONDS=0
 
-    echo "Waiting for PID $pid to finish"
+    _echo "Waiting for PID $pid to finish"
     while kill -0 "$pid" 2>/dev/null; do
         if ((SECONDS % 100 == 0)); then
-            echo -n "."
+            _echo -n "."
         fi
         sleep .1
     done
@@ -77,8 +78,8 @@ waitforpid() {
     wait "$pid"
     ec=$?
 
-    echo
-    echo "PID $pid finished with EC $ec in ${SECONDS}s"
+    _echo
+    _echo "PID $pid finished with EC $ec in ${SECONDS}s"
 
     return $ec
 }
@@ -271,6 +272,42 @@ exectask_p() {
     return 0
 }
 
+# Execute given task in parallel fashion:
+#   - redirect stdout/stderr to a given log file
+#   - return after inserting the task into the queue (or wait until there's
+#     a free spot)
+#   - dump the log on error
+# Arguments
+#   $1 - task name
+#   $2 - task command
+#   $3 - # of retries (default: 3) [optional]
+exectask_retry_p() {
+    local task_name="${1:?Missing task name}"
+    local task_command="${2:?Missing task command}"
+    local retries="${3:-$TASK_RETRY_DEFAULT}"
+    local key
+
+    while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
+        for key in "${!TASK_QUEUE[@]}"; do
+            if ! kill -0 "${TASK_QUEUE[$key]}" &>/dev/null; then
+                # Task has finished, drop it from the queue
+                wait "${TASK_QUEUE[$key]}"
+                unset "TASK_QUEUE[$key]"
+                # Break from inner for loop and outer while loop to skip
+                # the sleep below when we find a free slot in the queue
+                break 2
+            fi
+        done
+
+        # Precisely* calculated constant to keep the spinlock from burning the CPU(s)
+        sleep 0.01
+    done
+
+    TASK_LOG_LEVEL=0 exectask_retry "$task_name" "$task_command" "$retries" &
+    TASK_QUEUE[$task_name]=$!
+
+    return 0
+}
 # Wait for the remaining tasks in the parallel tasks queue
 exectask_p_finish() {
     local ec key logfile
