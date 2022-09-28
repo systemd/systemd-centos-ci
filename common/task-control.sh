@@ -237,22 +237,13 @@ exectask_retry() {
 exectask_p() {
     local task_name="${1:?Missing task name}"
     local task_command="${2:?Missing task command}"
-    local logfile="$LOGDIR/$task_name.log"
-    local ec finished_logfile key
-    touch "$logfile"
-
-    echo "[PARALLEL TASK] $task_name ($task_command)"
+    local key
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
             if ! kill -0 "${TASK_QUEUE[$key]}" &>/dev/null; then
-                # Task has finished, report its result and drop it from the queue
+                # Task has finished, drop it from the queue
                 wait "${TASK_QUEUE[$key]}"
-                ec=$?
-                finished_logfile="$LOGDIR/$key.log"
-                echo "[TASK END] $(date)" >>"$finished_logfile"
-                printresult $ec "$finished_logfile" "$key"
-                echo
                 unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
                 # the sleep below when we find a free slot in the queue
@@ -264,9 +255,7 @@ exectask_p() {
         sleep 0.01
     done
 
-    echo "[TASK START] $(date)" >>"$logfile"
-    # shellcheck disable=SC2086
-    eval $task_command &>>"$logfile" &
+    TASK_LOG_LEVEL=0 exectask "$task_name" "$task_command" &
     TASK_QUEUE[$task_name]=$!
 
     return 0
@@ -310,17 +299,13 @@ exectask_retry_p() {
 }
 # Wait for the remaining tasks in the parallel tasks queue
 exectask_p_finish() {
-    local ec key logfile
+    local key
 
     echo "[INFO] Waiting for remaining running parallel tasks"
 
     for key in "${!TASK_QUEUE[@]}"; do
         echo "[INFO] Waiting for task '$key' to finish..."
         wait ${TASK_QUEUE[$key]}
-        ec=$?
-        logfile="$LOGDIR/$key.log"
-        echo "[TASK END] $(date)" >>"$logfile"
-        printresult $ec "$logfile" "$key"
         unset "TASK_QUEUE[$key]"
     done
 }
