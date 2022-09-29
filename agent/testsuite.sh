@@ -56,7 +56,7 @@ if ! git diff --quiet "$MAIN_BRANCH" HEAD && ! git diff "$(git merge-base "$MAIN
 fi
 
 ## Integration test suite ##
-EXECUTED_LIST=()
+CHECK_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test, see below
 )
@@ -141,8 +141,16 @@ for t in "${INTEGRATION_TESTS[@]}"; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass && rm -fv $TESTDIR/*.img"
-    EXECUTED_LIST+=("$t")
+    # FIXME: retry each task again if it fails (i.e. run each task twice at most)
+    #        to work around intermittent QEMU soft lockups/ACPI timer errors
+    #
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    export MANGLE_TESTDIR=1
+    exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass && rm -fv \$TESTDIR/*.img" 2
+    # Retried tasks are suffixed with an index, so update the $CHECK_LIST
+    # array with all possible task names correctly find the respective journals
+    # shellcheck disable=SC2207
+    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
 done
 
 # Wait for remaining running tasks
@@ -162,20 +170,21 @@ for t in "${FLAKE_LIST[@]}"; do
     export MANGLE_TESTDIR=1
     exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass && rm -fv \$TESTDIR/*.img"
 
-    # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
+    # Retried tasks are suffixed with an index, so update the $CHECK_LIST
     # array accordingly to correctly find the respective journals
     for ((i = 1; i <= TASK_RETRY_DEFAULT; i++)); do
-        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && CHECK_LIST+=("${t}_${i}")
     done
 done
 
-for t in "${EXECUTED_LIST[@]}"; do
+for t in "${CHECK_LIST[@]}"; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -f "$testdir/system.journal" ]]; then
         # Filter out test-specific coredumps which are usually intentional
         # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
-        if [[ -v "COREDUMPCTL_EXCLUDE_MAP[$t]" ]]; then
-            export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[$t]}"
+        # Note2: strip the "_X" suffix added by exectask_retry*()
+        if [[ -v "COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]" ]]; then
+            export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]}"
         fi
         # Attempt to collect coredumps from test-specific journals as well
         exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
