@@ -14,9 +14,14 @@ if [[ -n "$1" ]]; then
 else
     LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
 fi
-PASSED=0
-FAILED=0
-FAILED_LIST=()
+
+# We need to use files to track the passed/failed tasks, as in certain cases
+# we use subprocesses which can't modify variables in the parent process
+declare -r PASSED_TASKS_STATE="$LOGDIR/.passed_tasks"
+declare -r FAILED_TASKS_STATE="$LOGDIR/.failed_tasks"
+# Initialize the state files
+: >"$PASSED_TASKS_STATE"
+: >"$FAILED_TASKS_STATE"
 # Variables for parallel tasks
 declare -A TASK_QUEUE=()
 # Default number of retries for exectask_retry()
@@ -122,12 +127,11 @@ printresult() {
     # Don't update internal counters if we want to ignore task's EC
     if [[ $ignore_ec -eq 0 ]]; then
         if [[ $task_ec -eq 0 ]]; then
-            PASSED=$((PASSED + 1))
+            echo "$task_name" >>"$PASSED_TASKS_STATE"
             echo "[RESULT] $task_name - PASS (log file: $task_logfile)"
         else
             cat "$task_logfile"
-            FAILED=$((FAILED + 1))
-            FAILED_LIST+=("$task_name")
+            echo "$task_name" >>"$FAILED_TASKS_STATE"
             echo "[RESULT] $task_name - FAIL (EC: $task_ec) (log file: $task_logfile)"
         fi
     else
@@ -312,21 +316,29 @@ exectask_p_finish() {
 
 # Show summary about executed tasks
 show_task_summary() {
-    local task
+    local failed passed
+
+    failed="$(wc -l <"$FAILED_TASKS_STATE")"
+    passed="$(wc -l <"$PASSED_TASKS_STATE")"
 
     echo
     echo "TEST SUMMARY:"
     echo "-------------"
-    echo "PASSED: $PASSED"
-    echo "FAILED: $FAILED"
-    echo "TOTAL:  $((PASSED + FAILED))"
+    echo "PASSED: $passed"
+    echo "FAILED: $failed"
+    echo "TOTAL:  $((passed + failed))"
 
-    if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
+    if [[ $failed -ne 0 ]]; then
         echo
         echo "FAILED TASKS:"
         echo "-------------"
-        for task in "${FAILED_LIST[@]}"; do
-            echo "$task"
-        done
+        sort "$FAILED_TASKS_STATE"
     fi
+}
+
+finish_and_exit() {
+    local failed
+
+    failed="$(wc -l <"$FAILED_TASKS_STATE")" || exit 1
+    [[ "$failed" -eq 0 ]] && exit 0 || exit 1
 }

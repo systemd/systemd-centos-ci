@@ -99,7 +99,7 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 # tests
 if ! git diff --quiet main HEAD && ! git diff "$(git merge-base main HEAD)" --name-only | grep -vE "^man/" >/dev/null; then
     echo "Detected man-only PR, skipping integration tests"
-    exit $FAILED
+    finish_and_exit
 fi
 
 ## Integration test suite ##
@@ -246,4 +246,4 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 # Summary
 show_task_summary
 
-[[ $FAILED -eq 0 ]] && exit 0 || exit 1
+finish_and_exit

@@ -80,4 +80,4 @@ done
 # Summary
 show_task_summary
 
-[[ $FAILED -eq 0 ]] && exit 0 || exit 1
+finish_and_exit
