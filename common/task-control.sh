@@ -7,19 +7,26 @@ set -o pipefail
 # the function name of the caller
 _log() { echo "[${FUNCNAME[1]}] $1"; }
 _err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
+_echo() { [[ "${TASK_LOG_LEVEL:-0}" -ne 0 ]] && echo "$@"; }
 
 if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
 else
     LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
 fi
-PASSED=0
-FAILED=0
-FAILED_LIST=()
+declare -r LOGDIR
+
+# We need to use files to track the passed/failed tasks, as in certain cases
+# we use subprocesses which can't modify variables in the parent process
+declare -r PASSED_TASKS_STATE="$LOGDIR/.passed_tasks"
+declare -r FAILED_TASKS_STATE="$LOGDIR/.failed_tasks"
+# Initialize the state files
+: >"$PASSED_TASKS_STATE"
+: >"$FAILED_TASKS_STATE"
 # Variables for parallel tasks
 declare -A TASK_QUEUE=()
 # Default number of retries for exectask_retry()
-declare -ri EXECTASK_RETRY_DEFAULT=3
+declare -ri TASK_RETRY_DEFAULT=3
 # Try to determine the optimal values for parallel execution using the nproc
 # utility. If that fails, fall back to using default values for necessary
 # variables.
@@ -66,10 +73,10 @@ waitforpid() {
     local ec
     SECONDS=0
 
-    echo "Waiting for PID $pid to finish"
+    _echo "Waiting for PID $pid to finish"
     while kill -0 "$pid" 2>/dev/null; do
         if ((SECONDS % 100 == 0)); then
-            echo -n "."
+            _echo -n "."
         fi
         sleep .1
     done
@@ -77,8 +84,8 @@ waitforpid() {
     wait "$pid"
     ec=$?
 
-    echo
-    echo "PID $pid finished with EC $ec in ${SECONDS}s"
+    _echo
+    _echo "PID $pid finished with EC $ec in ${SECONDS}s"
 
     return $ec
 }
@@ -121,12 +128,11 @@ printresult() {
     # Don't update internal counters if we want to ignore task's EC
     if [[ $ignore_ec -eq 0 ]]; then
         if [[ $task_ec -eq 0 ]]; then
-            PASSED=$((PASSED + 1))
+            echo "$task_name" >>"$PASSED_TASKS_STATE"
             echo "[RESULT] $task_name - PASS (log file: $task_logfile)"
         else
             cat "$task_logfile"
-            FAILED=$((FAILED + 1))
-            FAILED_LIST+=("$task_name")
+            echo "$task_name" >>"$FAILED_TASKS_STATE"
             echo "[RESULT] $task_name - FAIL (EC: $task_ec) (log file: $task_logfile)"
         fi
     else
@@ -180,7 +186,7 @@ exectask() {
 exectask_retry() {
     local task_name="${1:?Missing task name}"
     local task_command="${2:?Missing task command}"
-    local retries="${3:-$EXECTASK_RETRY_DEFAULT}"
+    local retries="${3:-$TASK_RETRY_DEFAULT}"
     local ec=0
     local orig_testdir
 
@@ -236,22 +242,13 @@ exectask_retry() {
 exectask_p() {
     local task_name="${1:?Missing task name}"
     local task_command="${2:?Missing task command}"
-    local logfile="$LOGDIR/$task_name.log"
-    local ec finished_logfile key
-    touch "$logfile"
-
-    echo "[PARALLEL TASK] $task_name ($task_command)"
+    local key
 
     while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
         for key in "${!TASK_QUEUE[@]}"; do
             if ! kill -0 "${TASK_QUEUE[$key]}" &>/dev/null; then
-                # Task has finished, report its result and drop it from the queue
+                # Task has finished, drop it from the queue
                 wait "${TASK_QUEUE[$key]}"
-                ec=$?
-                finished_logfile="$LOGDIR/$key.log"
-                echo "[TASK END] $(date)" >>"$finished_logfile"
-                printresult $ec "$finished_logfile" "$key"
-                echo
                 unset "TASK_QUEUE[$key]"
                 # Break from inner for loop and outer while loop to skip
                 # the sleep below when we find a free slot in the queue
@@ -263,48 +260,86 @@ exectask_p() {
         sleep 0.01
     done
 
-    echo "[TASK START] $(date)" >>"$logfile"
-    # shellcheck disable=SC2086
-    eval $task_command &>>"$logfile" &
+    TASK_LOG_LEVEL=0 exectask "$task_name" "$task_command" &
     TASK_QUEUE[$task_name]=$!
 
     return 0
 }
 
+# Execute given task in parallel fashion:
+#   - redirect stdout/stderr to a given log file
+#   - return after inserting the task into the queue (or wait until there's
+#     a free spot)
+#   - dump the log on error
+# Arguments
+#   $1 - task name
+#   $2 - task command
+#   $3 - # of retries (default: 3) [optional]
+exectask_retry_p() {
+    local task_name="${1:?Missing task name}"
+    local task_command="${2:?Missing task command}"
+    local retries="${3:-$TASK_RETRY_DEFAULT}"
+    local key
+
+    while [[ ${#TASK_QUEUE[@]} -ge $MAX_QUEUE_SIZE ]]; do
+        for key in "${!TASK_QUEUE[@]}"; do
+            if ! kill -0 "${TASK_QUEUE[$key]}" &>/dev/null; then
+                # Task has finished, drop it from the queue
+                wait "${TASK_QUEUE[$key]}"
+                unset "TASK_QUEUE[$key]"
+                # Break from inner for loop and outer while loop to skip
+                # the sleep below when we find a free slot in the queue
+                break 2
+            fi
+        done
+
+        # Precisely* calculated constant to keep the spinlock from burning the CPU(s)
+        sleep 0.01
+    done
+
+    TASK_LOG_LEVEL=0 exectask_retry "$task_name" "$task_command" "$retries" &
+    TASK_QUEUE[$task_name]=$!
+
+    return 0
+}
 # Wait for the remaining tasks in the parallel tasks queue
 exectask_p_finish() {
-    local ec key logfile
+    local key
 
     echo "[INFO] Waiting for remaining running parallel tasks"
 
     for key in "${!TASK_QUEUE[@]}"; do
         echo "[INFO] Waiting for task '$key' to finish..."
         wait ${TASK_QUEUE[$key]}
-        ec=$?
-        logfile="$LOGDIR/$key.log"
-        echo "[TASK END] $(date)" >>"$logfile"
-        printresult $ec "$logfile" "$key"
         unset "TASK_QUEUE[$key]"
     done
 }
 
 # Show summary about executed tasks
 show_task_summary() {
-    local task
+    local failed passed
+
+    failed="$(wc -l <"$FAILED_TASKS_STATE")"
+    passed="$(wc -l <"$PASSED_TASKS_STATE")"
 
     echo
     echo "TEST SUMMARY:"
     echo "-------------"
-    echo "PASSED: $PASSED"
-    echo "FAILED: $FAILED"
-    echo "TOTAL:  $((PASSED + FAILED))"
+    echo "PASSED: $passed"
+    echo "FAILED: $failed"
+    echo "TOTAL:  $((passed + failed))"
 
-    if [[ ${#FAILED_LIST[@]} -ne 0 ]]; then
+    if [[ $failed -ne 0 ]]; then
         echo
         echo "FAILED TASKS:"
         echo "-------------"
-        for task in "${FAILED_LIST[@]}"; do
-            echo "$task"
-        done
+        sort "$FAILED_TASKS_STATE"
     fi
+}
+
+finish_and_exit() {
+    local failed
+
+    failed="$(wc -l <"$FAILED_TASKS_STATE")" || exit 1
+    [[ "$failed" -eq 0 ]] && exit 0 || exit 1
 }

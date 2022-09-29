@@ -198,7 +198,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
         # array accordingly to correctly find the respective journals
-        for ((i = 1; i <= EXECTASK_RETRY_DEFAULT; i++)); do
+        for ((i = 1; i <= TASK_RETRY_DEFAULT; i++)); do
             [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
         done
     done
@@ -249,4 +249,4 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 # Summary
 show_task_summary
 
-[[ $FAILED -eq 0 ]] && exit 0 || exit 1
+finish_and_exit
