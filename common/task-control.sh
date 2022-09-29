@@ -14,6 +14,7 @@ if [[ -n "$1" ]]; then
 else
     LOGDIR="$(mktemp -d "$PWD/testsuite-logs.XXX")"
 fi
+declare -r LOGDIR
 
 # We need to use files to track the passed/failed tasks, as in certain cases
 # we use subprocesses which can't modify variables in the parent process
