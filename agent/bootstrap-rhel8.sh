@@ -209,7 +209,7 @@ fi
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
     dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
 
-    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
@@ -221,6 +221,7 @@ fi
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
+    export QEMU_OPTIONS="-cpu max"
 
     make -C test/TEST-01-BASIC clean setup run clean
 
@@ -247,6 +248,8 @@ fi
 # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
 echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
+# Make sure the latest kernel is the one we're going to boot into
+grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="$CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/

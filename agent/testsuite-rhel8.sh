@@ -88,8 +88,7 @@ if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     SKIP_LIST+=("test/TEST-19-DELEGATE")
 fi
 
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
@@ -118,13 +117,14 @@ for t in test/TEST-??-*; do
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     export KERNEL_APPEND="enforcing=0 $CGROUP_KERNEL_ARGS"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
+    export QEMU_TIMEOUT=1200
     export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    export QEMU_OPTIONS="-cpu max"
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
