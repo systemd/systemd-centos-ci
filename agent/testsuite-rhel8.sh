@@ -104,7 +104,7 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
-dracut -o multipath --rebuild "$INITRD"
+dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
