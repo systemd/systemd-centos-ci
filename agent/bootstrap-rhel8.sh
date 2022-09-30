@@ -95,6 +95,13 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "$REMOTE_REF"
 
+# Optionally cherry-pick some commits to make the test work/stable before they
+# reach RHEL 8 branches
+git remote add upstream "https://github.com/systemd/systemd"
+git fetch upstream
+# test: make TEST-27 non-racy
+git cherry-pick --no-commit 324ca05459422b55cb6fa04318552541159c239a || :
+
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
