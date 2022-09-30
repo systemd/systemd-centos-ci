@@ -61,6 +61,7 @@ ADDITIONAL_DEPS=(
     nmap-ncat
     perl-IPC-SysV
     perl-Time-HiRes
+    plymouth # *
     qemu-kvm
     quota
     socat
@@ -68,6 +69,9 @@ ADDITIONAL_DEPS=(
     time
     wget
 )
+# * We need plymouth with EL8 systemd, as we miss a couple of patches that make
+#   it an optional dependency (like e4e039bce4462b45e413bb687ab593b6ecc886e3 and
+#   follow-ups)
 
 # Install and enable EPEL
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core
