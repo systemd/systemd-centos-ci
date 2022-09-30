@@ -79,6 +79,7 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 [[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
+CHECK_LIST=()
 SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
@@ -131,14 +132,24 @@ for t in test/TEST-??-*; do
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    export MANGLE_TESTDIR=1
+    # FIXME: retry each task again if it fails (i.e. run each task twice at most)
+    #        to work around intermittent QEMU soft lockups/ACPI timer errors
+    #
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    exectask_retry_p "${t##*/}" "make -C $t clean setup run && touch \$TESTDIR/pass" 2
+    # Retried tasks are suffixed with an index, so update the $CHECK_LIST
+    # array with all possible task names correctly find the respective journals
+    # shellcheck disable=SC2207
+    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
 done
 
 # Wait for remaining running tasks
 exectask_p_finish
 
 # Save journals created by integration tests
-for t in test/TEST-??-*; do
+for t in "${CHECK_LIST[@]}"; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -d "$testdir/journal" ]]; then
         if [[ $COLLECT_COREDUMPS -ne 0 ]]; then
