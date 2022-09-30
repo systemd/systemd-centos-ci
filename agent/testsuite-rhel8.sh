@@ -79,6 +79,7 @@ exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplie
 [[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
+CHECK_LIST=()
 SKIP_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
 )
@@ -88,8 +89,7 @@ if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     SKIP_LIST+=("test/TEST-19-DELEGATE")
 fi
 
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
@@ -104,7 +104,7 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd without the multipath module
-dracut -o multipath --rebuild "$INITRD"
+dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
@@ -116,29 +116,40 @@ for t in test/TEST-??-*; do
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    export KERNEL_APPEND="$CGROUP_KERNEL_ARGS"
+    export KERNEL_APPEND="enforcing=0 $CGROUP_KERNEL_ARGS"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-    export QEMU_TIMEOUT=600
+    export QEMU_TIMEOUT=1200
     export NSPAWN_TIMEOUT=600
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    export QEMU_OPTIONS="-cpu max"
     # Use a "unique" name for each nspawn container to prevent scope clash
     export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
     rm -fr "$TESTDIR"
     mkdir -p "$TESTDIR"
 
-    exectask_p "${t##*/}" "make -C $t clean setup run && touch $TESTDIR/pass"
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    export MANGLE_TESTDIR=1
+    # FIXME: retry each task again if it fails (i.e. run each task twice at most)
+    #        to work around intermittent QEMU soft lockups/ACPI timer errors
+    #
+    # Suffix the $TESTDIR of each retry with an index to tell them apart
+    exectask_retry_p "${t##*/}" "make -C $t clean setup run && touch \$TESTDIR/pass" 2
+    # Retried tasks are suffixed with an index, so update the $CHECK_LIST
+    # array with all possible task names correctly find the respective journals
+    # shellcheck disable=SC2207
+    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
 done
 
 # Wait for remaining running tasks
 exectask_p_finish
 
 # Save journals created by integration tests
-for t in test/TEST-??-*; do
+for t in "${CHECK_LIST[@]}"; do
     testdir="/var/tmp/systemd-test-${t##*/}"
     if [[ -d "$testdir/journal" ]]; then
         if [[ $COLLECT_COREDUMPS -ne 0 ]]; then

@@ -61,6 +61,7 @@ ADDITIONAL_DEPS=(
     nmap-ncat
     perl-IPC-SysV
     perl-Time-HiRes
+    plymouth # *
     qemu-kvm
     quota
     socat
@@ -68,6 +69,9 @@ ADDITIONAL_DEPS=(
     time
     wget
 )
+# * We need plymouth with EL8 systemd, as we miss a couple of patches that make
+#   it an optional dependency (like e4e039bce4462b45e413bb687ab593b6ecc886e3 and
+#   follow-ups)
 
 # Install and enable EPEL
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core
@@ -91,11 +95,18 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "$REMOTE_REF"
 
+# Optionally cherry-pick some commits to make the test work/stable before they
+# reach RHEL 8 branches
+git remote add upstream "https://github.com/systemd/systemd"
+git fetch upstream
+# test: make TEST-27 non-racy
+git cherry-pick --no-commit 324ca05459422b55cb6fa04318552541159c239a || :
+
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
 if setenforce 0; then
-    echo SELINUX=disabled >/etc/selinux/config
+    echo SELINUX=permissive >/etc/selinux/config
 fi
 
 # Enable systemd-coredump
@@ -209,7 +220,7 @@ fi
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
     dracut -o multipath --filesystems ext4 --rebuild "$INITRD"
 
-    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
@@ -221,6 +232,7 @@ fi
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
+    export QEMU_OPTIONS="-cpu max"
 
     make -C test/TEST-01-BASIC clean setup run clean
 
@@ -234,10 +246,7 @@ fi
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-# The systemd testsuite uses the ext4 filesystem for QEMU virtual machines.
-# However, the ext4 module is not included in initramfs by default, because
-# CentOS uses xfs as the default filesystem
-dracut -f --regenerate-all --filesystems ext4
+dracut -f --regenerate-all
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
@@ -250,6 +259,8 @@ fi
 # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
 echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
+# Make sure the latest kernel is the one we're going to boot into
+grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="$CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
