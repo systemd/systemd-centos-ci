@@ -95,7 +95,7 @@ git_checkout_pr "$REMOTE_REF"
 # arbitrary pull request branches we're testing against.
 # Disable SELinux on the test hosts and avoid false positives.
 if setenforce 0; then
-    echo SELINUX=disabled >/etc/selinux/config
+    echo SELINUX=permissive >/etc/selinux/config
 fi
 
 # Enable systemd-coredump

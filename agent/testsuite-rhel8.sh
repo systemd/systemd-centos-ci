@@ -116,7 +116,7 @@ for t in test/TEST-??-*; do
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    export KERNEL_APPEND="$CGROUP_KERNEL_ARGS"
+    export KERNEL_APPEND="enforcing=0 $CGROUP_KERNEL_ARGS"
     # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     export NSPAWN_TIMEOUT=600
