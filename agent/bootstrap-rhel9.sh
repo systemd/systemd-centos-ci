@@ -271,119 +271,119 @@ if [[ $SANITIZE -ne 0 ]]; then
     fi
 
     exit 0
-else
-    # Install the compiled systemd
-    ninja-build -C build install
+fi
 
-    # Configure the selected cgroup hierarchy for both the host machine and each
-    # integration test VM
-    if [[ "$CGROUP_HIERARCHY" == unified ]]; then
-        CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=1" "systemd.legacy_systemd_cgroup_controller=0")
-    else
-        CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=0" "systemd.legacy_systemd_cgroup_controller=1")
+# Install the compiled systemd
+ninja-build -C build install
+
+# Configure the selected cgroup hierarchy for both the host machine and each
+# integration test VM
+if [[ "$CGROUP_HIERARCHY" == unified ]]; then
+    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=1" "systemd.legacy_systemd_cgroup_controller=0")
+else
+    CGROUP_KERNEL_ARGS=("systemd.unified_cgroup_hierarchy=0" "systemd.legacy_systemd_cgroup_controller=1")
+fi
+
+# Let's check if the new systemd at least boots before rebooting the system
+# As the CentOS' systemd-nspawn version is too old, we have to use QEMU
+(
+    # Ensure the initrd contains the same systemd version as the one we're
+    # trying to test
+    # Also, rebuild the original initrd without the multipath module, see
+    # comments in `testsuite.sh` for the explanation
+    export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
+    cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
+    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+
+    centos_ensure_qemu_symlink
+
+    ## Configure test environment
+    # Explicitly set paths to initramfs (see above) and kernel images
+    # (for QEMU tests)
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # Enable kernel debug output for easier debugging when something goes south
+    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console ${CGROUP_KERNEL_ARGS[*]}"
+    # Set timeout for QEMU tests to kill them in case they get stuck
+    export QEMU_TIMEOUT=600
+    # Disable nspawn version of the test
+    export TEST_NO_NSPAWN=1
+
+    if systemd-detect-virt -qv; then
+        # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
+        # See: https://access.redhat.com/solutions/6833751
+        # Do this conditionally here, since the same bootstrap phase is used
+        # in VMs as well as on bare metal machines
+        export QEMU_OPTIONS="-cpu max"
     fi
 
-    # Let's check if the new systemd at least boots before rebooting the system
-    # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
-    (
-        # Ensure the initrd contains the same systemd version as the one we're
-        # trying to test
-        # Also, rebuild the original initrd without the multipath module, see
-        # comments in `testsuite.sh` for the explanation
-        export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
-        cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-        dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    make -C test/TEST-01-BASIC clean setup run clean-again
 
-        centos_ensure_qemu_symlink
+    rm -fv "$INITRD"
+) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
-        ## Configure test environment
-        # Explicitly set paths to initramfs (see above) and kernel images
-        # (for QEMU tests)
-        export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-        # Enable kernel debug output for easier debugging when something goes south
-        export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console ${CGROUP_KERNEL_ARGS[*]}"
-        # Set timeout for QEMU tests to kill them in case they get stuck
-        export QEMU_TIMEOUT=600
-        # Disable nspawn version of the test
-        export TEST_NO_NSPAWN=1
+# The new systemd binary boots, so let's issue a daemon-reexec to use it.
+# This is necessary, since at least once we got into a situation where
+# the old systemd binary was incompatible with the unit files on disk and
+# prevented the system from reboot
+SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
+SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-        if systemd-detect-virt -qv; then
-            # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
-            # See: https://access.redhat.com/solutions/6833751
-            # Do this conditionally here, since the same bootstrap phase is used
-            # in VMs as well as on bare metal machines
-            export QEMU_OPTIONS="-cpu max"
-        fi
+dracut -f --regenerate-all
 
-        make -C test/TEST-01-BASIC clean setup run clean-again
+# Check if the new dracut image contains the systemd module to avoid issues
+# like systemd/systemd#11330
+if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
+    echo >&2 "Missing systemd module in the initramfs image, can't continue..."
+    lsinitrd "/boot/initramfs-$(uname -r).img"
+    exit 1
+fi
 
-        rm -fv "$INITRD"
-    ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
+# Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
+echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS[*]}'"
 
-    # The new systemd binary boots, so let's issue a daemon-reexec to use it.
-    # This is necessary, since at least once we got into a situation where
-    # the old systemd binary was incompatible with the unit files on disk and
-    # prevented the system from reboot
-    SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
-    SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
-
-    dracut -f --regenerate-all
-
-    # Check if the new dracut image contains the systemd module to avoid issues
-    # like systemd/systemd#11330
-    if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
-        echo >&2 "Missing systemd module in the initramfs image, can't continue..."
-        lsinitrd "/boot/initramfs-$(uname -r).img"
+GRUBBY_ARGS=(
+    "${CGROUP_KERNEL_ARGS[@]}"
+    # Needed for systemd-nspawn -U
+    "user_namespace.enable=1"
+    # As the RTC on CentOS CI machines is notoriously incorrect, let's override
+    # it early in the boot process to properly execute units using
+    # ConditionNeedsUpdate=
+    # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
+    # Update: if the original time difference is too big, the mtime of
+    # /etc/.updated is already too far in the future, so it doesn't matter if
+    # we correct the time during the next boot, since it's still going to be
+    # in the past. Let's just explicitly override all ConditionNeedsUpdate=
+    # directives to true to fix this once and for all
+    "systemd.condition-needs-update=1"
+    # Also, store & reuse the current (and corrected) time & date, as it doesn't
+    # persist across reboots without this kludge and can (actually it does)
+    # interfere with running tests
+    "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
+    # Reboot the machine on kernel panic
+    "panic=3"
+)
+grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
+# Check if the $GRUBBY_ARGS were applied correctly
+for arg in "${GRUBBY_ARGS[@]}"; do
+    if ! grep -q -r "$arg" /boot/loader/entries/; then
+        echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
         exit 1
     fi
+done
 
-    # Switch between cgroups v1 (legacy) or cgroups v2 (unified) if requested
-    echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS[*]}'"
+# coredumpctl_collect takes an optional argument, which upsets shellcheck
+# shellcheck disable=SC2119
+coredumpctl_collect
 
-    GRUBBY_ARGS=(
-        "${CGROUP_KERNEL_ARGS[@]}"
-        # Needed for systemd-nspawn -U
-        "user_namespace.enable=1"
-        # As the RTC on CentOS CI machines is notoriously incorrect, let's override
-        # it early in the boot process to properly execute units using
-        # ConditionNeedsUpdate=
-        # See: https://github.com/systemd/systemd/issues/15724#issuecomment-628194867
-        # Update: if the original time difference is too big, the mtime of
-        # /etc/.updated is already too far in the future, so it doesn't matter if
-        # we correct the time during the next boot, since it's still going to be
-        # in the past. Let's just explicitly override all ConditionNeedsUpdate=
-        # directives to true to fix this once and for all
-        "systemd.condition-needs-update=1"
-        # Also, store & reuse the current (and corrected) time & date, as it doesn't
-        # persist across reboots without this kludge and can (actually it does)
-        # interfere with running tests
-        "systemd.clock_usec=$(($(date +%s%N) / 1000 + 1))"
-        # Reboot the machine on kernel panic
-        "panic=3"
-    )
-    grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
-    # Check if the $GRUBBY_ARGS were applied correctly
-    for arg in "${GRUBBY_ARGS[@]}"; do
-        if ! grep -q -r "$arg" /boot/loader/entries/; then
-            echo >&2 "Kernel parameter '$arg' was not found in /boot/loader/entries/*.conf"
-            exit 1
-        fi
-    done
+# Let's leave this here for a while for debugging purposes
+echo "Current date:         $(date)"
+echo "RTC:                  $(hwclock --show)"
+echo "/usr mtime:           $(date -r /usr)"
+echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
 
-    # coredumpctl_collect takes an optional argument, which upsets shellcheck
-    # shellcheck disable=SC2119
-    coredumpctl_collect
+echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
-    # Let's leave this here for a while for debugging purposes
-    echo "Current date:         $(date)"
-    echo "RTC:                  $(hwclock --show)"
-    echo "/usr mtime:           $(date -r /usr)"
-    echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
-
-    echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
-
-    echo "-----------------------------"
-    echo "- REBOOT THE MACHINE BEFORE -"
-    echo "-         CONTINUING        -"
-    echo "-----------------------------"
-fi
+echo "-----------------------------"
+echo "- REBOOT THE MACHINE BEFORE -"
+echo "-         CONTINUING        -"
+echo "-----------------------------"
