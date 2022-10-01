@@ -343,8 +343,6 @@ echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '${CGROUP_KERNEL_ARGS
 
 GRUBBY_ARGS=(
     "${CGROUP_KERNEL_ARGS[@]}"
-    # Needed for systemd-nspawn -U
-    "user_namespace.enable=1"
     # As the RTC on CentOS CI machines is notoriously incorrect, let's override
     # it early in the boot process to properly execute units using
     # ConditionNeedsUpdate=
@@ -380,8 +378,6 @@ echo "Current date:         $(date)"
 echo "RTC:                  $(hwclock --show)"
 echo "/usr mtime:           $(date -r /usr)"
 echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
-
-echo "user.max_user_namespaces=10000" >> /etc/sysctl.conf
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"

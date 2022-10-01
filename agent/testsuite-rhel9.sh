@@ -146,7 +146,7 @@ exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=
 # See $INITRD above
 export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
 # Explicitly enable user namespaces
-export KERNEL_APPEND="user_namespace.enable=1 ${CGROUP_KERNEL_ARGS[*]}"
+export KERNEL_APPEND="${CGROUP_KERNEL_ARGS[*]}"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
