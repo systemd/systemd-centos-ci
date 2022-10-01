@@ -59,6 +59,7 @@ ADDITIONAL_DEPS=(
     clang
     cryptsetup
     device-mapper-event
+    device-mapper-multipath
     dhcp-client
     dnsmasq
     dosfstools
@@ -70,6 +71,7 @@ ADDITIONAL_DEPS=(
     gdb
     integritysetup
     iproute-tc
+    iscsi-initiator-utils
     kernel-modules-extra
     libasan
     libfdisk-devel
@@ -77,6 +79,7 @@ ADDITIONAL_DEPS=(
     libubsan
     libzstd-devel
     llvm
+    lvm2
     make
     net-tools
     nmap-ncat
@@ -96,7 +99,7 @@ ADDITIONAL_DEPS=(
     wget
 )
 
-cmd_retry dnf -y install epel-release dnf-plugins-core
+cmd_retry dnf -y install epel-next-release dnf-plugins-core
 cmd_retry dnf -y config-manager --enable crb
 cmd_retry dnf -y config-manager --disable epel --disable epel-next
 cmd_retry dnf -y update
@@ -104,6 +107,11 @@ cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Install busybox without enabling epel system-wide
 cmd_retry dnf -y install --enablerepo epel busybox dfuzzer
+# Install only scsi-target-utils from our Copr repo, since it's not available
+# in the official ones, nor in EPEL
+cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
+cmd_retry dnf -y install --enablerepo epel,epel-next scsi-target-utils
+cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
