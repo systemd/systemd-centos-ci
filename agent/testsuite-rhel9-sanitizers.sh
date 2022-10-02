@@ -194,7 +194,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
         export MANGLE_TESTDIR=1
-        exectask_retry "${t##*/}" "make -C $t setup run && touch \$TESTDIR/pass"
+        exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
 
         # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
         # array accordingly to correctly find the respective journals
