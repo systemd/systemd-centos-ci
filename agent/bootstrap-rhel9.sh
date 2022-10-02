@@ -148,6 +148,7 @@ COMMITS=(
     cde09b07dfdc132a31672693c037bfc0b5879331 # test: check for other hypervisors as well
     12ee072db571d5d3aca37fbf9b9261441ac9aeff # test: make the virt detection quiet
     092499b9f69b89f7afb392ddc733edb87e1503ca # test: require KVM only for specific sub-tests
+    10d7ed12c9aedae3055218452de452800c3ea39d # test: use a unique machine name for each nspawn test
     ed1cbdc347aeca077a7f6e88eda590340c004c34 # Revert "test: temporary workaround for systemd#21819"
     d9e1cb288f9f2b76b281c163070a3083231b0792 # test: support open-iscsi >= 2.1.2
 )

@@ -162,7 +162,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Run certain other integration tests under sanitizers to cover bigger
     # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     # be somewhat sure the 'base' systemd components work).
-    EXECUTED_LIST=()
+    CHECK_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
@@ -189,22 +189,24 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
             continue
         fi
 
+        export TEST_PARALLELIZE=1
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
         # Suffix the $TESTDIR of each retry with an index to tell them apart
         export MANGLE_TESTDIR=1
-        exectask_retry "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
+        exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass"
 
-        # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
-        # array accordingly to correctly find the respective journals
-        for ((i = 1; i <= TASK_RETRY_DEFAULT; i++)); do
-            [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
-        done
+        # Retried tasks are suffixed with an index, so update the $CHECK_LIST
+        # array with all possible task names correctly find the respective journals
+        # shellcheck disable=SC2207
+        CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
     done
 
+    exectask_p_finish
+
     # Save journals created by integration tests
-    for t in "TEST-01-BASIC_sanitizers-qemu" "${EXECUTED_LIST[@]}"; do
+    for t in "TEST-01-BASIC_sanitizers-qemu" "${CHECK_LIST[@]}"; do
         testdir="/var/tmp/systemd-test-${t##*/}"
         if [[ -f "$testdir/system.journal" ]]; then
             # Filter out test-specific coredumps which are usually intentional
