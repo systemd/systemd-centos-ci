@@ -368,6 +368,13 @@ GRUBBY_ARGS=(
     # Reboot the machine on kernel panic
     "panic=3"
 )
+# For some reason the C9S AMIs have BLS in grub switched off. If that's the case
+# let's re-enable it before tweaking the grub configuration further.
+if grep -q "GRUB_ENABLE_BLSCFG=false" /etc/default/grub; then
+    sed -i 's/GRUB_ENABLE_BLSCFG=false/GRUB_ENABLE_BLSCFG=true/' /etc/default/grub
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+fi
+
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
