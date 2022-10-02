@@ -375,6 +375,7 @@ if grep -q "GRUB_ENABLE_BLSCFG=false" /etc/default/grub; then
     grub2-mkconfig -o /boot/grub2/grub.cfg
 fi
 
+grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
