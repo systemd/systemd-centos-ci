@@ -100,7 +100,7 @@ git_checkout_pr "$REMOTE_REF"
 git remote add upstream "https://github.com/systemd/systemd"
 git fetch upstream
 # test: make TEST-27 non-racy
-git cherry-pick --no-commit 324ca05459422b55cb6fa04318552541159c239a || :
+git show 324ca05459422b55cb6fa04318552541159c239a | git apply --verbose --recount || :
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
