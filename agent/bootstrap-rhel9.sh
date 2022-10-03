@@ -148,15 +148,18 @@ COMMITS=(
     cde09b07dfdc132a31672693c037bfc0b5879331 # test: check for other hypervisors as well
     12ee072db571d5d3aca37fbf9b9261441ac9aeff # test: make the virt detection quiet
     092499b9f69b89f7afb392ddc733edb87e1503ca # test: require KVM only for specific sub-tests
+    10d7ed12c9aedae3055218452de452800c3ea39d # test: use a unique machine name for each nspawn test
     ed1cbdc347aeca077a7f6e88eda590340c004c34 # Revert "test: temporary workaround for systemd#21819"
     d9e1cb288f9f2b76b281c163070a3083231b0792 # test: support open-iscsi >= 2.1.2
+    25213e16f7bfb371e6a37b520bb256a3202953c2 # test: introduce a simple environment file for test service
+    326425fb4dfd20c8410be46b6c2c0ea865436de8 # test: pre-load ASan's DSO for iscsi-init.service
 )
 
 git remote add upstream "https://github.com/systemd/systemd"
 git fetch upstream
 for commit in "${COMMITS[@]}"; do
     # Use `git show xxx | git apply` instead of cherry-pick, since apply is atomic
-    # (i.e. it either applies the patch or don't without leaving the tree in some
+    # (i.e. it either applies the patch or doesn't without leaving the tree in some
     # "in-between" state
     git show "$commit" | git apply --verbose --recount || :
 done
