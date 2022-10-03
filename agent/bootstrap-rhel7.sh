@@ -85,7 +85,7 @@ fi
 (
     # Ensure the initrd contains the same systemd version as the one we're
     # trying to test
-    dracut -f --filesystems ext4
+    dracut -f --filesystems "xfs ext4"
 
     centos_ensure_qemu_symlink
 
