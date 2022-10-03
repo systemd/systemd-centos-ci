@@ -96,12 +96,7 @@ echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
 echo 'int main(void) { return 77; }' > src/test/test-barrier.c
 
 # Run the internal unit tests (make check)
-# Note: All .dusty.* servers have Intel Xeon CPUs with 4 cores and HT enabled
-#       which causes issues when the machine is under heavy load (in this case
-#       when meson parallelizes the jobs on all 8 CPUs) - namely spurious
-#       timeouts and hangups/deadlocks (like in test-barries).
-[[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]] && MESON_NUM_PROCESSES=4
-exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3 ${MESON_NUM_PROCESSES:+--num-processes "$MESON_NUM_PROCESSES"}"
+exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 # Copy over meson test artifacts
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
