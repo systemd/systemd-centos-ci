@@ -7,7 +7,7 @@ set -o pipefail
 # the function name of the caller
 _log() { echo "[${FUNCNAME[1]}] $1"; }
 _err() { echo >&2 "[${FUNCNAME[1]}] $1"; }
-_echo() { [[ "${TASK_LOG_LEVEL:-0}" -ne 0 ]] && echo "$@"; }
+_echo() { [[ "${TASK_LOG_LEVEL:-1}" -ne 0 ]] && echo "$@"; }
 
 if [[ -n "$1" ]]; then
     LOGDIR="$(mktemp -d "$PWD/$1.XXX")"
