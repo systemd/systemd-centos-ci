@@ -156,7 +156,7 @@ git remote add upstream "https://github.com/systemd/systemd"
 git fetch upstream
 for commit in "${COMMITS[@]}"; do
     # Use `git show xxx | git apply` instead of cherry-pick, since apply is atomic
-    # (i.e. it either applies the patch or don't without leaving the tree in some
+    # (i.e. it either applies the patch or doesn't without leaving the tree in some
     # "in-between" state
     git show "$commit" | git apply --verbose --recount || :
 done
