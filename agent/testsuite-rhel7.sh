@@ -37,8 +37,7 @@ fi
 ## Integration test suite ##
 SKIP_LIST=()
 
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
