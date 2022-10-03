@@ -85,22 +85,22 @@ fi
 (
     # Ensure the initrd contains the same systemd version as the one we're
     # trying to test
-    dracut -f --filesystems ext4
+    dracut -f --filesystems "xfs ext4"
 
-    [[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
+    centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     export INITRD="/boot/initramfs-$(uname -r).img"
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
-    # Enable kernel debug output for easier debugging when something goes south
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
     # Set timeout for QEMU tests to kill them in case they get stuck
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
 
-    make -C test/TEST-01-BASIC clean setup run clean
+    if ! make -C test/TEST-01-BASIC clean setup run clean; then
+        rsync -amq /var/tmp/systemd-test*/journal "$LOGDIR/" &>/dev/null || :
+    fi
 ) 2>&1 | tee "$LOGDIR/sanity-boot-check.log"
 
 echo "-----------------------------"
