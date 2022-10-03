@@ -74,8 +74,7 @@ SKIP_LIST=(
 ## Other integration tests ##
 # Enqueue the "other" tests first. The networkd testsuite has quite a long
 # runtime without requiring too much resources, hence it can run in parallel
-# with the "standard" integration tests, saving ~30 minutes ATTOW (this excludes
-# dusty nodes, where any kind of parallelism leads to unstable tests)
+# with the "standard" integration tests, saving ~30 minutes ATTOW
 TEST_LIST=(
     "test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"

@@ -37,12 +37,7 @@ set +e
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 # Run the internal unit tests (make check)
-# Note: All .dusty.* servers have Intel Xeon CPUs with 4 cores and HT enabled
-#       which causes issues when the machine is under heavy load (in this case
-#       when meson parallelizes the jobs on all 8 CPUs) - namely spurious
-#       timeouts and hangups/deadlocks (like in test-barries).
-[[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]] && MESON_NUM_PROCESSES=4
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3 ${MESON_NUM_PROCESSES:+--num-processes "$MESON_NUM_PROCESSES"}"
+exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
 [[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
 

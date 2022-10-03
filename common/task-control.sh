@@ -50,16 +50,6 @@ else
     OPTIMAL_QEMU_SMP=${OPTIMAL_QEMU_SMP:-1}
 fi
 
-if ! systemd-detect-virt -vq && [[ "$(hostnamectl --static)" =~ .dusty.ci.centos.org$ ]]; then
-    # All dusty machines have Intel Xeon CPUs with 4 cores and HT enabled,
-    # which causes issues when the HT cores are counted as "real" ones, namely
-    # CPU over-saturation and strange hangups. As all dusty server have the
-    # same HW, let's manually override the # of CPUs for the VM to 4.
-    _log "Running on a *.dusty machine, overriding the # of CPUs to 4 and queue size to 1"
-    MAX_QUEUE_SIZE=1
-    OPTIMAL_QEMU_SMP=4
-fi
-
 echo "[TASK-CONTROL] OPTIMAL_QEMU_SMP = $OPTIMAL_QEMU_SMP"
 echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
 
