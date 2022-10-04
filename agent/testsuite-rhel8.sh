@@ -113,6 +113,7 @@ for t in test/TEST-??-*; do
     fi
 
     ## Configure test environment
+    export TEST_RETRIES=2
     # Explicitly set paths to initramfs and kernel images (for QEMU tests)
     # See $INITRD above
     export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
@@ -138,11 +139,11 @@ for t in test/TEST-??-*; do
     #        to work around intermittent QEMU soft lockups/ACPI timer errors
     #
     # Suffix the $TESTDIR of each retry with an index to tell them apart
-    exectask_retry_p "${t##*/}" "make -C $t clean setup run && touch \$TESTDIR/pass" 2
+    exectask_retry_p "${t##*/}" "make -C $t clean setup run && touch \$TESTDIR/pass" "${TEST_RETRIES:?}"
     # Retried tasks are suffixed with an index, so update the $CHECK_LIST
     # array with all possible task names correctly find the respective journals
     # shellcheck disable=SC2207
-    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
+    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRIES"))
 done
 
 # Wait for remaining running tasks
