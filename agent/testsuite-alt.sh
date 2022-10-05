@@ -28,8 +28,7 @@ if ! coredumpctl_init; then
 fi
 
 [[ ! -f /usr/bin/ninja ]] && ln -s /usr/bin/ninja-build /usr/bin/ninja
-[[ ! -f /usr/bin/qemu-kvm ]] && ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 set +e
 
@@ -66,7 +65,6 @@ export NSPAWN_TIMEOUT=1200
 # Set QEMU_SMP to speed things up
 export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
-export QEMU_BIN=/usr/bin/qemu-kvm
 # Since QEMU without accel is extremely slow on the alt-arch machines, let's use
 # it only when we don't have a choice (i.e. with QEMU-only test)
 export TEST_PREFER_NSPAWN=yes
