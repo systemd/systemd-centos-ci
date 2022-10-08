@@ -139,7 +139,7 @@ for t in test/TEST-??-*; do
     #        to work around intermittent QEMU soft lockups/ACPI timer errors
     #
     # Suffix the $TESTDIR of each retry with an index to tell them apart
-    exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass && rm -fv \$TESTDIR/*.img" "${TASK_RETRIES:?}"
+    exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass; rm -fv \$TESTDIR/*.img; test -e \$TESTDIR/pass" "${TASK_RETRIES:?}"
     # Retried tasks are suffixed with an index, so update the $CHECK_LIST
     # array with all possible task names correctly find the respective journals
     # shellcheck disable=SC2207
