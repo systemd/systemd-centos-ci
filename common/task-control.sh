@@ -190,7 +190,7 @@ exectask_retry() {
         echo "[TASK START] $(date)" >>"$logfile"
 
         # Suffix the $TESTDIR for each retry by its index if requested
-        if [[ -v MANGLE_TESTDIR && "$MANGLE_TESTDIR" -ne 0 ]]; then
+        if [[ "${MANGLE_TESTDIR:-0}" -ne 0 ]]; then
             orig_testdir="${orig_testdir:-$TESTDIR}"
             export TESTDIR="${orig_testdir}_${i}"
             mkdir -p "$TESTDIR"
