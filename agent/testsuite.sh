@@ -11,6 +11,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 at_exit() {
     set +e
     exectask "journalctl-testsuite" "journalctl -b --no-pager"
+    df -h
 }
 
 set -eu
@@ -32,6 +33,8 @@ fi
 centos_ensure_qemu_symlink
 
 set +e
+
+df -h
 
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
