@@ -25,6 +25,9 @@ Vagrant.configure("2") do |config|
 
     whoami
 
+    # Clear Pacman's caches
+    pacman --noconfirm -Scc
+    rm -fv /var/lib/pacman/sync/*.db
     # Initialize pacman's keyring
     pacman-key --init
     pacman-key --populate archlinux
