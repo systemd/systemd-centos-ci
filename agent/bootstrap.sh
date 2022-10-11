@@ -76,6 +76,7 @@ ADDITIONAL_DEPS=(
     lvm2
     make
     mdadm
+    mtools
     net-tools
     netlabel_tools
     nftables

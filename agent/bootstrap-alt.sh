@@ -77,6 +77,7 @@ ADDITIONAL_DEPS=(
     llvm
     make
     mdadm
+    mtools
     net-tools
     nmap-ncat
     openssl-devel
