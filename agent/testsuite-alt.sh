@@ -107,13 +107,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     rm -fr "$TESTDIR"
     exectask "TEST-01-BASIC_sanitizers-qemu" "make -C test/TEST-01-BASIC clean setup run TEST_NO_NSPAWN=1 && touch $TESTDIR/pass"
 
-    # Run the systemd-networkd testsuite "in the background" while we run other
-    # integration tests, since it doesn't require much resources and should not
-    # interfere with them (and vice versa), saving a non-insignificant amount
-    # of time
-    exectask_p "systemd-networkd_sanitizers" \
-               "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
-
     # Run certain other integration tests under sanitizers to cover bigger
     # systemd subcomponents (but only if TEST-01-BASIC passed, so we can
     # be somewhat sure the 'base' systemd components work).
@@ -193,6 +186,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     done
 
     exectask_p_finish
+
+    exectask "systemd-networkd_sanitizers" \
+             "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
     exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
 fi
 
