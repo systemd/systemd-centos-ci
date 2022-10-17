@@ -97,8 +97,6 @@ for t in test/TEST-??-*; do
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     # Enforce nested KVM
     export TEST_NESTED_KVM=1
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
     # Skipped test don't create the $TESTDIR automatically, so do it explicitly
     # otherwise the `touch` command would fail
@@ -124,8 +122,6 @@ for t in "${FLAKE_LIST[@]}"; do
     export QEMU_SMP=$(nproc)
     # Enforce nested KVM
     export TEST_NESTED_KVM=1
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
