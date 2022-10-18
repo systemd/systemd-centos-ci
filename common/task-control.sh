@@ -60,12 +60,13 @@ echo "[TASK-CONTROL] MAX_QUEUE_SIZE = $MAX_QUEUE_SIZE"
 #   - PID (must be a child of current shell)
 waitforpid() {
     local pid="${1:?Missing PID}"
+    local counter=0
     local ec
     SECONDS=0
 
     _echo "Waiting for PID $pid to finish"
     while kill -0 "$pid" 2>/dev/null; do
-        if ((SECONDS % 100 == 0)); then
+        if ((counter++ % 100 == 0)); then
             _echo -n "."
         fi
         sleep .1
