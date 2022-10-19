@@ -85,6 +85,7 @@ ADDITIONAL_DEPS=(
     python3-jinja2
     python3-pexpect
     python3-psutil
+    python3-pyparsing
     qemu-kvm
     qrencode-devel
     quota
