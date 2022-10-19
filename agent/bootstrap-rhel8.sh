@@ -109,6 +109,13 @@ if setenforce 0; then
     echo SELINUX=permissive >/etc/selinux/config
 fi
 
+# Set tuned to throughput-performance if available
+if command -v tuned-adm 2>/dev/null; then
+    tuned-adm profile throughput-performance
+    tuned-adm active
+    tuned-adm verify
+fi
+
 # Enable systemd-coredump
 if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
