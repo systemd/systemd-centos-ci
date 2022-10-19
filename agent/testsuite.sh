@@ -105,6 +105,10 @@ export QEMU_OPTIONS="-cpu max"
 # stack traces when something crashes
 export STRIP_BINARIES=no
 
+# Override stuff from common/task-control.sh
+MAX_QUEUE_SIZE=3
+OPTIMAL_QEMU_SMP=$((NPROC / MAX_QUEUE_SIZE))
+
 # Let's re-shuffle the test list a bit by placing the most expensive tests
 # in the front, so they can run in background while we go through the rest
 # of the list
