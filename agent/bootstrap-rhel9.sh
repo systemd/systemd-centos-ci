@@ -132,6 +132,13 @@ fi
 # Disable firewalld (needed for systemd-networkd tests)
 systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 
+# Set tuned to throughput-performance if available
+if command -v tuned-adm 2>/dev/null; then
+    tuned-adm profile throughput-performance
+    tuned-adm active
+    tuned-adm verify
+fi
+
 # Enable systemd-coredump
 if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"

@@ -154,6 +154,13 @@ fi
 # Disable firewalld (needed for systemd-networkd tests)
 systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 
+# Set tuned to throughput-performance if available
+if command -v tuned-adm 2>/dev/null; then
+    tuned-adm profile throughput-performance
+    tuned-adm active
+    tuned-adm verify
+fi
+
 # Unlike gcc's ASan, clang's ASan DSO is in a non-standard path, thus any binary
 # compiled with -shared-libasan using clang will fail to start. Let's add the
 # necessary path to the ldconfig cache to avoid that.

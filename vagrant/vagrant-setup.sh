@@ -46,6 +46,13 @@ fi
 systemctl enable --now chronyd
 systemctl status --no-pager chronyd
 
+# Set tuned to throughput-performance if available
+if command -v tuned-adm 2>/dev/null; then
+    tuned-adm profile throughput-performance
+    tuned-adm active
+    tuned-adm verify
+fi
+
 # Configure Vagrant
 if ! vagrant version 2>/dev/null; then
     # Install Vagrant
