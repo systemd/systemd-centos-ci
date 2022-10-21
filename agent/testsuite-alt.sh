@@ -114,7 +114,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     EXECUTED_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
-        # FIXME: This test gets stuck on C8S when calling `sysctl, possibly
+        # FIXME: This test gets stuck on C8S when calling `sysctl`, possibly
         #        related to https://bugzilla.redhat.com/show_bug.cgi?id=2098125
         #test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
@@ -126,17 +126,19 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-34-DYNAMICUSERMIGRATE
         test/TEST-45-TIMEDATE       # systemd-timedated
         test/TEST-46-HOMED          # systemd-homed
-        # FIXME: device-mapper complains about invalid ioctl and then dies
-        #        because it can't allocate memory; needs further investigation
-        #test/TEST-50-DISSECT        # systemd-dissect
+        test/TEST-50-DISSECT        # systemd-dissect
         test/TEST-54-CREDS          # credentials & stuff
         test/TEST-55-OOMD           # systemd-oomd
         test/TEST-58-REPART         # systemd-repart
+        # FIXME: many of the TEST-64 subtests don't work with ppc64le QEMU
+        #test/TEST-64-UDEV-STORAGE   # systemd-udevd with various storage setups
         test/TEST-65-ANALYZE        # systemd-analyze
         test/TEST-70-TPM2           # systemd-cryptenroll
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
+        # FIXME: also hangs at `sysctl`, see TEST-13 above
+        #test/TEST-75-RESOLVED       # systemd-resolved
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
