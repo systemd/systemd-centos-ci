@@ -69,6 +69,7 @@ ADDITIONAL_DEPS=(
     "kernel-tools-$(uname -r)"
     kmod-wireguard # Kmods SIG
     knot
+    knot-dnssecutils
     libasan
     libfdisk-devel
     libpwquality-devel
