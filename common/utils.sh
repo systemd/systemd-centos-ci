@@ -180,7 +180,7 @@ centos_ensure_qemu_symlink() {
         return 1
     fi
 
-    systemd-detect-virt -q && target=/bin/qemu-system-x86_64 || target=/bin/qemu-kvm
+    systemd-detect-virt -q && target="/bin/qemu-system-$(uname -m)" || target=/bin/qemu-kvm
     if [[ ! -x "${target:?}" ]]; then
         ln -svf "${source:?}" "${target:?}"
     fi
