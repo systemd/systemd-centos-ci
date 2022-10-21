@@ -59,6 +59,7 @@ exectask "ninja-test_sanitizers_$(uname -m)" "meson test -C $BUILD_DIR --print-e
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
+export QEMU_BIN="/bin/qemu-system-$(uname -m)"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1200
 export NSPAWN_TIMEOUT=1200
