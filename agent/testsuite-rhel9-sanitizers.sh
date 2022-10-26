@@ -46,10 +46,7 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-if [[ ! -f /usr/bin/qemu-kvm ]]; then
-    ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-fi
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     echo >&2 "user.max_user_namespaces must be > 0"
