@@ -12,6 +12,8 @@ SCRIPT_DIR="$(dirname "$0")"
 # This variable is automagically consumed by the "framework" for integration tests
 # See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+# Consumed by coredumpctl_init()/coredumpctl_collect()
+export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 
 # Following scripts are copied from the systemd-centos-ci/common directory
 # by vagrant-build.sh
