@@ -269,7 +269,10 @@ check_for_sanitizer_errors() {
 # Returns:
 #   0 when both systemd-coredump & coredumpctl work as expected, 1 otherwise
 coredumpctl_init() {
+    local coredumpctl_bin="${COREDUMPCTL_BIN:-coredumpctl}"
     local ec
+
+    _log "Using coredumpctl binary '$coredumpctl_bin'"
 
     if ! systemctl start systemd-coredump.socket; then
         _err "Failed to start systemd-coredump.socket"
@@ -279,7 +282,7 @@ coredumpctl_init() {
     # Let's make sure coredumpctl doesn't crash on invocation
     # Note: coredumpctl returns 1 when no coredumps are found, so accept this EC
     # as a success as well
-    coredumpctl > /dev/null
+    "$coredumpctl_bin" >/dev/null
     ec=$?
 
     if ! [[ $ec -eq 0 || $ec -eq 1 ]]; then
@@ -315,6 +318,8 @@ coredumpctl_collect() {
     local coredumpctl_bin="${COREDUMPCTL_BIN:-coredumpctl}"
     local journaldir="${1:-}"
     local tempfile="$(mktemp)"
+
+    _log "Using coredumpctl binary '$coredumpctl_bin'"
 
     # Register a cleanup handler
     # shellcheck disable=SC2064

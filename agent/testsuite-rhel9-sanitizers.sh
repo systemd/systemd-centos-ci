@@ -26,8 +26,10 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 ## Sanitizer-specific options
 export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2:handle_ioctl=1:print_cmdline=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
-BUILD_DIR="build"
+BUILD_DIR="$PWD/build"
 CGROUP_HIERARCHY="$(print_cgroup_hierarchy)"
+# Consumed by coredumpctl_init()/coredumpctl_collect()
+export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 
 echo "Current cgroup hierarchy: $CGROUP_HIERARCHY"
 # Reflect the current cgroup hierarchy in each test VM
@@ -46,14 +48,7 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-if [[ ! -f /usr/bin/ninja ]]; then
-    ln -s /usr/bin/ninja-build /usr/bin/ninja
-fi
-
-if [[ ! -f /usr/bin/qemu-kvm ]]; then
-    ln -s /usr/libexec/qemu-kvm /usr/bin/qemu-kvm
-fi
-qemu-kvm --version
+centos_ensure_qemu_symlink
 
 if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     echo >&2 "user.max_user_namespaces must be > 0"
@@ -217,7 +212,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
                 export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]}"
             fi
             # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
             # Make sure to not propagate the custom coredumpctl filter override
             [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
 

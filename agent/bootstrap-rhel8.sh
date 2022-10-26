@@ -199,11 +199,11 @@ fi
     fi
 
     meson build "${CONFIGURE_OPTS[@]}"
-    ninja-build -C build
+    ninja -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
 # Install the compiled systemd
-ninja-build -C build install
+ninja -C build install
 
 # Create necessary systemd users/groups
 getent group systemd-resolve &>/dev/null || groupadd -r -g 193 systemd-resolve 2>&1

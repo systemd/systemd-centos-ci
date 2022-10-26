@@ -12,6 +12,8 @@ SCRIPT_DIR="$(dirname "$0")"
 # This variable is automagically consumed by the "framework" for integration tests
 # See respective bootstrap script under vagrant/bootstrap_scripts/ for reasoning
 export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+# Consumed by coredumpctl_init()/coredumpctl_collect()
+export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 
 # Following scripts are copied from the systemd-centos-ci/common directory by vagrant-builder.sh
 # shellcheck source=common/task-control.sh
@@ -187,7 +189,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
                 export COREDUMPCTL_EXCLUDE_RX="${COREDUMPCTL_EXCLUDE_MAP[${t%_[0-9]}]}"
             fi
             # Attempt to collect coredumps from test-specific journals as well
-            exectask "${t##*/}_coredumpctl_collect" "COREDUMPCTL_BIN='$BUILD_DIR/coredumpctl' coredumpctl_collect '$testdir/'"
+            exectask "${t##*/}_coredumpctl_collect" "coredumpctl_collect '$testdir/'"
             # Make sure to not propagate the custom coredumpctl filter override
             [[ -v COREDUMPCTL_EXCLUDE_RX ]] && unset -v COREDUMPCTL_EXCLUDE_RX
 

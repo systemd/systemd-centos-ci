@@ -193,14 +193,14 @@ fi
                 -Dnobody-group=nfsnobody \
                 -Dman=true \
                 -Dhtml=true
-    ninja-build -C build
+    ninja -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
 # shellcheck disable=SC2119
 coredumpctl_set_ts
 
 # Install the compiled systemd
-ninja-build -C build install
+ninja -C build install
 
 # Let's check if the new systemd at least boots before rebooting the system
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
