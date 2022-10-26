@@ -27,7 +27,6 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-[[ ! -f /usr/bin/ninja ]] && ln -s /usr/bin/ninja-build /usr/bin/ninja
 centos_ensure_qemu_symlink
 
 set +e

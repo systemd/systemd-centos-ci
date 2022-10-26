@@ -272,7 +272,7 @@ done
         )
     fi
     meson build "${CONFIGURE_OPTS[@]}"
-    ninja-build -C build
+    ninja -C build
 ) 2>&1 | tee "$LOGDIR/build.log"
 
 # Following stuff is relevant only to unsanitized builds, since we don't install
@@ -293,7 +293,7 @@ if [[ $SANITIZE -ne 0 ]]; then
 fi
 
 # Install the compiled systemd
-ninja-build -C build install
+ninja -C build install
 
 # Configure the selected cgroup hierarchy for both the host machine and each
 # integration test VM

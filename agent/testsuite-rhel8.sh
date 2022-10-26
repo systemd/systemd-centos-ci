@@ -46,10 +46,6 @@ if [[ $COLLECT_COREDUMPS -ne 0 ]] && ! coredumpctl_init; then
     exit 1
 fi
 
-if [[ ! -f /usr/bin/ninja ]]; then
-    ln -s /usr/bin/ninja-build /usr/bin/ninja
-fi
-
 set +e
 
 ### TEST PHASE ###

@@ -222,7 +222,7 @@ fi
         -Dman=false \
         -Db_sanitize=address,undefined \
         -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
-    ninja-build -C "$BUILD_DIR"
+    ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build-$(uname -m).log"
 
 # Manually install upstream D-Bus config file for org.freedesktop.network1
