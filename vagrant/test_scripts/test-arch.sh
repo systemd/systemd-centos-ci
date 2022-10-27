@@ -120,6 +120,8 @@ for t in test/TEST-??-*; do
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
+    # Use a "unique" name for each nspawn container to prevent scope clash
+    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
     # Skipped test don't create the $TESTDIR automatically, so do it explicitly
     # otherwise the `touch` command would fail
@@ -140,6 +142,8 @@ for t in "${FLAKE_LIST[@]}"; do
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$(nproc)
+    # Use a "unique" name for each nspawn container to prevent scope clash
+    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
