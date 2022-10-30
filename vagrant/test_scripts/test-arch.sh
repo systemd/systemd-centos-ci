@@ -31,14 +31,6 @@ swapoff -av
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
-## FIXME: systemd-networkd testsuite: skip test_macsec
-# Since kernel 5.7.2 the macsec module is broken, causing a runtime NULL pointer
-# dereference (and since 5.8.0 an additional oops). Since the issue hasn't been
-# looked at/fixed for over a month now, let's disable the failing test to
-# no longer block the CI image updates.
-# See: systemd/systemd#16199
-sed -i '/def test_macsec/i\    @unittest.skip("See systemd/systemd#16199")' test/test-network/systemd-networkd-tests.py
-
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
