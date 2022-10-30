@@ -31,6 +31,8 @@ swapoff -av
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
+sed -i '/@unittest.skip/d' test/test-network/systemd-networkd-tests.py
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
