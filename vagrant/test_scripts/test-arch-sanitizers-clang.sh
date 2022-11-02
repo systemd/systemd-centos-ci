@@ -127,6 +127,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
+        test/TEST-26-SYSTEMCTL      # systemctl & friends
         test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
         test/TEST-45-TIMEDATE       # systemd-timedated
