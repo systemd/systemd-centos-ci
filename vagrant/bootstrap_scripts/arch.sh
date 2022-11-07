@@ -49,6 +49,7 @@ meson "$BUILD_DIR" \
       -Dtests=unsafe \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
+      -Dlocalegen-path=/usr/bin/locale-gen \
       -Dman=true \
       -Dhtml=true
 ninja -C "$BUILD_DIR"

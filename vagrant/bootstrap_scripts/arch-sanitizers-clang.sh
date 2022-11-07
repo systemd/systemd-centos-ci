@@ -89,6 +89,7 @@ meson "$BUILD_DIR" \
       -Dfuzz-tests=true \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
+      -Dlocalegen-path=/usr/bin/locale-gen \
       -Dman=false \
       -Db_sanitize=address,undefined \
       -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764

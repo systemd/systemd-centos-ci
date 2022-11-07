@@ -49,7 +49,8 @@ meson "$BUILD_DIR" \
       -Dfuzz-tests=true \
       -Dtests=unsafe \
       -Dinstall-tests=true \
-      -Ddbuspolicydir=/usr/share/dbus-1/system.d
+      -Ddbuspolicydir=/usr/share/dbus-1/system.d \
+      -Dlocalegen-path=/usr/bin/locale-gen
 ninja -C "$BUILD_DIR"
 
 # Install cpp-coveralls to generate the Coveralls-compatible report
