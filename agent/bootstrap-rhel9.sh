@@ -68,6 +68,7 @@ ADDITIONAL_DEPS=(
     elfutils-devel
     expect
     gcc-c++
+    glibc-langpack-en
     gdb
     integritysetup
     iproute-tc

@@ -60,6 +60,7 @@ ADDITIONAL_DEPS=(
     evemu
     expect
     gcc-c++
+    glibc-langpack-en
     integritysetup
     iproute-tc
     iscsi-initiator-utils
