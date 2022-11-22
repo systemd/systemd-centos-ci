@@ -18,9 +18,10 @@ set -o pipefail
 ARGS=()
 
 analyze_fail() {
+    local ec=$?
     set +e
 
-    case "$?" in
+    case "$ec" in
         124)
             # The current way the EC2 T2 machines work is that they compete for
             # CPU time in given region. If the region is oversaturated, the CPU
