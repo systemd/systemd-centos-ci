@@ -124,7 +124,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-50-DISSECT        # systemd-dissect
         test/TEST-54-CREDS          # credentials & stuff
         test/TEST-55-OOMD           # systemd-oomd
-        test/TEST-58-REPART         # systemd-repart
+        # FIXME: su ends up in an endless loop when ASan is preloaded
+        # See: https://github.com/llvm/llvm-project/issues/59114
+        #test/TEST-58-REPART         # systemd-repart
         # FIXME: many of the TEST-64 subtests don't work with ppc64le QEMU
         #test/TEST-64-UDEV-STORAGE   # systemd-udevd with various storage setups
         test/TEST-65-ANALYZE        # systemd-analyze
