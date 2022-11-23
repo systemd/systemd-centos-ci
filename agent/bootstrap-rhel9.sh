@@ -73,6 +73,7 @@ ADDITIONAL_DEPS=(
     integritysetup
     iproute-tc
     iscsi-initiator-utils
+    jq
     kernel-modules-extra
     libasan
     libfdisk-devel
