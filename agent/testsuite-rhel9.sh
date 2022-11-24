@@ -108,8 +108,11 @@ SKIP_LIST=(
 )
 
 if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
-    # This test explicitly requires unified cgroup hierarchy
-    SKIP_LIST+=("test/TEST-19-DELEGATE")
+    # These test (or parts of them) explicitly require unified cgroup hierarchy
+    SKIP_LIST+=(
+        "test/TEST-19-DELEGATE"
+        "test/TEST-74-AUX-UTILS"
+    )
 fi
 
 centos_ensure_qemu_symlink
