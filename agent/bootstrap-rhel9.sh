@@ -108,8 +108,8 @@ cmd_retry dnf -y config-manager --disable epel --disable epel-next
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
-# Install busybox without enabling epel system-wide
-cmd_retry dnf -y install --enablerepo epel busybox dfuzzer
+# Install necessary utils for tests without enabling epel system-wide
+cmd_retry dnf -y install --enablerepo epel busybox dfuzzer screen
 # Install only scsi-target-utils from our Copr repo, since it's not available
 # in the official ones, nor in EPEL
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
