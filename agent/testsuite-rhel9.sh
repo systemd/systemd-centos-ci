@@ -101,8 +101,9 @@ FLAKE_LIST=(
     "test/TEST-58-REPART"         # flaky test (until `udevadm wait` stuff is backported)
 )
 SKIP_LIST=(
-    "test/TEST-29-PORTABLE"      # we don't ship portabled in RHEL 9
-    "test/TEST-30-ONCLOCKCHANGE" # we don't ship timesyncd in RHEL 9
+    "test/TEST-29-PORTABLE"       # we don't ship portabled in RHEL 9
+    "test/TEST-30-ONCLOCKCHANGE"  # we don't ship timesyncd in RHEL 9
+    "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
     "${FLAKE_LIST[@]}"
 )
 
