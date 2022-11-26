@@ -62,7 +62,7 @@ exectask "fedora-selinux-testsuite" "tmt -vvv --root selinux run --id fedora-sel
 #       the -m/--prune-empty-dirs option
 rsync -amq --include '*.txt' --include '*/' --exclude '*' /var/tmp/tmt/fedora-selinux-testsuite/{log.txt,plans/systemd/execute} "$LOGDIR/fedora-selinux-testsuite/"
 
-exectask "avc-check" "! ausearch -m avc -i --start boot | audit2why"
+exectask "avc-check" "! ausearch -m avc,user_avc -i --start boot"
 
 # Summary
 show_task_summary
