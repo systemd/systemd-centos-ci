@@ -154,7 +154,7 @@ export QEMU_OPTIONS="-cpu max"
 # of the list
 readarray -t INTEGRATION_TESTS < <(
     echo test/TEST-64-UDEV-STORAGE
-    find test/ -maxdepth 1 -type d -name "TEST-??-*" ! -name "TEST-64-UDEV-STORAGE"
+    find test/ -maxdepth 1 -type d -name "TEST-??-*" ! -name "TEST-64-UDEV-STORAGE" | sort
 )
 
 for t in "${INTEGRATION_TESTS[@]}"; do
