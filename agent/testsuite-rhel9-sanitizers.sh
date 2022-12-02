@@ -161,6 +161,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
+        test/TEST-26-SYSTEMCTL      # systemctl & friends
         # We don't ship portabled in RHEL
         #test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
@@ -175,7 +176,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-65-ANALYZE        # systemd-analyze
         test/TEST-70-TPM2           # systemd-cryptenroll
         test/TEST-71-HOSTNAME       # systemd-hostnamed
+        test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
+        test/TEST-75-RESOLVED       # systemd-resolved
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
