@@ -254,7 +254,8 @@ done
             -Dhomed=false
             -Duserdb=false
             -Dportabled=false
-            -Dnetworkd=false
+            # CI only: we need networkd for TEST-75-RESOLVED
+            -Dnetworkd=true
             -Dsupport-url=https://access.redhat.com/support
             # Custom options
             -Dslow-tests=true
