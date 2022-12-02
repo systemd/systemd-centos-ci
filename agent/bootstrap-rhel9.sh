@@ -55,6 +55,7 @@ done
 
 ADDITIONAL_DEPS=(
     attr
+    bind-utils
     bpftool
     clang
     cryptsetup
@@ -110,7 +111,7 @@ cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Install necessary utils for tests without enabling epel system-wide
-cmd_retry dnf -y install --enablerepo epel busybox dfuzzer screen
+cmd_retry dnf -y install --enablerepo epel busybox dfuzzer knot knot-dnssecutils screen
 # Install only scsi-target-utils from our Copr repo, since it's not available
 # in the official ones, nor in EPEL
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
@@ -253,7 +254,8 @@ done
             -Dhomed=false
             -Duserdb=false
             -Dportabled=false
-            -Dnetworkd=false
+            # CI only: we need networkd for TEST-75-RESOLVED
+            -Dnetworkd=true
             -Dsupport-url=https://access.redhat.com/support
             # Custom options
             -Dslow-tests=true
