@@ -69,8 +69,9 @@ ADDITIONAL_DEPS=(
     elfutils-devel
     expect
     gcc-c++
-    glibc-langpack-en
     gdb
+    glibc-langpack-en
+    gnu-efi-devel
     integritysetup
     iproute-tc
     iscsi-initiator-utils
@@ -229,8 +230,8 @@ done
             -Dlibiptc=false
             -Dlibcurl=true
             -Dlibfido2=false
-            -Dgnu-efi=false
             -Dtpm=true
+            -Dtpm2=true
             -Dhwdb=true
             -Dsysusers=true
             -Dstandalone-binaries=true
@@ -266,6 +267,20 @@ done
             -Dinstall-tests=true
             --werror
     )
+
+    # Since RHEL/C9S 9.2 we build the EFI tools as well
+    # See: https://gitlab.com/redhat/centos-stream/rpms/systemd/-/commit/9875c7e5b4e6a06aedd74bc16c68b65f87616fe0
+    if git diff --quiet ..remotes/origin/rhel-9.0.0 || git diff --quiet ..remotes/origin/rhel-9.1.0; then
+        CONFIGURE_OPTS+=(
+            -Dgnu-efi=false
+        )
+    else
+        CONFIGURE_OPTS+=(
+            -Defi=true
+            -Dgnu-efi=true
+        )
+    fi
+
     if [[ $SANITIZE -ne 0 ]]; then
         CONFIGURE_OPTS+=(
             "-Db_sanitize=address,undefined"
