@@ -135,10 +135,6 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
-# FIXME: temporarily downgrade clang to 14.0.0-1
-# See: https://bugzilla.redhat.com/show_bug.cgi?id=2127370
-dnf -y install clang-14.0.0-1.module_el8.7.0+1142+5343df54
-
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
