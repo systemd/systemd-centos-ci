@@ -39,9 +39,11 @@ rm -fr "$BUILD_DIR"
 # Build phase
 meson "$BUILD_DIR" \
       --werror \
-      -Dc_args='-fno-omit-frame-pointer -ftrapv' \
+      -Dc_args='-fno-omit-frame-pointer -ftrapv -g -Wp,-D_FORTIFY_SOURCE=3' \
+      -Dcpp_args='-fno-omit-frame-pointer -ftrapv -g -Wp,-D_FORTIFY_SOURCE=3' \
+      -Db_lto=true \
       -Ddebug=true \
-      --optimization=g \
+      --optimization=3 \
       -Dlog-trace=true \
       -Dfexecve=true \
       -Dslow-tests=true \
