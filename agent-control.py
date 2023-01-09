@@ -76,7 +76,7 @@ class AgentControl():
 
             if error is not None:
                 # Print the error only every minute to not unnecessarily spam the console
-                if _try % 12 == 0:
+                if _try == 1 or _try % 12 == 0:
                     logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, error)
 
                 time.sleep(wait_delay)
