@@ -39,6 +39,9 @@ class AgentControl():
         self._client = DuffyClient(API_BASE, "systemd", self.duffy_key)
 
     def __del__(self):
+        if not self._session_id:
+            return
+
         # Deallocate the allocated node on script exit, if not requested otherwise
         if not self.keep_node:
             self.free_session()
