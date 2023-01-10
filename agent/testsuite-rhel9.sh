@@ -115,6 +115,12 @@ if [[ "$CGROUP_HIERARCHY" == "legacy" ]]; then
     )
 fi
 
+# Skip TEST-70-TPM2 on RHEL/C9S < 9.2, as it's not supported there and
+# we lack a lot of patches to make the test work
+if systemctl --version | grep -q "systemd 250"; then
+    SKIP_LIST+=("test/TEST-70-TPM2")
+fi
+
 centos_ensure_qemu_symlink
 
 ## Generate a custom-tailored initrd for the integration tests
