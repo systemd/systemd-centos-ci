@@ -174,12 +174,17 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-58-REPART         # systemd-repart
         test/TEST-64-UDEV-STORAGE   # systemd-udevd with various storage setups
         test/TEST-65-ANALYZE        # systemd-analyze
-        test/TEST-70-TPM2           # systemd-cryptenroll
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
         test/TEST-75-RESOLVED       # systemd-resolved
     )
+
+    # Skip TEST-70-TPM2 on RHEL/C9S < 9.2, as it's not supported there and
+    # we lack a lot of patches to make the test work
+    if ! "build/systemctl" --version | grep -q "systemd 250"; then
+        INTEGRATION_TESTS+=(test/TEST-70-TPM2) # systemd-cryptenroll
+    fi
 
     for t in "${INTEGRATION_TESTS[@]}"; do
         if [[ ! -d "$t" ]]; then
