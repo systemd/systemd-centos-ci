@@ -117,7 +117,7 @@ fi
 
 # Skip TEST-70-TPM2 on RHEL/C9S < 9.2, as it's not supported there and
 # we lack a lot of patches to make the test work
-if systemctl --version | grep -q "systemd 250"; then
+if "build/systemctl" --version | grep -q "systemd 250"; then
     SKIP_LIST+=("test/TEST-70-TPM2")
 fi
 
