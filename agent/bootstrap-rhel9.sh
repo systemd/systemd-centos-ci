@@ -67,7 +67,6 @@ ADDITIONAL_DEPS=(
     e2fsprogs
     elfutils
     elfutils-devel
-    evemu
     expect
     gcc-c++
     gdb
