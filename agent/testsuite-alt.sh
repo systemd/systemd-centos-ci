@@ -31,6 +31,30 @@ fi
 
 centos_ensure_qemu_symlink
 
+# Since we don't install the built revision in this case, let's copy some files
+# over manually to make tests work. Do it here instead of in the bootstrap script,
+# since we reboot the machine in between, which might cause issues if the copied
+# over files are incompatible with the distro-provided systemd stuff
+#
+# Manually install upstream D-Bus config file for org.freedesktop.network1
+# so systemd-networkd testsuite can use potentially new/updated methods
+cp -fv systemd/src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
+
+# Manually install upstream systemd-networkd service unit files in case a PR
+# introduces a change in them
+# See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
+cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
+cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
+
+# Support udevadm/systemd-udevd merge efforts from
+# https://github.com/systemd/systemd/pull/15918
+# The udevadm -> systemd-udevd symlink is created in the install phase which
+# we don't execute in sanitizer runs, so let's create it manually where
+# we need it
+if [[ -x "$BUILD_DIR/udevadm" && ! -x "$BUILD_DIR/systemd-udevd" ]]; then
+    ln -frsv "$BUILD_DIR/udevadm" "$BUILD_DIR/systemd-udevd"
+fi
+
 set +e
 
 ### TEST PHASE ###

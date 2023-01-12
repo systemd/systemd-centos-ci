@@ -222,24 +222,8 @@ fi
     ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build-$(uname -m).log"
 
-# Manually install upstream D-Bus config file for org.freedesktop.network1
-# so systemd-networkd testsuite can use potentially new/updated methods
-cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
-
-# Manually install upstream systemd-networkd service unit files in case a PR
-# introduces a change in them
-# See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
-cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
-cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
-
-# Support udevadm/systemd-udevd merge efforts from
-# https://github.com/systemd/systemd/pull/15918
-# The udevadm -> systemd-udevd symlink is created in the install phase which
-# we don't execute in sanitizer runs, so let's create it manually where
-# we need it
-if [[ -x "$BUILD_DIR/udevadm" && ! -x "$BUILD_DIR/systemd-udevd" ]]; then
-    ln -frsv "$BUILD_DIR/udevadm" "$BUILD_DIR/systemd-udevd"
-fi
-
-# Don't reboot the machine, since we don't install the sanitized build anyway,
-# due to stability reasons
+# Reboot the machine here to switch to the latest kernel if available
+echo "-----------------------------"
+echo "- REBOOT THE MACHINE BEFORE -"
+echo "-         CONTINUING        -"
+echo "-----------------------------"

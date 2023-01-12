@@ -65,7 +65,6 @@ run_ppc64le_sanitizers() {
     ./agent-control.py --pool virt-one-medium-centos-8s-ppc64le \
                        --bootstrap-script="bootstrap-alt.sh" \
                        --testsuite-script="testsuite-alt.sh" \
-                       --skip-reboot \
                        --no-index \
                        ${ARGS:+"${ARGS[@]}"}
 }
