@@ -121,6 +121,10 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.
 cmd_retry dnf -y install --enablerepo epel,epel-next scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
+# FIXME: Temporarily downgrade QEMU to 7.1.0, since with 7.2.0 we get spurious
+# timeouts in multiple tests
+cmd_retry dnf -y install qemu-kvm-7.1.0
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -151,33 +155,6 @@ if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
     exit 1
 fi
-
-# FIXME: drop once the patches are backported
-# Optionally backport necessary patches to make the tests work/stable
-# See: https://github.com/redhat-plumbers/systemd-rhel9/pull/108
-COMMITS=(
-    6a9c4977683a30fcd36baf64e35255e9846028c6 # test: bump the base VM memory to 768M
-    761b1d83145a6f9f41ad9aafcb5f28d452582864 # test: don't overwrite existing $QEMU_OPTIONS
-    03f5e9b2210e012060261efb734ea62c782fd465 # test: optionally wait a bit when checking the mount unit
-    1678bd2f81096b3b2b7c09f335e9c5cc8da96dca # test: lower the # of mpath devices to 16
-    cde09b07dfdc132a31672693c037bfc0b5879331 # test: check for other hypervisors as well
-    12ee072db571d5d3aca37fbf9b9261441ac9aeff # test: make the virt detection quiet
-    092499b9f69b89f7afb392ddc733edb87e1503ca # test: require KVM only for specific sub-tests
-    10d7ed12c9aedae3055218452de452800c3ea39d # test: use a unique machine name for each nspawn test
-    ed1cbdc347aeca077a7f6e88eda590340c004c34 # Revert "test: temporary workaround for systemd#21819"
-    d9e1cb288f9f2b76b281c163070a3083231b0792 # test: support open-iscsi >= 2.1.2
-    25213e16f7bfb371e6a37b520bb256a3202953c2 # test: introduce a simple environment file for test service
-    326425fb4dfd20c8410be46b6c2c0ea865436de8 # test: pre-load ASan's DSO for iscsi-init.service
-)
-
-git remote add upstream "https://github.com/systemd/systemd"
-git fetch upstream
-for commit in "${COMMITS[@]}"; do
-    # Use `git show xxx | git apply` instead of cherry-pick, since apply is atomic
-    # (i.e. it either applies the patch or doesn't without leaving the tree in some
-    # "in-between" state
-    git show "$commit" | git apply --verbose --recount || :
-done
 
 # Compile systemd
 #   - slow-tests=true: enables slow tests
