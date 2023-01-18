@@ -47,38 +47,42 @@ set +e
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
-# FIXME: test-journal-flush
-# A particularly ugly workaround for the flaky test-journal-flush. As the issue
-# presented so far only in the QEMU TEST-02, let's skip it just there, instead
-# of disabling it completely (even in the `meson test`).
-#
-# See: systemd/systemd#17963
-# shellcheck disable=SC2016
-sed -i '/mapfile -t TEST_LIST/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
+# Following issues should be fixed by the rebase in RHEL 9.2, but let's keep
+# them around for possible z-streams
+if "build/systemctl" --version | grep -q "systemd 250"; then
+    # FIXME: test-journal-flush
+    # A particularly ugly workaround for the flaky test-journal-flush. As the issue
+    # presented so far only in the QEMU TEST-02, let's skip it just there, instead
+    # of disabling it completely (even in the `meson test`).
+    #
+    # See: systemd/systemd#17963
+    # shellcheck disable=SC2016
+    sed -i '/mapfile -t TEST_LIST/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\/test-journal-flush}")' test/units/testsuite-02.sh
 
-# FIXME: test-loop-block
-# This test is flaky due to uevent mess, and requires a kernel change.
-#
-# See:
-#   systemd/systemd#17469
-#   systemd/systemd#18166
-echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
+    # FIXME: test-loop-block
+    # This test is flaky due to uevent mess, and requires a kernel change.
+    #
+    # See:
+    #   systemd/systemd#17469
+    #   systemd/systemd#18166
+    echo 'int main(void) { return 77; }' > src/test/test-loop-block.c
 
-# FIXME: test-seccomp
-# This test became flaky once again, so disable it temporarily until the reason
-# is found out.
-#
-# See: systemd/systemd#17078
-echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
+    # FIXME: test-seccomp
+    # This test became flaky once again, so disable it temporarily until the reason
+    # is found out.
+    #
+    # See: systemd/systemd#17078
+    echo 'int main(void) { return 77; }' > src/test/test-seccomp.c
 
-# FIXME: test-barrier
-# This test is flaky on systems under load, which happens intermittently due
-# to how meson runs the tests (in parallel).
-#
-# See:
-#   https://github.com/systemd/systemd/commit/fd23f9c9a70e1214507641d327da40d1688b74d7
-#   https://github.com/systemd/systemd/commit/a1e3f0f38b43e68ff9ea33ab1935aed4edf6ed7f
-echo 'int main(void) { return 77; }' > src/test/test-barrier.c
+    # FIXME: test-barrier
+    # This test is flaky on systems under load, which happens intermittently due
+    # to how meson runs the tests (in parallel).
+    #
+    # See:
+    #   https://github.com/systemd/systemd/commit/fd23f9c9a70e1214507641d327da40d1688b74d7
+    #   https://github.com/systemd/systemd/commit/a1e3f0f38b43e68ff9ea33ab1935aed4edf6ed7f
+    echo 'int main(void) { return 77; }' > src/test/test-barrier.c
+fi
 
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
