@@ -49,6 +49,7 @@ done
 
 ADDITIONAL_DEPS=(
     busybox
+    cryptsetup
     dhclient
     dnsmasq
     e2fsprogs
