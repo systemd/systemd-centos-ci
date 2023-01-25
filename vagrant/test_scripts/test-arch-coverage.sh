@@ -39,6 +39,9 @@ swapoff -av
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
+# Tweak $BUILD_DIR's permissions, so anybody can read & write the gcov metadata
+setfacl --recursive --modify="d:u::rwX,d:g::rwX,d:o:rwX" --modify="u::rwX,g::rwX,o:rwX" "$BUILD_DIR"
+
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
@@ -177,9 +180,6 @@ systemctl status dhcpcd@eth0.service
 # and other tools)
 exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
 
-# Tweak $BUILD_DIR's permissions, since networkd and resolved run under unprivileged
-# users and wouldn't be able to generate coverage reports
-setfacl -R -m 'd:o:rwX' -m 'o:rwX' "$BUILD_DIR"
 exectask "systemd-networkd" \
          "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
 exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
