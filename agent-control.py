@@ -213,7 +213,7 @@ class AgentControl():
             except Exception:
                 logging.debug("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
-            time.sleep(2)
+            time.sleep(.5)
 
         self._session_id = None
         self._node_hostname = None
