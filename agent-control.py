@@ -295,7 +295,12 @@ class SignalException(Exception):
 def handle_signal(signum, _frame):
     """Signal handler"""
     print(f"handle_signal: got signal {signum}")
-    raise SignalException()
+
+    # Raise the exception only for the first signal we handle, to avoid raising
+    # exceptions in the exception handler
+    if not hasattr(handle_signal, "handled"):
+        handle_signal.handled = True
+        raise SignalException()
 
 def main():
     # Setup logging
