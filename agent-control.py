@@ -107,10 +107,13 @@ class AgentControl():
         """
         logging.info("Executing a LOCAL command: %s", " ".join(command))
 
-        stdin = None if self.interactive else subprocess.PIPE
-        # pylint: disable=R1732
-        proc = subprocess.Popen(command, stdin=stdin, stdout=None, stderr=None, shell=False)
-        proc.communicate()
+        if self.interactive:
+            # pylint: disable=R1732
+            proc = subprocess.Popen(command, stdout=None, stderr=None, shell=False)
+            proc.communicate()
+        else:
+            # pylint: disable=R1732
+            proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=None, stderr=None, shell=False)
 
         return proc.wait()
 
