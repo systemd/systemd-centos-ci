@@ -255,6 +255,8 @@ fi
         CONFIGURE_OPTS+=(
             -Defi=true
             -Dgnu-efi=true
+            # Added in 9.2 by https://gitlab.com/redhat/centos-stream/rpms/systemd/-/merge_requests/56
+            -Ddefault-net-naming-scheme=rhel-9.0
         )
     fi
 
