@@ -208,8 +208,11 @@ class AgentControl():
         for _ in range(10):
             # pylint: disable=W0703
             try:
-                self._client.retire_session(self._session_id)
-                break
+                result = self._client.retire_session(self._session_id)
+                if not isinstance(result, DuffyAPIErrorModel):
+                    break
+
+                logging.debug("Received an API error from the server: %s", result.error)
             except Exception:
                 logging.debug("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
