@@ -287,18 +287,10 @@ class AgentControl():
         if self.execute_local_command(command) != 0:
             raise RuntimeError(f"Failed to upload file {local_source} to {self.node}")
 
-class SignalException(Exception):
-    pass
-
 def handle_signal(signum, _frame):
     """Signal handler"""
-    print(f"handle_signal: got signal {signum}")
-
-    # Raise the exception only for the first signal we handle, to avoid raising
-    # exceptions in the exception handler
-    if not hasattr(handle_signal, "handled"):
-        handle_signal.handled = True
-        raise SignalException()
+    signal.signal(signum, signal.SIG_IGN)
+    sys.exit(f"Received signal {signum}")
 
 def main():
     # Setup logging
@@ -346,8 +338,8 @@ def main():
     # pylint: disable=W0703
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
-        for s in [signal.SIGTERM, signal.SIGHUP]:
-            signal.signal(s, lambda signum, _: sys.exit(f"Received signal {signum}"))
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+        signal.signal(signal.SIGTERM, handle_signal)
 
         ac.allocate_node(args.pool)
 
@@ -424,11 +416,6 @@ def main():
             logging.info("PHASE 3: Upstream testsuite")
             command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script}"
             ac.execute_remote_command(command, artifacts_dir="~/testsuite-logs*")
-
-    except SignalException:
-        # Do a proper cleanup on certain signals
-        # (i.e. continue with the `finally` section)
-        logging.info("Ignoring received signal...")
 
     except Exception:
         if ac.node and args.kdump_collect:
