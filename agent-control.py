@@ -346,8 +346,8 @@ def main():
     # pylint: disable=W0703
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
-        signal.signal(signal.SIGTERM, handle_signal)
-        signal.signal(signal.SIGHUP, handle_signal)
+        for s in [signal.SIGTERM, signal.SIGHUP]:
+            signal.signal(s, lambda signum, _: sys.exit(f"Received signal {signum}"))
 
         ac.allocate_node(args.pool)
 
@@ -450,21 +450,6 @@ def main():
         rc = 1
 
     finally:
-        # Return the loaned node back to the pool if not requested otherwise
-        if not ac.keep_node:
-            # Ugly workaround for current Jenkin's behavior, where the signal
-            # is sent several times under certain conditions. This is already
-            # filed upstream, but the fix is still incomplete. Let's just
-            # ignore SIGTERM/SIGHUP until the cleanup is complete.
-            signal.signal(signal.SIGTERM, signal.SIG_IGN)
-            signal.signal(signal.SIGHUP, signal.SIG_IGN)
-
-            ac.free_session()
-
-            # Restore default signal handlers
-            signal.signal(signal.SIGTERM, signal.SIG_DFL)
-            signal.signal(signal.SIGHUP, signal.SIG_DFL)
-
         if os.path.isfile("utils/generate-index.sh") and artifacts_dir and not args.no_index:
             # Try to generate a simple HTML index with results
             logging.info("Attempting to create an HTML index page")
