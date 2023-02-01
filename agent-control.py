@@ -5,6 +5,7 @@
 import argparse
 import logging
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -201,18 +202,26 @@ class AgentControl():
         if not self._session_id:
             return
 
-        logging.info("Freeing session %s (with node %s)", self._session_id, self.node)
         # Try a bit harder when retiring the session, since the API might return an error
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
-        for _ in range(10):
+        for i in range(10):
+            logging.info("Freeing session %s (with node %s) [try %s/10]", self._session_id, self.node, i)
+
             # pylint: disable=W0703
             try:
                 result = self._client.retire_session(self._session_id)
-                if not isinstance(result, DuffyAPIErrorModel):
-                    break
+                if isinstance(result, DuffyAPIErrorModel):
+                    # A particularly ugly workaround for an issue in Duffy where a session
+                    # might not get released even after a successful API call. Let's make
+                    # sure the session is released by making multiple calls until the API
+                    # returns an error that the session is already released.
+                    # See: https://github.com/CentOS/duffy/issues/558
+                    if re.search(r"session \d+ is retired", result.error.detail):
+                        logging.info("Session %s was successfully freed", self._session_id)
+                        break
 
-                logging.debug("Received an API error from the server: %s", result.error)
+                    logging.debug("Received an API error from the server: %s", result.error)
             except Exception:
                 logging.debug("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
