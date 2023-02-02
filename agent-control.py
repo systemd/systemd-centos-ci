@@ -144,6 +144,8 @@ class AgentControl():
         """
         assert self.node, "Can't continue without a valid node"
 
+        timeout = False
+
         command_wrapper = [
             "/usr/bin/ssh", "-t",
             "-o", "UserKnownHostsFile=/dev/null",
@@ -156,13 +158,20 @@ class AgentControl():
         ]
 
         logging.info("Executing a REMOTE command on node '%s': %s", self.node, command)
-        rc = self.execute_local_command(command_wrapper)
+        try:
+            rc = self.execute_local_command(command_wrapper)
+        except AlarmException:
+            # Delay the timeout exception, so we can fetch artifacts first
+            timeout = True
 
         # Fetch artifacts if both remote and local dirs are set
         if artifacts_dir is not None and self.artifacts_storage is not None:
             arc = self.fetch_artifacts(artifacts_dir, self.artifacts_storage)
             if arc != 0:
                 logging.warning("Fetching artifacts failed")
+
+        if timeout:
+            raise AlarmException()
 
         if not ignore_rc and rc != expected_rc:
             raise RuntimeError("Remote command exited with an unexpected return code "
@@ -206,7 +215,7 @@ class AgentControl():
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
         for i in range(10):
-            logging.info("Freeing session %s (with node %s) [try %s/10]", self._session_id, self.node, i)
+            logging.info("Freeing session %s (with node %s) [try %d/10]", self._session_id, self.node, i)
 
             # pylint: disable=W0703
             try:
@@ -299,9 +308,15 @@ class AgentControl():
 class SignalException(Exception):
     pass
 
+class AlarmException(Exception):
+    pass
+
 def handle_signal(signum, _frame):
     """Signal handler"""
     print(f"handle_signal: got signal {signum}")
+
+    if signum == signal.SIGALRM:
+        raise AlarmException()
 
     # Raise the exception only for the first signal we handle, to avoid raising
     # exceptions in the exception handler
@@ -340,6 +355,8 @@ def main():
             help="Skip reboot between bootstrap and test phases (on baremetal machines)")
     parser.add_argument("--testsuite-script", metavar="SCRIPT", type=str, default="testsuite.sh",
             help="Script which runs tests on the bootstrapped machine")
+    parser.add_argument("--timeout", metavar="MINUTES", type=int, default=0,
+            help="Set a timeout for the test run (in minutes)")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
     parser.add_argument("--vagrant-sync", metavar="VAGRANTFILE", type=str, default="",
@@ -355,10 +372,14 @@ def main():
     # pylint: disable=W0703
     try:
         # Workaround for Jenkins, which sends SIGTERM/SIGHUP
-        for s in [signal.SIGTERM, signal.SIGHUP, signal.SIGINT]:
+        for s in [signal.SIGTERM, signal.SIGHUP, signal.SIGINT, signal.SIGALRM]:
             signal.signal(s, handle_signal)
 
         ac.allocate_node(args.pool)
+
+        if args.timeout > 0:
+            logging.info("Setting timeout to %d minutes", args.timeout * 60)
+            signal.alarm(args.timeout * 60)
 
         # Figure out a systemd branch to compile
         if args.pr:
@@ -438,7 +459,7 @@ def main():
         if not ac.keep_node:
             ac.free_session()
 
-    except Exception:
+    except Exception as e:
         if ac.node and args.kdump_collect:
             logging.info("Trying to collect kernel dumps from %s:/var/crash", ac.node)
             # Wait a bit for the reboot to kick in in case we got a kernel panic
@@ -454,7 +475,11 @@ def main():
                 # we can do if the machine is FUBAR
                 pass
 
-        logging.exception("Execution failed")
+        if isinstance(e, AlarmException):
+            logging.error("Execution failed: timeout reached")
+        else:
+            logging.exception("Execution failed")
+
         rc = 1
 
     finally:
