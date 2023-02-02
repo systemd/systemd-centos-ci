@@ -215,7 +215,7 @@ class AgentControl():
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
         for i in range(10):
-            logging.info("Freeing session %s (with node %s) [try %s/10]", self._session_id, self.node, i)
+            logging.info("Freeing session %s (with node %s) [try %d/10]", self._session_id, self.node, i)
 
             # pylint: disable=W0703
             try:
