@@ -477,10 +477,10 @@ def main():
 
         if isinstance(e, AlarmException):
             logging.error("Execution failed: timeout reached")
+            rc = 124
         else:
             logging.exception("Execution failed")
-
-        rc = 1
+            rc = 1
 
     finally:
         if os.path.isfile("utils/generate-index.sh") and artifacts_dir and not args.no_index:
