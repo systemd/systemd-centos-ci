@@ -105,7 +105,7 @@ export STRIP_BINARIES=no
 # in the front, so they can run in background while we go through the rest
 # of the list
 readarray -t INTEGRATION_TESTS < <(
-    echo test/TEST-64-UDEV-STORAGE
+    [[ -d test/TEST-64-UDEV-STORAGE ]] && echo test/TEST-64-UDEV-STORAGE
     find test/ -maxdepth 1 -type d -name "TEST-??-*" ! -name "TEST-64-UDEV-STORAGE" | sort
 )
 
