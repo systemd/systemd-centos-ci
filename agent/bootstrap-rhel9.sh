@@ -121,10 +121,6 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.
 cmd_retry dnf -y install --enablerepo epel,epel-next scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
-# FIXME: Temporarily downgrade QEMU to 7.1.0, since with 7.2.0 we get spurious
-# timeouts in multiple tests
-cmd_retry dnf -y install qemu-kvm-7.1.0
-
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -330,10 +326,12 @@ fi
 
     if systemd-detect-virt -qv; then
         # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
-        # See: https://access.redhat.com/solutions/6833751
+        # See:
+        #   - https://bugzilla.redhat.com/show_bug.cgi?id=2060839
+        #   - https://access.redhat.com/solutions/6833751
         # Do this conditionally here, since the same bootstrap phase is used
         # in VMs as well as on bare metal machines
-        export QEMU_OPTIONS="-cpu max"
+        export QEMU_OPTIONS="-cpu Nehalem"
     fi
 
     make -C test/TEST-01-BASIC clean setup run clean-again

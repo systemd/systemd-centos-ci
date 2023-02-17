@@ -156,8 +156,10 @@ export KERNEL_APPEND="${CGROUP_KERNEL_ARGS[*]}"
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
 # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
-# See: https://access.redhat.com/solutions/6833751
-export QEMU_OPTIONS="-cpu max"
+# See:
+#   - https://bugzilla.redhat.com/show_bug.cgi?id=2060839
+#   - https://access.redhat.com/solutions/6833751
+export QEMU_OPTIONS="-cpu Nehalem"
 
 # Let's re-shuffle the test list a bit by placing the most expensive tests
 # in the front, so they can run in background while we go through the rest
