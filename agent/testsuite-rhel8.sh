@@ -124,9 +124,6 @@ for t in test/TEST-??-*; do
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     export QEMU_OPTIONS="-cpu max"
 
-    rm -fr "$TESTDIR"
-    mkdir -p "$TESTDIR"
-
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
     # FIXME: retry each task again if it fails (i.e. run each task twice at most)

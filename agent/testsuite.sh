@@ -126,11 +126,6 @@ for t in "${INTEGRATION_TESTS[@]}"; do
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
 
-    # Skipped test don't create the $TESTDIR automatically, so do it explicitly
-    # otherwise the `touch` command would fail
-    mkdir -p "$TESTDIR"
-    rm -f "$TESTDIR/pass"
-
     # FIXME: retry each task again if it fails (i.e. run each task twice at most)
     #        to work around intermittent QEMU soft lockups/ACPI timer errors
     #
