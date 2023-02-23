@@ -155,7 +155,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
         export TEST_PARALLELIZE=1
         export QEMU_SMP=$OPTIMAL_QEMU_SMP
-        export NSPAWN_ARGUMENTS="--machine=${t##*/}"
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
