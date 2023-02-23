@@ -190,12 +190,19 @@ exectask_retry() {
         echo "[TASK] $task_name ($task_command) [try $i/$retries]"
         echo "[TASK START] $(date)" >>"$logfile"
 
-        # Suffix the $TESTDIR for each retry by its index if requested
+        # Make sure each retry has a unique state dir ($TESTDIR) and container
+        # name (passed in $NSPAWN_ARGUMENTS), so we don't overwrite results
+        # of previous retries or die because of a name clash.
+        # Note: this is relevant only for the integration tests (test/TEST-??-*)
         if [[ "${MANGLE_TESTDIR:-0}" -ne 0 ]]; then
+            # Suffix the $TESTDIR for each retry by its index if requested
             orig_testdir="${orig_testdir:-$TESTDIR}"
             export TESTDIR="${orig_testdir}_${i}"
             mkdir -p "$TESTDIR"
             rm -f "$TESTDIR/pass"
+
+            # Also, set a unique name for each nspawn container to prevent scope clash
+            export NSPAWN_ARGUMENTS="--machine=${task_name}--${i}"
         fi
 
         # shellcheck disable=SC2086
@@ -301,7 +308,7 @@ exectask_p_finish() {
 
     for key in "${!TASK_QUEUE[@]}"; do
         echo "[INFO] Waiting for task '$key' to finish..."
-        wait ${TASK_QUEUE[$key]}
+        wait "${TASK_QUEUE[$key]}"
         unset "TASK_QUEUE[$key]"
     done
 }

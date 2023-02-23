@@ -123,11 +123,6 @@ for t in test/TEST-??-*; do
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
     export QEMU_OPTIONS="-cpu max"
-    # Use a "unique" name for each nspawn container to prevent scope clash
-    export NSPAWN_ARGUMENTS="--machine=${t##*/}"
-
-    rm -fr "$TESTDIR"
-    mkdir -p "$TESTDIR"
 
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
