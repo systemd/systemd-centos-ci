@@ -308,7 +308,7 @@ exectask_p_finish() {
 
     for key in "${!TASK_QUEUE[@]}"; do
         echo "[INFO] Waiting for task '$key' to finish..."
-        wait ${TASK_QUEUE[$key]}
+        wait "${TASK_QUEUE[$key]}"
         unset "TASK_QUEUE[$key]"
     done
 }
