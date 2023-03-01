@@ -86,9 +86,11 @@ ADDITIONAL_DEPS=(
     openssl-devel
     pcre2-devel
     python3-jinja2
+    python3-pefile # EPEL
     python3-pexpect
     python3-psutil
     python3-pyparsing
+    python3-pytest
     qemu-kvm
     qrencode-devel
     quota
@@ -110,7 +112,7 @@ ADDITIONAL_DEPS=(
 )
 
 dnf -y install epel-release epel-next-release dnf-plugins-core gdb
-dnf -y config-manager --enable epel --enable powertools
+dnf -y config-manager --enable epel --enable epel-next --enable powertools
 # Install the Kmods SIG repository for certain kernel modules
 # See: https://sigs.centos.org/kmods/repositories/
 cmd_retry dnf -y install centos-release-kmods
