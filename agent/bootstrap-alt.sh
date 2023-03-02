@@ -109,6 +109,7 @@ ADDITIONAL_DEPS=(
     tpm2-tss-devel
     veritysetup
     wget
+    zstd
 )
 
 dnf -y install epel-release epel-next-release dnf-plugins-core gdb
