@@ -42,3 +42,4 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
  - OWASP Markup Formatter (https://plugins.jenkins.io/antisamy-markup-formatter)
  - Timestamper (https://plugins.jenkins.io/timestamper)
  - URL SCM (https://plugins.jenkins.io/URLSCM)
+ - Workspace Cleanup (https://plugins.jenkins.io/ws-cleanup)
