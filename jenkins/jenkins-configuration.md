@@ -43,3 +43,9 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
  - Timestamper (https://plugins.jenkins.io/timestamper)
  - URL SCM (https://plugins.jenkins.io/URLSCM)
  - Workspace Cleanup (https://plugins.jenkins.io/ws-cleanup)
+
+## Unwanted plugins
+ - Blue Ocean
+ - Display URL for Blue Ocean
+ - Personalization for Blue Ocean
+ - ...
