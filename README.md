@@ -71,7 +71,7 @@ To achieve this, `agent-control.py` runs `agent/bootstrap.sh` script to fetch, b
 the respective PR (along with other necessary dependencies), reboots the machine, and executes
 `agent/testsuite.sh` to to the actual testing.
 
-## Downstream (RHEL) on CentOS 7 and CentOS Stream 8 (rhel7-centos7 and rhel8-centos8)
+## Downstream (RHEL) on CentOS 7 and CentOS Stream 8/9 (rhelX-centosX)
 
 The same worklflow as above, but for systemd in RHEL:
 
@@ -85,6 +85,12 @@ agent-control.py +-> agent/bootstrap-rhel7.sh +-> reboot +-> agent/testsuite-rhe
 
 ```
 agent-control.py +-> agent/bootstrap-rhel8.sh +-> reboot +-> agent/testsuite-rhel8.sh
+```
+
+  * [RHEL 9/CentOS Stream 9](https://github.com/redhat-plumbers/systemd-rhel9)
+
+```
+agent-control.py +-> agent/bootstrap-rhel9.sh +-> reboot +-> agent/testsuite-rhel9.sh
 ```
 
 ## Upstream on Arch Linux using Vagrant (upstream-vagrant-archlinux)
@@ -171,15 +177,17 @@ this job's sole purpose is to rebuild the base images (Vagrant Boxes) every few 
 (based on Jenkins cron) and upload it to the artifacts server, where it can be
 used by the respective Vagrantfile.
 
-## (Auxiliary) Mirror the Copr repo with CentOS (Stream) 8 dependencies (centos8-reposync)
+## (Auxiliary) Mirror the Copr repo with CentOS (Stream) dependencies (reposync)
 
 ```
 utils/reposync.sh
 ```
 
-We need a couple of newer dependencies for systemd on CentOS (Stream) 8 to cover the most
-recent features. For this we have a [Copr repo](https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/)
-with necessary packages.
+We need a couple of newer dependencies for systemd on CentOS (Stream) to cover the most
+recent features. For this we have a bunch of Copr repositories [0][1] with necessary packages.
+
+[0] https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/ \
+[1] https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
 
 However, we found out that the infrastructure Copr is running in is quite unreliable
 so a fair share of our jobs was failing just because they couldn't install dependencies.
