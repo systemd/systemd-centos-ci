@@ -117,7 +117,7 @@ cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 cmd_retry dnf -y install --enablerepo epel busybox dfuzzer knot knot-dnssecutils screen
 # Install only scsi-target-utils from our Copr repo, since it's not available
 # in the official ones, nor in EPEL
-cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
+cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y install --enablerepo epel,epel-next scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 

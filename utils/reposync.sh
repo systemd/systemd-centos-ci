@@ -2,7 +2,7 @@
 
 DOWNLOAD_LOCATION="${1:-.}"
 # JOB_URL is exported by Jenkins
-# See: https://jenkins-systemd.apps.ocp.ci.centos.org/env-vars.html/
+# See: https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/env-vars.html/
 ARTIFACT_BASE_DIR="${JOB_URL:?}/lastSuccessfulBuild/artifact/$DOWNLOAD_LOCATION"
 
 at_exit() {

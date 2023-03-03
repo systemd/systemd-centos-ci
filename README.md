@@ -56,7 +56,7 @@ chmod +x runner.sh
 
 # Pipelines
 
-Jenkins instance: https://jenkins-systemd.apps.ocp.ci.centos.org/
+Jenkins instance: https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/
 
 ## Upstream on CentOS Stream 8 (upstream-centos8)
 
