@@ -28,7 +28,7 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
  - Matrix-based security -> Anonymous Users -> Check "Read" in the "Overall" and "Job" categories
 
 ### Markup Formatter
- - Markup Formatter: `Raw HTML`
+ - Markup Formatter: `Safe HTML`
 
 ## Manage Nodes and Clouds
 ### Configure Clouds
