@@ -24,8 +24,15 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
     - Admin list: mrc0mmand
 
 ## Configure Global Security
+### Authorization
+ - Matrix-based security -> Anonymous Users -> Check "Read" in the "Overall" and "Job" categories
+
 ### Markup Formatter
  - Markup Formatter: `Raw HTML`
+
+## Manage Nodes and Clouds
+### Configure Clouds
+ - Kubernetes -> Kubernetes Cloud Details -> Set "Concurrency Limit" to 10
 
 ## Plugins
  - Embeddable Build Status (https://plugins.jenkins.io/embeddable-build-status)
