@@ -3,7 +3,7 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
 # Manage Jenkins
 ## Configure System
 ### Global
- - # of executors: 0
+ - \# of executors: 0
 
 ### Global Properties
  - Environment variables
