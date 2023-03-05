@@ -31,17 +31,6 @@ declare -ri TASK_RETRY_DEFAULT=3
 # utility. If that fails, fall back to using default values for necessary
 # variables.
 if NPROC=$(nproc); then
-    # Workaround: in case of EC2 machines the hypervisor might start stealing
-    #             our CPU time once the region we run in gets under heavy load.
-    #             This makes the tests run longer (in the better case) or timeout
-    #             unexpectedly. Let's attempt to lessen the impact in such situations
-    #             by keeping some CPUs "free" in hopes that when the "stealing"
-    #             begins we will have some spare resources to distribute the load to.
-    if [[ "$(uname -m)" == "x86_64" && "$(systemd-detect-virt -v)" == "xen" ]]; then
-        NPROC=$((NPROC - 2))
-        echo "[TASK-CONTROL] Reducing the # of usable CPUs from $(nproc) to $NPROC"
-    fi
-
     OPTIMAL_QEMU_SMP=2
     MAX_QUEUE_SIZE=$((NPROC / OPTIMAL_QEMU_SMP))
     if [[ $MAX_QUEUE_SIZE -lt 1 ]]; then
