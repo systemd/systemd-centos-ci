@@ -69,7 +69,23 @@ run_ppc64le_sanitizers() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_remaining_sanitizer_job run_coverage run_ppc64le_sanitizers; do
+run_aarch64_sanitizers() {
+    # Run the integration test suite on C8S aarch64 with sanitizers
+    ./agent-control.py --pool virt-ec2-c6g-centos-8s-aarch64 \
+                       --bootstrap-script="bootstrap-alt.sh" \
+                       --testsuite-script="testsuite-alt.sh" \
+                       --no-index \
+                       ${ARGS:+"${ARGS[@]}"}
+}
+
+JOBS=(
+    run_remaining_sanitizer_job
+    run_coverage
+    run_ppc64le_sanitizers
+    run_aarch64_sanitizers
+)
+
+for job in "${JOBS[@]}"; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
