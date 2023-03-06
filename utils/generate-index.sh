@@ -35,7 +35,7 @@ tree --charset=utf-8 -C -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H
 ADDITIONAL_INFO_FILE="$(mktemp)"
 cat > "$ADDITIONAL_INFO_FILE" << EOF
 <div>
-<strong>Build URL:</strong> <a href='$BUILD_URL'>$BUILD_URL</a><br/>
+<strong>Build URL:</strong> <a href='${BUILD_URL:?}'>$BUILD_URL</a><br/>
 <strong>Console log:</strong> <a href='$BUILD_URL/console'>$BUILD_URL/console</a><br/>
 <strong>PR title:</strong> ${ghprbPullTitle:-N/A}</br>
 <strong>Reschedule count:</strong> ${NAGINATOR_COUNT:-0}</br>
