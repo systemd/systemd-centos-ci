@@ -32,7 +32,7 @@ if KVM_MODULE_NAME="$(lsmod | grep -m1 -Eo '(kvm_intel|kvm_amd)')"; then
             echo "[vagrant-setup] Failed to enable nested KVM"
         fi
     else
-        echo "[vagrant-setup] Failed to reload module '$KVM_MODULE_SETUP'"
+        echo "[vagrant-setup] Failed to reload module '$KVM_MODULE_NAME'"
     fi
 else
     echo "[vagrant-setup] No KVM module found, can't setup nested KVM"
