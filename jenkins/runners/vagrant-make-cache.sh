@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2181
+# shellcheck disable=SC2181,SC2317
 
 # Note: this script MUST be self-contained - i.e. it MUST NOT source any
 # external scripts as it is used as a bootstrap script, thus it's

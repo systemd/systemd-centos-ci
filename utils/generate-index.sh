@@ -58,7 +58,7 @@ grep --text -Pzo '(?s)(?<=<style type="text/css">)(.*)(?=</style>)' "$INDEX_FILE
 # Part 2: link it back to the original index file
 sed -i "/<head>/a<link rel=\"stylesheet\" href=\"$CSS_FILE\" type=\"text/css\">" "$INDEX_FILE"
 
-LANDING_URL="${BUILD_URL}artifact/${PWD##$WORKSPACE}/index.html"
+LANDING_URL="${BUILD_URL}artifact/${PWD##"$WORKSPACE"}/index.html"
 
 # As we can't expect to have 'cowsay' installed, let's make our own oversimplified
 # version of it for absolutely no apparent reason. The picture below is, of course,
@@ -66,7 +66,7 @@ LANDING_URL="${BUILD_URL}artifact/${PWD##$WORKSPACE}/index.html"
 echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '_'; done
 echo -ne "\n< $LANDING_URL >\n"
 echo -n ' '; for ((i = 0; i < ${#LANDING_URL} + 2; i++)); do echo -n '-'; done
-# shellcheck disable=SC1004
+# shellcheck disable=SC1004,SC2028
 echo '
                        \                    ^    /^
                         \                  / \  // \
