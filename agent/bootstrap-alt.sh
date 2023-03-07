@@ -89,6 +89,7 @@ ADDITIONAL_DEPS=(
     python3-pefile # EPEL
     python3-pexpect
     python3-psutil
+    python3-pyelftools # EPEL
     python3-pyparsing
     python3-pytest
     qemu-kvm
