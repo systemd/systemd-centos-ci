@@ -89,8 +89,6 @@ export SKIP_INITRD=no
 export TEST_PREFER_NSPAWN=yes
 # Bump the SUT memory to 4G, mainly for dfuzzer
 export QEMU_MEM=4G
-# Use the unified cgroup hierarchy in nspawn as well
-export UNIFIED_CGROUP_HIERARCHY=yes
 
 ## Generate a custom-tailored initrd for the integration tests
 # The host initrd contains multipath modules & services which are unused
