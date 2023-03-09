@@ -60,6 +60,7 @@ ADDITIONAL_DEPS=(
     elfutils-devel
     evemu
     expect
+    fsverity-utils # EPEL
     gcc-c++
     glibc-langpack-en
     integritysetup
@@ -67,6 +68,7 @@ ADDITIONAL_DEPS=(
     iscsi-initiator-utils
     jq
     kernel-modules-extra
+    keyutils
     kmod-wireguard # Kmods SIG
     knot
     knot-dnssecutils
@@ -107,6 +109,7 @@ ADDITIONAL_DEPS=(
     tpm2-tools
     tpm2-tss-devel
     veritysetup
+    vim-common
     wget
     zstd
 )
