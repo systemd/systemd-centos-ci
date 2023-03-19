@@ -399,7 +399,8 @@ def main():
             # for the user sessions.
             # See: https://pagure.io/centos-infra/issue/865#comment-810347
             logging.info("Wait until the machine is fully initialized")
-            ac.execute_remote_command("systemd-run --wait -p Wants=cloud-init.target -p After=cloud-init.target true && systemctl --user daemon-reexec")
+            dnf_wait = "bash -c 'while pgrep -a dnf; do sleep 1; done'"
+            ac.execute_remote_command(f"systemd-run --wait -p Wants=cloud-init.target -p After=cloud-init.target -- {dnf_wait} && systemctl --user daemon-reexec")
 
         # Let's differentiate between CentOS <= 7 (yum) and CentOS >= 8 (dnf)
         pkg_man = "yum" if "centos-7-" in args.pool else "dnf"
