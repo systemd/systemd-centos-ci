@@ -272,7 +272,7 @@ class AgentControl():
             time.sleep(15)
 
         if rc != 0:
-            raise Exception("Timeout reached when waiting for node to become online")
+            raise RuntimeError("Timeout reached when waiting for node to become online")
 
         logging.info("Node %s appears reachable again", self.node)
 
