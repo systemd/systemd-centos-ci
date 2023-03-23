@@ -97,13 +97,7 @@ lsmod | grep -E '^nfsd$' || modprobe -v nfsd
 echo 10 > /proc/sys/fs/nfs/nlm_grace_period
 echo 10 > /proc/fs/nfsd/nfsv4gracetime
 echo 10 > /proc/fs/nfsd/nfsv4leasetime
-systemctl enable  nfs-server
+systemctl enable nfs-server
 systemctl restart nfs-server
 systemctl status nfs-server
 sleep 10
-
-# Debug for #272
-echo "[DEBUG] Simulate Vagrant's nfs_installed check"
-/usr/bin/systemctl list-units '*nfs*server*' --no-pager --no-legend
-/bin/sh -c "systemctl --no-pager --no-legend --plain list-unit-files --all --type=service | grep nfs-server.service"
-echo "[DEBUG] End"
