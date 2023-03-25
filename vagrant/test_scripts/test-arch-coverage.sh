@@ -191,6 +191,7 @@ exectask "lcov_merge_coverage" "lcov_merge all-integration-tests.coverage-info $
 # See: https://github.com/eddyxu/cpp-coveralls/issues/126#issuecomment-946716583
 #      for reasoning
 exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
+exectask "lcov_coverage_report" "lcov --list everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
 exectask "coveralls_upload" "coveralls --no-gcov --lcov-file everything.coverage-info"
