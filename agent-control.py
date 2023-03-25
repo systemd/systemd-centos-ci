@@ -93,6 +93,18 @@ class AgentControl():
         assert self.node, "Can't continue without a valid node"
         logging.info("Allocated node %s with session id %s", self.node, self._session_id)
 
+        logging.info("Checking if node %s is reachable over ssh", self.node)
+        reachable = False
+        for _ in range(10):
+            if self.execute_remote_command("true", ignore_rc=True) == 0:
+                reachable = True
+                break
+
+            time.sleep(5)
+
+        if not reachable:
+            raise RuntimeError(f"Node {self.node} doesn't appear to be reachable over ssh")
+
     def execute_local_command(self, command):
         """Execute a command on the local machine
 
