@@ -190,10 +190,12 @@ exectask "lcov_merge_coverage" "lcov_merge all-integration-tests.coverage-info $
 # Drop *.gperf files from the lcov files
 # See: https://github.com/eddyxu/cpp-coveralls/issues/126#issuecomment-946716583
 #      for reasoning
-exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o integration-tests.coverage-info"
+exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
-exectask "coveralls_upload" "coveralls --no-gcov --lcov-file integration-tests.coverage-info"
+exectask "coveralls_upload" "coveralls --no-gcov --lcov-file everything.coverage-info"
+# Copy the final coverage report to artifacts for local analysis if needed
+cp -fv "everything.coverage-info" "$LOGDIR/"
 
 # If the test logs contain lines like:
 #
