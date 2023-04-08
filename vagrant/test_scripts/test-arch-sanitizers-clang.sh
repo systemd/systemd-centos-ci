@@ -144,6 +144,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-73-LOCALE         # systemd-localed
         test/TEST-74-AUX-UTILS      # auxiliary utils (busctl, sd-delta, sd-mount, ...)
         test/TEST-75-RESOLVED       # systemd-resolved
+        test/TEST-81-GENERATORS     # various systemd generators
     )
 
     for t in "${INTEGRATION_TESTS[@]}"; do
