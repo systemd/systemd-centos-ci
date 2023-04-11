@@ -14,8 +14,6 @@ Do ^ _after_ installing all the plugins below.
     - Kind: Secret Text
     - Secret: token generated at https://github.com/settings/tokens (classic token with scope: repo:status)
     - Description: GH/mrc0mmand
-    - Uncheck "Auto-manage webhooks"
-    - Admin list: mrc0mmand
 
 ## Configure Global Security
 ### Markup Formatter
