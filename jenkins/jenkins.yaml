@@ -30,6 +30,10 @@ jenkins:
           - key: LANG
             value: en_US.utf8
 
+  markupFormatter:
+    # OWASP Markup Formatter plugin
+    rawHtml:
+      disableSyntaxHighlighting: false
   mode: EXCLUSIVE
   numExecutors: 1
   primaryView:
