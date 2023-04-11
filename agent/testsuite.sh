@@ -71,6 +71,9 @@ export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd with the dm-crypt modules and without the multipath module
 dracut -a crypt -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+# Don't strip systemd binaries installed into test images, so we can get nice
+# stack traces when something crashes
+export STRIP_BINARIES=no
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
@@ -98,9 +101,6 @@ export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
 export QEMU_OPTIONS="-cpu max"
-# Don't strip systemd binaries installed into test images, so we can get nice
-# stack traces when something crashes
-export STRIP_BINARIES=no
 
 # Let's re-shuffle the test list a bit by placing the most expensive tests
 # in the front, so they can run in background while we go through the rest

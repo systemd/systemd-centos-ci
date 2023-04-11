@@ -47,6 +47,10 @@ if ! mkinitcpio -c /dev/null -A base,systemd,sd-encrypt,autodetect,modconf,block
     exit 1
 fi
 
+# Don't strip systemd binaries installed into test images, so we can get nice
+# stack traces when something crashes
+export STRIP_BINARIES=no
+
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
 
@@ -93,9 +97,6 @@ export QEMU_TIMEOUT=900
 export NSPAWN_TIMEOUT=900
 # Enforce nested KVM
 export TEST_NESTED_KVM=1
-# Don't strip systemd binaries installed into test images, so we can get nice
-# stack traces when something crashes
-export STRIP_BINARIES=no
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
