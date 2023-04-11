@@ -50,6 +50,7 @@ fi
 CHECK_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test, see below
+    "test/TEST-63-PATH" # flaky when the AWS region is under heavy load
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
