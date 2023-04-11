@@ -1,0 +1,37 @@
+---
+# Jenkins configuration for the Configuration as a Code plugin (JCasC)
+# yamllint disable rule:line-length
+
+jenkins:
+  systemMessage: |
+    <img src="https://github.com/systemd/brand.systemd.io/raw/main/assets/page-logo.png" /><br /><br />
+
+    CI jobs for both upstream and downstream (RHEL) systemd repositories. <br/><br/>
+
+    Upstream: <a href='https://github.com/systemd/systemd'>https://github.com/systemd/systemd</a><br/>
+    Upstream-stable: <a href='https://github.com/systemd/systemd-stable'>https://github.com/systemd/systemd-stable</a><br/>
+    RHEL 7: <a href='https://github.com/redhat-plumbers/systemd-rhel7'>https://github.com/redhat-plumbers/systemd-rhel7</a><br/>
+    RHEL 8: <a href='https://github.com/redhat-plumbers/systemd-rhel8'>https://github.com/redhat-plumbers/systemd-rhel8</a><br/>
+    RHEL 9: <a href='https://github.com/redhat-plumbers/systemd-rhel9'>https://github.com/redhat-plumbers/systemd-rhel9</a><br/>
+      <br/>
+    Upstream test coverage: <a href='https://coveralls.io/github/systemd/systemd?branch=main'><img src='https://coveralls.io/repos/github/systemd/systemd/badge.svg?branch=main' alt='Coverage Status' /></a>
+      <br/>
+      <br/>
+    CI scripts: <a href='https://github.com/systemd/systemd-centos-ci'>https://github.com/systemd/systemd-centos-ci</a><br/>
+      <br/>
+      <br/>
+    Something's broken or missing? Ping mrc0mmand@LiberaChat or open an issue in the <a href='https://github.com/systemd/systemd-centos-ci'>systemd CentOS CI GitHub repo</a>.
+
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: LANG
+            value: en_US.utf8
+
+unclassified:
+  location:
+    # Jenkins in OCP overrides this on each startup
+    # See: https://pagure.io/centos-infra/issue/1103
+    adminAddress: builder@jenkins-systemd.apps.ocp.cloud.ci.centos.org
+  mailer:
+    smtpHost: smtp.ci.centos.org

@@ -1,19 +1,14 @@
 Notes describing current Jenkins configuration in case it needs to be redeployed.
 
+Note: part of this configuration has been translated to a yaml format parsed
+by the Configuration as Code plugin. Simply copy the `jenkins.yaml` to
+`/var/lib/jenkins/jenkins.yaml` and reload the configuration under
+Configure System -> Configuration as Code -> Actions -> Reload existing configuration
+
 # Manage Jenkins
 ## Configure System
 ### Global
  - \# of executors: 0
-
-### Global Properties
- - Environment variables
-    - `LANG=en_US.utf8`
-
-### Jenkins Location
- - System Admin e-mail address: `builder@<Jenkins URL>`
-
-### E-mail Notification
- - SMTP server: `smtp.ci.centos.org`
 
 ### GitHub Pull Request Builder
  - Credentials -> Add -> Jenkins
@@ -35,6 +30,7 @@ Notes describing current Jenkins configuration in case it needs to be redeployed
  - Kubernetes -> Kubernetes Cloud Details -> Set "Concurrency Limit" to 10
 
 ## Plugins
+ - Configuration as Code (https://plugins.jenkins.io/configuration-as-code/)
  - Embeddable Build Status (https://plugins.jenkins.io/embeddable-build-status)
  - GitHub Pull Request Builder (https://plugins.jenkins.io/ghprb)
  - Mailer (https://plugins.jenkins.io/mailer)
