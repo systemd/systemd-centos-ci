@@ -1,5 +1,8 @@
 ---
 # Jenkins configuration for the Configuration as a Code plugin (JCasC)
+# Docs & examples:
+#   - https://github.com/jenkinsci/configuration-as-code-plugin
+#
 # yamllint disable rule:line-length
 
 jenkins:
