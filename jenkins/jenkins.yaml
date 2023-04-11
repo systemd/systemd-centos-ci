@@ -3,6 +3,38 @@
 # yamllint disable rule:line-length
 
 jenkins:
+  authorizationStrategy:
+    globalMatrix:
+      # Allow viewing jobs to anonymous users
+      # Note: this _replaces_ the whole permissions matrix
+      permissions:
+        - "Job/Discover:anonymous"
+        - "Job/Read:anonymous"
+        - "Job/ViewStatus:anonymous"
+        - "Overall/Administer:mrc0mmand-admin-edit-view"
+        - "Overall/Read:anonymous"
+
+  clouds:
+    - kubernetes:
+        # Limit the # of concurrent pods to 10
+        containerCap: 10
+
+  globalNodeProperties:
+    # Set LANG=en_US.utf8 everywhere to avoid encoding issues when viewing
+    # logs in a browser
+    - envVars:
+        env:
+          - key: LANG
+            value: en_US.utf8
+
+  mode: EXCLUSIVE
+  numExecutors: 1
+  primaryView:
+    all:
+      name: "All"
+  remotingSecurity:
+    enabled: true
+
   systemMessage: |
     <img src="https://github.com/systemd/brand.systemd.io/raw/main/assets/page-logo.png" /><br /><br />
 
@@ -22,13 +54,23 @@ jenkins:
       <br/>
     Something's broken or missing? Ping mrc0mmand@LiberaChat or open an issue in the <a href='https://github.com/systemd/systemd-centos-ci'>systemd CentOS CI GitHub repo</a>.
 
-  globalNodeProperties:
-    - envVars:
-        env:
-          - key: LANG
-            value: en_US.utf8
+  views:
+    - all:
+        name: "All"
+    - list:
+        includeRegex: "^rhel.+"
+        name: "CentOS - RHEL"
+    - list:
+        includeRegex: "(?!.+-stable)upstream-.+"
+        name: "Upstream"
+    - list:
+        includeRegex: "upstream-.+-stable$"
+        name: "Upstream-stable"
 
 unclassified:
+  ghprbTrigger:
+    adminlist: "mrc0mmand"
+    manageWebhooks: false
   location:
     # Jenkins in OCP overrides this on each startup
     # See: https://pagure.io/centos-infra/issue/1103

@@ -1,15 +1,14 @@
 Notes describing current Jenkins configuration in case it needs to be redeployed.
 
-Note: part of this configuration has been translated to a yaml format parsed
+Note: most of the configuration has been translated to a yaml format parsed
 by the Configuration as Code plugin. Simply copy the `jenkins.yaml` to
 `/var/lib/jenkins/jenkins.yaml` and reload the configuration under
 Configure System -> Configuration as Code -> Actions -> Reload existing configuration
 
+Do ^ _after_ installing all the plugins below.
+
 # Manage Jenkins
 ## Configure System
-### Global
- - \# of executors: 0
-
 ### GitHub Pull Request Builder
  - Credentials -> Add -> Jenkins
     - Kind: Secret Text
@@ -19,15 +18,8 @@ Configure System -> Configuration as Code -> Actions -> Reload existing configur
     - Admin list: mrc0mmand
 
 ## Configure Global Security
-### Authorization
- - Matrix-based security -> Anonymous Users -> Check "Read" in the "Overall" and "Job" categories
-
 ### Markup Formatter
  - Markup Formatter: `Safe HTML`
-
-## Manage Nodes and Clouds
-### Configure Clouds
- - Kubernetes -> Kubernetes Cloud Details -> Set "Concurrency Limit" to 10
 
 ## Plugins
  - Configuration as Code (https://plugins.jenkins.io/configuration-as-code/)
