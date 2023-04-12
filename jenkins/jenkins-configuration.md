@@ -15,6 +15,10 @@ Do ^ _after_ installing all the plugins below.
     - Secret: token generated at https://github.com/settings/tokens (classic token with scope: repo:status)
     - Description: GH/mrc0mmand
 
+## Manage Nodes and Clouds
+### Configure Clouds
+ - Kubernetes -> Kubernetes Cloud Details -> Set "Concurrency Limit" to 10
+
 ## Plugins
  - Configuration as Code (https://plugins.jenkins.io/configuration-as-code/)
  - Embeddable Build Status (https://plugins.jenkins.io/embeddable-build-status)
