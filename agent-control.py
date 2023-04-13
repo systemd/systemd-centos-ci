@@ -242,9 +242,9 @@ class AgentControl():
                         logging.info("Session %s was successfully freed", self._session_id)
                         break
 
-                    logging.debug("Received an API error from the server: %s", result.error)
+                    logging.info("Received an API error from the server: %s", result.error)
             except Exception:
-                logging.debug("Got an exception when trying to free a session, ignoring...", exc_info=True)
+                logging.info("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
             time.sleep(.5)
 
