@@ -223,6 +223,10 @@ class AgentControl():
         if not self._session_id:
             return
 
+        # Dump info about the session we're about to free, to debug a possible
+        # race in Duffy
+        self.show_session()
+
         # Try a bit harder when retiring the session, since the API might return an error
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
@@ -271,6 +275,33 @@ class AgentControl():
 
         # Give the node time to finish the booting process
         time.sleep(30)
+
+    def show_session(self):
+        assert self._session_id
+
+        # pylint: disable=W0718
+        try:
+            result = self._client.show_session(self._session_id)
+
+            if isinstance(result, DuffyAPIErrorModel):
+                logging.error("API returned an error: %s", result.error)
+                return
+
+            logging.info("Session: %s", result.session.id)
+            logging.info("Session owner: %s", result.session.tenant.name)
+            logging.info("Session active state: %s", result.session.active)
+            logging.info("Session retired at: %s", result.session.retired_at)
+            logging.info("First session node: %s", result.session.nodes[0].hostname)
+
+        except HTTPStatusError as e:
+            logging.error("Error response %s while requesting %s.",
+                          e.response.status_code, e.request.url)
+        except TimeoutException as e:
+            logging.error("Timeout while requesting %s", e.request.url)
+        except Exception as e:
+            # This is a best-effort function used only for debugging, so suppress
+            # any exceptions that happen here
+            logging.exception("Exception occurred while getting session info, ignoring...")
 
     def wait_for_node(self, attempts):
         assert self.node, "Can't continue without a valid node"
