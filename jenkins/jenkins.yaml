@@ -33,7 +33,7 @@ jenkins:
     rawHtml:
       disableSyntaxHighlighting: false
   mode: EXCLUSIVE
-  numExecutors: 1
+  numExecutors: 0
   primaryView:
     all:
       name: "All"
