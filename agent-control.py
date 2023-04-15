@@ -65,8 +65,8 @@ class AgentControl():
 
         # Wait up to 2 hours with a try every 5 seconds
         wait_delay = 5
-        tries = int(7200 / wait_delay)
-        for _try in range(1, tries):
+        attempts = int(7200 / wait_delay)
+        for i in range(1, attempts + 1):
             error = None
 
             try:
@@ -81,8 +81,8 @@ class AgentControl():
 
             if error is not None:
                 # Print the error only every minute to not unnecessarily spam the console
-                if _try == 1 or _try % 12 == 0:
-                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, error)
+                if i == 1 or i % 12 == 0:
+                    logging.error("[Try %d/%d] Received an API error from the server: %s", i, attempts, error)
 
                 time.sleep(wait_delay)
             else:
@@ -92,18 +92,7 @@ class AgentControl():
         self._node_hostname = result.session.nodes[0].hostname
         assert self.node, "Can't continue without a valid node"
         logging.info("Allocated node %s with session id %s", self.node, self._session_id)
-
-        logging.info("Checking if node %s is reachable over ssh", self.node)
-        reachable = False
-        for _ in range(10):
-            if self.execute_remote_command("true", ignore_rc=True) == 0:
-                reachable = True
-                break
-
-            time.sleep(5)
-
-        if not reachable:
-            raise RuntimeError(f"Node {self.node} doesn't appear to be reachable over ssh")
+        self.wait_for_node(ping_attempts=1, ssh_attempts=10)
 
     def execute_local_command(self, command):
         """Execute a command on the local machine
@@ -230,8 +219,9 @@ class AgentControl():
         # Try a bit harder when retiring the session, since the API might return an error
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
-        for i in range(10):
-            logging.info("Freeing session %s (with node %s) [try %d/10]", self._session_id, self.node, i)
+        attempts = 10
+        for i in range(1, attempts + 1):
+            logging.info("[Try %d/%d] Freeing session %s (with node %s)", i, attempts, self._session_id, self.node)
 
             # pylint: disable=W0703
             try:
@@ -247,10 +237,11 @@ class AgentControl():
                         break
 
                     logging.info("Received an API error from the server: %s", result.error)
+
             except Exception:
                 logging.info("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
-            time.sleep(.5)
+            time.sleep(1)
 
         self._session_id = None
         self._node_hostname = None
@@ -271,10 +262,7 @@ class AgentControl():
                 ignore_rc=True)
         time.sleep(30)
 
-        self.wait_for_node(10)
-
-        # Give the node time to finish the booting process
-        time.sleep(30)
+        self.wait_for_node(ping_attempts=30, ssh_attempts=20)
 
     def show_session(self):
         assert self._session_id
@@ -303,21 +291,37 @@ class AgentControl():
             # any exceptions that happen here
             logging.exception("Exception occurred while getting session info, ignoring...")
 
-    def wait_for_node(self, attempts):
+    def wait_for_node(self, ping_attempts, ssh_attempts):
         assert self.node, "Can't continue without a valid node"
 
         ping_command = ["/usr/bin/ping", "-q", "-c", "1", "-W", "10", self.node]
-        for i in range(attempts):
-            logging.info("Checking if the node %s is alive (try #%d)", self.node, i)
+        attempts = clamp(1, 100, ping_attempts)
+        rc = -1
+        for i in range(1, attempts + 1):
+            logging.info("[Try %d/%d] Checking if node %s is alive", i, attempts, self.node)
             rc = self.execute_local_command(ping_command)
             if rc == 0:
+                logging.info("Node %s appears to be reachable", self.node)
                 break
-            time.sleep(15)
+
+            time.sleep(10)
 
         if rc != 0:
-            raise RuntimeError("Timeout reached when waiting for node to become online")
+            raise RuntimeError(f"Timeout reached when waiting for node {self.node} to become online")
 
-        logging.info("Node %s appears reachable again", self.node)
+        attempts = clamp(1, 100, ssh_attempts)
+        rc = -1
+        for i in range(1, attempts + 1):
+            logging.info("[Try %d/%d] Checking if node %s is reachable over ssh", i, attempts, self.node)
+            rc = self.execute_remote_command("true", ignore_rc=True)
+            if rc == 0:
+                logging.info("Node %s appears to be reachable over ssh", self.node)
+                break
+
+            time.sleep(5)
+
+        if rc != 0:
+            raise RuntimeError(f"Timeout reached when waiting for working ssh on node {self.node}")
 
     def upload_file(self, local_source, remote_target):
         """Upload a file (or a directory) to a remote host
@@ -354,8 +358,10 @@ class SignalException(Exception):
 class AlarmException(Exception):
     pass
 
+def clamp(_min, _max, value):
+    return max(_min, min(_max, value))
+
 def handle_signal(signum, _frame):
-    """Signal handler"""
     print(f"handle_signal: got signal {signum}")
 
     if signum == signal.SIGALRM:
@@ -510,7 +516,7 @@ def main():
             time.sleep(10)
 
             try:
-                ac.wait_for_node(10)
+                ac.wait_for_node(ping_attempts=20, ssh_attempts=10)
 
                 if ac.fetch_artifacts("/var/crash", os.path.join(artifacts_dir, "kdumps")) != 0:
                     logging.warning("Failed to collect kernel dumps from %s", ac.node)
