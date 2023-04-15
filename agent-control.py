@@ -362,7 +362,6 @@ def clamp(_min, _max, value):
     return max(_min, min(_max, value))
 
 def handle_signal(signum, _frame):
-    """Signal handler"""
     print(f"handle_signal: got signal {signum}")
 
     if signum == signal.SIGALRM:
