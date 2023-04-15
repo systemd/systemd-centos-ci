@@ -65,8 +65,8 @@ class AgentControl():
 
         # Wait up to 2 hours with a try every 5 seconds
         wait_delay = 5
-        tries = int(7200 / wait_delay)
-        for _try in range(1, tries):
+        attempts = int(7200 / wait_delay)
+        for i in range(1, attempts + 1):
             error = None
 
             try:
@@ -81,8 +81,8 @@ class AgentControl():
 
             if error is not None:
                 # Print the error only every minute to not unnecessarily spam the console
-                if _try == 1 or _try % 12 == 0:
-                    logging.error("[Try %d/%d] Received an API error from the server: %s", _try, tries, error)
+                if i == 1 or i % 12 == 0:
+                    logging.error("[Try %d/%d] Received an API error from the server: %s", i, attempts, error)
 
                 time.sleep(wait_delay)
             else:
@@ -219,8 +219,9 @@ class AgentControl():
         # Try a bit harder when retiring the session, since the API might return an error
         # when attempting to do so, leaving orphaned sessions laying around taking
         # precious resources
-        for i in range(10):
-            logging.info("Freeing session %s (with node %s) [try %d/10]", self._session_id, self.node, i)
+        attempts = 10
+        for i in range(1, attempts + 1):
+            logging.info("[Try %d/%d] Freeing session %s (with node %s)", i, attempts, self._session_id, self.node)
 
             # pylint: disable=W0703
             try:
@@ -236,10 +237,11 @@ class AgentControl():
                         break
 
                     logging.info("Received an API error from the server: %s", result.error)
+
             except Exception:
                 logging.info("Got an exception when trying to free a session, ignoring...", exc_info=True)
 
-            time.sleep(.5)
+            time.sleep(1)
 
         self._session_id = None
         self._node_hostname = None
