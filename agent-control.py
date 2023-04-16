@@ -92,7 +92,7 @@ class AgentControl():
         self._node_hostname = result.session.nodes[0].hostname
         assert self.node, "Can't continue without a valid node"
         logging.info("Allocated node %s with session id %s", self.node, self._session_id)
-        self.wait_for_node(ping_attempts=1, ssh_attempts=10)
+        self.wait_for_node(ping_attempts=5, ssh_attempts=10)
 
     def execute_local_command(self, command):
         """Execute a command on the local machine
