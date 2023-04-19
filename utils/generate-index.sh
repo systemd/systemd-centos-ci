@@ -38,6 +38,7 @@ cat > "$ADDITIONAL_INFO_FILE" << EOF
 <strong>Build URL:</strong> <a href='${BUILD_URL:?}'>$BUILD_URL</a><br/>
 <strong>Console log:</strong> <a href='$BUILD_URL/console'>$BUILD_URL/console</a><br/>
 <strong>PR title:</strong> ${ghprbPullTitle:-N/A}</br>
+<strong>Date:</strong> $(date --rfc-3339=seconds)</br>
 <strong>Reschedule count:</strong> ${NAGINATOR_COUNT:-0}</br>
 </div>
 EOF
