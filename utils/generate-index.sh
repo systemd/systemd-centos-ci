@@ -33,16 +33,19 @@ tree --charset=utf-8 -C -T "systemd CentOS CI (PR#<a href='$PR_URL'>$PR</a>)" -H
 
 # Add some useful info below the main title
 ADDITIONAL_INFO_FILE="$(mktemp)"
-cat > "$ADDITIONAL_INFO_FILE" << EOF
+cat >"$ADDITIONAL_INFO_FILE" <<EOF
 <div>
-<strong>Build URL:</strong> <a href='${BUILD_URL:?}'>$BUILD_URL</a><br/>
-<strong>Console log:</strong> <a href='$BUILD_URL/console'>$BUILD_URL/console</a><br/>
-<strong>PR title:</strong> ${ghprbPullTitle:-N/A}</br>
-<strong>Date:</strong> $(date --rfc-3339=seconds)</br>
-<strong>Reschedule count:</strong> ${NAGINATOR_COUNT:-0}</br>
+<table>
+<tr><td><strong>Build URL:</strong></td>        <td><a href='${BUILD_URL:?}'>$BUILD_URL</a></td></tr>
+<tr><td><strong>Console log:</strong></td>      <td><a href='$BUILD_URL/console'>$BUILD_URL/console</a></td></tr>
+<tr><td><strong>PR title:</strong></td>         <td>${ghprbPullTitle:-N/A}</td></tr>
+<tr><td><strong>Date:</strong></td>             <td>$(date --rfc-3339=seconds)</td></tr>
+<tr><td><strong>Reschedule count:</strong></td> <td>${NAGINATOR_COUNT:-0}</td></tr>
+</table>
+</br>
 </div>
 EOF
-# 1) Add a newline after the </h1> tag, so we can use sed's patter matching
+# 1) Add a newline after the </h1> tag, so we can use sed's pattern matching
 sed -i "s#</h1>#</h1>\n#" "$INDEX_FILE"
 # 2) Append contents of the $ADDITIONAL_INFO_FILE after the </h1> tag
 sed -i "/<\/h1>/ r $ADDITIONAL_INFO_FILE" "$INDEX_FILE"
@@ -55,7 +58,7 @@ sed -i -r 's/(_FAIL.log)(<\/a>)/\1 \&#x274C;\2/g' "$INDEX_FILE"
 # Completely unnecessary workaround for CentOS CI Jenkins' CSP, which disallows
 # inline CSS (but I want my colored links)
 # Part 1: extract the inline CSS
-grep --text -Pzo '(?s)(?<=<style type="text/css">)(.*)(?=</style>)' "$INDEX_FILE" | sed -e '/<!--/d' -e '/-->/d' > "$CSS_FILE"
+grep --text -Pzo '(?s)(?<=<style type="text/css">)(.*)(?=</style>)' "$INDEX_FILE" | sed -e '/<!--/d' -e '/-->/d' >"$CSS_FILE"
 # Part 2: link it back to the original index file
 sed -i "/<head>/a<link rel=\"stylesheet\" href=\"$CSS_FILE\" type=\"text/css\">" "$INDEX_FILE"
 
