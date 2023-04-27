@@ -53,7 +53,7 @@ if ! mkinitcpio -c /dev/null -A base,systemd,sd-encrypt,autodetect,modconf,block
     exit 1
 fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
-export QEMU_TIMEOUT=1200
+export QEMU_TIMEOUT=1500
 export NSPAWN_TIMEOUT=1200
 # Set QEMU_SMP to speed things up
 export QEMU_SMP=$(nproc)
