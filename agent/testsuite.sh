@@ -143,6 +143,12 @@ done
 exectask_p_finish
 
 for t in "${FLAKE_LIST[@]}"; do
+    # For older stable branches
+    if [[ ! -d "$t" ]]; then
+        echo "Test '$t' is not available, skipping..."
+        continue
+    fi
+
     ## Configure test environment
     # Set the test dir to something predictable so we can refer to it later
     export TESTDIR="/var/tmp/systemd-test-${t##*/}"
