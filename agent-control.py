@@ -1,4 +1,4 @@
-#!/bin/env python3.9
+#!/bin/env python3.11
 # pylint: disable=line-too-long,invalid-name,too-many-branches,too-many-statements,too-many-arguments,too-many-instance-attributes
 # pylint: disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
 
