@@ -55,6 +55,7 @@ ADDITIONAL_DEPS=(
     e2fsprogs
     expect
     gdb
+    jq
     libasan
     libubsan
     make
