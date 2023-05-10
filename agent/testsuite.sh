@@ -34,6 +34,7 @@ watch_systemd_and_dump() {
     while :; do
         if ! timeout 30 systemctl -q is-active systemd-journald.service; then
             echo -ne "set pagination off\nbt full\n" | gdb -p 1 |& tee "$LOGDIR/PID1-stack-trace"
+            break
         fi
 
         sleep 60
