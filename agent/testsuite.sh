@@ -29,21 +29,6 @@ centos_ensure_qemu_symlink
 
 set +e
 
-# FIXME: drop once https://github.com/systemd/systemd/issues/27287 is sorted out
-watch_systemd_and_dump() {
-    while :; do
-        if ! timeout 30 systemctl -q is-active systemd-journald.service; then
-            echo -ne "set pagination off\nbt full\n" | gdb -p 1 |& tee "$LOGDIR/PID1-stack-trace"
-            break
-        fi
-
-        sleep 60
-    done
-}
-
-watch_systemd_and_dump &
-disown $!
-
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
