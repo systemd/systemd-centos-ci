@@ -42,6 +42,7 @@ watch_systemd_and_dump() {
 }
 
 watch_systemd_and_dump &
+disown $!
 
 ### TEST PHASE ###
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
