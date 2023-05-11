@@ -121,12 +121,14 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     CHECK_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
+        test/TEST-07-PID1           # PID1 & core stuff
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
-        test/TEST-23-TYPE-EXEC
+        test/TEST-23-TYPE-EXEC      # Old test name for stable branches
+        test/TEST-23-UNIT-FILE
         test/TEST-26-SYSTEMCTL      # systemctl & friends
         test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
