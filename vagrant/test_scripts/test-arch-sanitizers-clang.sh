@@ -122,7 +122,8 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
         test/TEST-07-PID1           # PID1 & core stuff
-        test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
+        test/TEST-13-NSPAWN-SMOKE   # Old test name for stable branches
+        test/TEST-13-NSPAWN         # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
