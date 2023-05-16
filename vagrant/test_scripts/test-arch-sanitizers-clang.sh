@@ -126,6 +126,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-13-NSPAWN         # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
+        test/TEST-19-CGROUP
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC      # Old test name for stable branches
