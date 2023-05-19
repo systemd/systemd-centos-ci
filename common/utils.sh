@@ -455,7 +455,7 @@ lcov_collect() {
         return 1
     fi
 
-    if ! lcov --remove "$output_file" -o "$output_file" '/usr/include/*' '/usr/lib/*'; then
+    if ! lcov --remove "$output_file" -o "$output_file" '/usr/include/*' '/usr/lib/*' "${BUILD_DIR:?}/*"; then
         _err "Failed to remove unrelated data from the capture file"
         return 1
     fi
