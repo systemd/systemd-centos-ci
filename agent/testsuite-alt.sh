@@ -67,6 +67,9 @@ export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 # Dump current ASan config
 ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}help=1" "$BUILD_DIR/systemctl" is-system-running &>"$LOGDIR/asan_config.txt"
 
+# FIXME: temporarily work around a stack overflow in libattr
+sed -i '/bin_rx=/s/setfacl|//' test/test-functions
+
 ## Disable certain flaky tests
 # FIXME: test-execute
 # This test occasionally timeouts when running under sanitizers. Until the root
