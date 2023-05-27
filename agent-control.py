@@ -86,11 +86,13 @@ class AgentControl():
 
                 time.sleep(wait_delay)
             else:
+                self._session_id = result.session.id
+                self._node_hostname = result.session.nodes[0].hostname
                 break
 
-        self._session_id = result.session.id
-        self._node_hostname = result.session.nodes[0].hostname
-        assert self.node, "Can't continue without a valid node"
+        if not self._session_id:
+            raise RuntimeError("Failed to allocate a node")
+
         logging.info("Allocated node %s with session id %s", self.node, self._session_id)
         self.wait_for_node(ping_attempts=5, ssh_attempts=10)
 
