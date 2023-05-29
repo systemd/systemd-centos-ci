@@ -57,22 +57,25 @@ ninja -C "$BUILD_DIR" install
 
 # Make sure the revision we just compiled is actually bootable
 (
-  # We need a custom initrd (with the systemd module) for integration tests
-  # See vagrant-test.sh for reasoning
-  export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-  mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
-  # Enable as much debug logging as we can to make debugging easier
-  # (especially for boot issues)
-  export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
-  export QEMU_TIMEOUT=600
-  # Skip the nspawn version of the test
-  export TEST_NO_NSPAWN=1
-  # Enforce nested KVM
-  export TEST_NESTED_KVM=1
+    # We need a custom initrd (with the systemd module) for integration tests
+    # See vagrant-test.sh for reasoning
+    export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
+    mkinitcpio -c /dev/null -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
+    # Enable as much debug logging as we can to make debugging easier
+    # (especially for boot issues)
+    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
+    export QEMU_TIMEOUT=600
+    # Skip the nspawn version of the test
+    export TEST_NO_NSPAWN=1
+    # Enforce nested KVM
+    export TEST_NESTED_KVM=1
 
-  make -C test/TEST-01-BASIC clean setup run clean-again
+    if ! make -C test/TEST-01-BASIC clean setup run clean-again; then
+        rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" >/dev/null || :
+        exit 1
+    fi
 
-  rm -f "$INITRD"
+    rm -fv "$INITRD"
 ) 2>&1 | grep --text --line-buffered '^' | tee vagrant-arch-sanity-boot-check.log
 
 popd
