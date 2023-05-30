@@ -71,7 +71,7 @@ ninja -C "$BUILD_DIR" install
     export TEST_NESTED_KVM=1
 
     if ! make -C test/TEST-01-BASIC clean setup run clean-again; then
-        rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" >/dev/null || :
+        rsync -amq /var/tmp/systemd-test*/system.journal vagrant-sanity-boot-check.journal >/dev/null || :
         exit 1
     fi
 
