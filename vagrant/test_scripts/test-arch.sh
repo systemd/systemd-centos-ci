@@ -42,7 +42,7 @@ exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-mult
 # the kernel command line.
 # The exported INITRD variable is picked up by all following integration tests
 export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-if ! mkinitcpio -c /dev/null -A base,systemd,sd-encrypt,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
+if ! mkinitcpio -c /etc/mkinitcpio.ci.conf -A base,systemd,sd-encrypt,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
     echo >&2 "Failed to generate initrd, can't continue"
     exit 1
 fi

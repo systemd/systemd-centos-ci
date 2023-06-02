@@ -219,8 +219,11 @@ ninja -C build install
     # Also, rebuild the original initrd without the multipath module, see
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
+    # FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
+    DRACUT_OPTS=()
+    [[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut "${DRACUT_OPTS[@]}" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 

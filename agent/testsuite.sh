@@ -65,12 +65,14 @@ SKIP_LIST=(
 # Set a path to the custom initrd into the INITRD variable which is read by
 # the integration test suite "framework"
 export INITRD="/var/tmp/ci-initramfs-$(uname -r).img"
+DRACUT_OPTS=()
+[[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
 # Copy over the original initrd, as we want to keep the custom installed
 # files we installed during the bootstrap phase (i.e. we want to keep the
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd with the dm-crypt modules and without the multipath module
-dracut -a crypt -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+dracut "${DRACUT_OPTS[@]}" -a crypt -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
