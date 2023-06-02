@@ -45,7 +45,7 @@ Vagrant.configure("2") do |config|
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
     pacman --needed --noconfirm -S coreutils bind busybox dhclient dhcp dhcpcd diffutils dnsmasq dosfstools e2fsprogs erofs-utils \
         evemu expect fsverity-utils gdb inetutils jq knot keyutils lcov libdwarf libelf mdadm mtools net-tools nfs-utils nftables ntp \
-        openbsd-netcat open-iscsi perl-capture-tiny perl-datetime python-pefile python-pexpect python-psutil python-pyelftools \
+        openbsd-netcat open-iscsi perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect python-psutil python-pyelftools \
         python-pyparsing python-pytest qemu rsync screen socat squashfs-tools strace time tpm2-tools swtpm vim wireguard-tools
 
     # Unlock root account and set its password to 'vagrant' to allow root login
