@@ -211,6 +211,10 @@ coredumpctl_set_ts
 # Install the compiled systemd
 ninja -C build install
 
+# FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
+DRACUT_OPTS=()
+[[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
+
 # Let's check if the new systemd at least boots before rebooting the system
 # As the CentOS' systemd-nspawn version is too old, we have to use QEMU
 (
@@ -219,9 +223,6 @@ ninja -C build install
     # Also, rebuild the original initrd without the multipath module, see
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
-    # FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
-    DRACUT_OPTS=()
-    [[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
     dracut "${DRACUT_OPTS[@]}" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
@@ -254,7 +255,7 @@ ninja -C build install
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-dracut -f --regenerate-all
+dracut "${DRACUT_OPTS[@]}" -f --regenerate-all
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
