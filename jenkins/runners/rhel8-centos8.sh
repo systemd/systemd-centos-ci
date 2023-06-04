@@ -16,7 +16,7 @@ set -eu
 set -o pipefail
 
 ARGS=()
-TARGET_BRANCH="${ghprbTargetBranch:-master}"
+TARGET_BRANCH="${ghprbTargetBranch:-main}"
 
 at_exit() {
     # Correctly collect artifacts from all cron jobs and generate a nice

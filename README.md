@@ -40,7 +40,7 @@ The CI scripts are scattered among several directories:
 
 set -e
 
-curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/master/jenkins/runners/upstream-centos8.sh
+curl -q -o runner.sh https://raw.githubusercontent.com/systemd/systemd-centos-ci/main/jenkins/runners/upstream-centos8.sh
 chmod +x runner.sh
 ./runner.sh
 ```
@@ -198,7 +198,7 @@ the purpose of this script is to update it every few hours (again, using Jenkins
 
 To make sure changes to this repository don't break the CI pipeline, this job
 provides a way to run a specific revision of the CI scripts (from a PR) against
-the master branch of the respective systemd repository.
+the main branch of the respective systemd repository.
 
 As this requires twiddling around with various bits and knobs given which part
 of the CI pipeline we want to test (instead of just running everything and pointlessly

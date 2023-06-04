@@ -134,7 +134,7 @@ cmd_retry() {
 #      the corresponding branch for this PR is be checked out
 #   2) if any other string except pr:* is passed, it's used as a branch
 #      name to check out
-#   3) if the script is called without arguments, the default (possibly master)
+#   3) if the script is called without arguments, the default (possibly main)
 #      branch is used
 git_checkout_pr() {
     local main_branch
@@ -148,7 +148,7 @@ git_checkout_pr() {
                 echo "Detected main branch: $main_branch"
                 # Draft and already merged pull requests don't have the 'merge'
                 # ref anymore, so fall back to the *standard* 'head' ref in
-                # such cases and rebase it against the master branch
+                # such cases and rebase it against the main branch
                 if ! git fetch -fu origin "refs/pull/${1#pr:}/merge:pr"; then
                     git fetch -fu origin "refs/pull/${1#pr:}/head:pr"
                     git rebase "$main_branch" pr
