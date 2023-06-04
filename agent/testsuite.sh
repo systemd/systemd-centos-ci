@@ -72,7 +72,7 @@ DRACUT_OPTS=()
 # command line arguments the original initrd was built with)
 cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
 # Rebuild the original initrd with the dm-crypt modules and without the multipath module
-dracut "${DRACUT_OPTS[@]}" -a crypt -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+dracut "${DRACUT_OPTS[@]}" -a crypt -o "multipath rngd nfs" --filesystems ext4 --rebuild "$INITRD"
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
