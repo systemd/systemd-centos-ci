@@ -198,8 +198,6 @@ fi
                 -Dtests=unsafe \
                 -Dinstall-tests=true \
                 -Ddbuspolicydir=/etc/dbus-1/system.d \
-                -Dnobody-user=nfsnobody \
-                -Dnobody-group=nfsnobody \
                 -Dman=true \
                 -Dhtml=true
     ninja -C build
