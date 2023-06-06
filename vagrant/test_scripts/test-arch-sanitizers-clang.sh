@@ -131,6 +131,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC      # Old test name for stable branches
         test/TEST-23-UNIT-FILE
+        test/TEST-24-CRYPTSETUP     # systemd-cryptsetup + generator
         test/TEST-26-SYSTEMCTL      # systemctl & friends
         test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
