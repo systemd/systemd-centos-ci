@@ -87,6 +87,7 @@ ADDITIONAL_DEPS=(
     nmap-ncat
     openssl-devel
     pcre2-devel
+    python38
     python3-jinja2
     python3-pefile # EPEL
     python3-pexpect
@@ -133,8 +134,10 @@ fi
 # with the OpenBSD version present on CentOS 8
 if alternatives --display nmap; then
     alternatives --set nmap /usr/bin/ncat
-    alternatives --display nmap
 fi
+# Set Python 3.8 as the default Python
+alternatives --set python /usr/bin/python3.8
+alternatives --list
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
