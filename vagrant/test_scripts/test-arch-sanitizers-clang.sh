@@ -135,6 +135,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-26-SYSTEMCTL      # systemctl & friends
         test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
+        test/TEST-35-LOGIN          # systemd-logind
         test/TEST-45-TIMEDATE       # systemd-timedated
         test/TEST-46-HOMED          # systemd-homed
         test/TEST-50-DISSECT        # systemd-dissect
