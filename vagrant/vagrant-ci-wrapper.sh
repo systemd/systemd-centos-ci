@@ -80,7 +80,14 @@ git_checkout_pr "$REMOTE_REF"
 # Create a Coveralls configuration file if the Coveralls token is present
 # (the file is provided by the agent-control.py script)
 if [[ -f /.coveralls.token ]]; then
-    (set +x; echo "repo_token: $(</.coveralls.token)" >.coveralls.yml)
+    (
+        set +x
+        cat >.coveralls.yml <<EOF
+repo_token: $(</.coveralls.token)
+repo_name: systemd/systemd
+service_name: CentOS CI
+EOF
+    )
 fi
 popd
 

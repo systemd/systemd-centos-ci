@@ -53,13 +53,10 @@ meson "$BUILD_DIR" \
       -Dlocalegen-path=/usr/bin/locale-gen
 ninja -C "$BUILD_DIR"
 
-# Install cpp-coveralls to generate the Coveralls-compatible report
-# See: https://github.com/eddyxu/cpp-coveralls
-python3 -m ensurepip
-# Temporarily install cpp-coveralls from a custom fork until
-# https://github.com/eddyxu/cpp-coveralls/pull/165 is merged/resolved
-python3 -m pip install git+https://github.com/mrc0mmand/cpp-coveralls@centos-ci
-#python3 -m pip install cpp-coveralls
+# Install the universal coverage uploader
+# https://github.com/coverallsapp/coverage-reporter
+curl -L https://coveralls.io/coveralls-linux.tar.gz | tar -xz -C /usr/local/bin
+coveralls --version
 
 # Manually install upstream D-Bus config file for org.freedesktop.network1
 # so systemd-networkd testsuite can use potentially new/updated methods
