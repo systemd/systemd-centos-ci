@@ -193,7 +193,7 @@ exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf
 exectask "lcov_coverage_report" "lcov --list everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
-exectask "coveralls_upload" "coveralls --no-gcov --lcov-file everything.coverage-info"
+exectask "coveralls_upload" "coveralls report --format=lcov everything.coverage-info"
 # Copy the final coverage report to artifacts for local analysis if needed
 cp -fv "everything.coverage-info" "$LOGDIR/"
 
