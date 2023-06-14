@@ -62,23 +62,24 @@ else
     PASSED+=("archlinux_systemd")
 fi
 
-#(
-#    set -e
-#    echo "Updating the systemd/selinux Fedora Rawhide image"
-#
-#    # Generate a new image with '-new' suffix
-#    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
-#    # Overwrite the production image with the just tested one. Since the CentOS CI
-#    # artifact server supports only rsync protocol, use a single-purpose script
-#    # to do that
-#    utils/artifacts-copy-file.sh vagrant_boxes/rawhide_selinux-new vagrant_boxes/rawhide_selinux
-#)
-#if [[ $? -ne 0 ]]; then
-#    EC=$((EC + 1))
-#    FAILED+=("rawhide_selinux")
-#else
-#    PASSED+=("rawhide_selinux")
-#fi
+(
+    set -e
+    echo "Updating the systemd/selinux Fedora Rawhide image"
+
+    # Generate a new image with '-new' suffix
+    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant-sync Vagrantfile_rawhide_selinux ${ARGS:+"${ARGS[@]}"}
+    # Overwrite the production image with the just tested one. Since the CentOS CI
+    # artifact server supports only rsync protocol, use a single-purpose script
+    # to do that
+    utils/artifacts-copy-file.sh vagrant_boxes/rawhide_selinux-new vagrant_boxes/rawhide_selinux
+)
+if [[ $? -ne 0 ]]; then
+    EC=$((EC + 1))
+    FAILED+=("rawhide_selinux")
+else
+
+    PASSED+=("rawhide_selinux")
+fi
 
 echo "PASSED TASKS:"
 printf "    %s\n" "${PASSED[@]}"
