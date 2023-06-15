@@ -8,8 +8,10 @@ set -u
 __COREDUMPCTL_TS=""
 # Keep a map of test-specific excludes to avoid code duplication
 declare -Arx COREDUMPCTL_EXCLUDE_MAP=(
+    ["test/TEST-02-UNITTESTS"]="/(bash|bin/python3.[0-9]+|platform-python3.[0-9]+|systemd-executor|test-execute)$"
     ["test/TEST-17-UDEV"]="/(sleep|udevadm)$"
     ["test/TEST-59-RELOADING-RESTART"]="/(sleep|bash|systemd-notify)$"
+    ["test/TEST-74-AUX-UTILS"]="/(test(-usr)?-dump|sleep)$"
 )
 
 # Internal logging helpers which make use of the internal call stack to get
@@ -348,17 +350,13 @@ coredumpctl_collect() {
 
     # Collect executable paths of all coredumps and filter out the expected ones.
     # The filter can be overridden using the $COREDUMPCTL_EXCLUDE_RX env variable.
+    # Also, see the $COREDUMPCTL_EXCLUDE_MAP at the beginning of this file.
     # EXCLUDE_RX:
-    #   test-execute - certain subtests die with SIGSEGV intentionally
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
     #            further investigation
-    #   python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
-    #               (since systemd/systemd#16675)
     #   sleep/bash - intentional SIGABRT caused by TEST-57
-    #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
     #   auditd - bug in C8S
-    #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify|auditd|test(-usr)?-dump)$}"
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(dhcpcd|sleep|auditd)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
