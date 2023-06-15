@@ -348,6 +348,7 @@ coredumpctl_collect() {
 
     # Collect executable paths of all coredumps and filter out the expected ones.
     # The filter can be overridden using the $COREDUMPCTL_EXCLUDE_RX env variable.
+    # See also the $COREDUMPCTL_EXCLUDE_MAP at the beginning of this file.
     # EXCLUDE_RX:
     #   test-execute - certain subtests die with SIGSEGV intentionally
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
@@ -358,7 +359,11 @@ coredumpctl_collect() {
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
     #   auditd - bug in C8S
     #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify|auditd|test(-usr)?-dump)$}"
+    #   systemd-executor - there's a couple of instances where test-execute blocks exec
+    #                      syscalls through a seccomp filter which then kills the test
+    #                      with SIGSYS, and with systemd/systemd#27890 the coredump
+    #                      executable will be set to the new systemd-executor binary
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify|auditd|test(-usr)?-dump|systemd-executor)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
