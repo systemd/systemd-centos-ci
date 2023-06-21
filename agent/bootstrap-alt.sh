@@ -104,6 +104,7 @@ ADDITIONAL_DEPS=(
     socat
     squashfs-tools
     strace
+    stress # EPEL
     systemd-networkd # EPEL
     systemd-timesyncd # EPEL
     swtpm
