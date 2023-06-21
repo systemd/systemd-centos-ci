@@ -105,6 +105,7 @@ ADDITIONAL_DEPS=(
     socat
     squashfs-tools
     strace
+    stress # EPEL
     swtpm
     time
     tpm2-tools
