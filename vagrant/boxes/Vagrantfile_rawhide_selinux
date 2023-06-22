@@ -29,17 +29,17 @@ Vagrant.configure("2") do |config|
     # when we try to update the fedora-gpg-keys by two versions (e.g. 35 -> 37). In
     # that case use a relatively ugly hack to force-get the latest GPG keys from
     # the Rawhide repository.
-    if ! dnf --refresh -y update fedora-repos fedora-gpg-keys; then
+    if ! dnf -y update fedora-repos fedora-gpg-keys; then
       dnf -y --nogpgcheck --disablerepo '*' \
           --repofrompath the-true-rawhide,https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Everything/x86_64/os/ \
           update fedora-repos fedora-gpg-keys
     fi
 
     # Upgrade the system
-    dnf upgrade --refresh -y
+    dnf upgrade -y
 
     # Install build & test dependencies
-    dnf install -y attr busybox cryptsetup dosfstools fedpkg git nc qemu-kvm rpm-build rpmdevtools rust socat \
+    dnf install -y attr busybox cryptsetup dnf5-plugins dosfstools fedpkg git nc qemu-kvm rpm-build rpmdevtools rust socat \
                    strace time tmt tpm2-tss-devel 'python3dist(jinja2)'
     dnf builddep -y systemd
 
