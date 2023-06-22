@@ -76,6 +76,10 @@ dracut "${DRACUT_OPTS[@]}" -a crypt -o "multipath rngd nfs" --filesystems ext4 -
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
+# Run only two parallel jobs at once to try to avoid timing out on overloaded AWS regions
+export MAX_QUEUE_SIZE=2
+export OPTIMAL_QEMU_SMP="$(($(nproc) / MAX_QUEUE_SIZE))"
+echo "Overriding MAX_QUEUE_SIZE=$MAX_QUEUE_SIZE and OPTIMAL_QEMU_SMP=$OPTIMAL_QEMU_SMP"
 
 # Initialize the 'base' image (default.img) on which the other images are based
 exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
@@ -103,10 +107,6 @@ export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
 export QEMU_TIMEOUT=1800
 export NSPAWN_TIMEOUT=600
 export QEMU_OPTIONS="-cpu max"
-# Since the situation with overloaded AWS regions got quite unbearable and most
-# of the C8S jobs failed with crapton of timeouts, lets resort to running most
-# of the tests only in nspawn and use qemu only when necessary
-export TEST_PREFER_NSPAWN=yes
 
 # Let's re-shuffle the test list a bit by placing the most expensive tests
 # in the front, so they can run in background while we go through the rest
