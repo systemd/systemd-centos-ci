@@ -8,7 +8,7 @@ whoami
 uname -a
 
 # Do a system upgrade
-dnf upgrade --refresh -y
+dnf upgrade -y
 
 # Let's make the $BUILD_DIR for meson reside outside of the NFS volume mounted
 # under /build to avoid certain race conditions, like:
