@@ -59,7 +59,6 @@ EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test
     "test/TEST-25-IMPORT"          # flaky when paralellized (systemd/systemd#13973)
-    "test/TEST-46-HOMED"           # flaky test (systemd/systemd#21589)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
