@@ -406,6 +406,8 @@ def main():
             help="Skip reboot between bootstrap and test phases (on baremetal machines)")
     parser.add_argument("--testsuite-script", metavar="SCRIPT", type=str, default="testsuite.sh",
             help="Script which runs tests on the bootstrapped machine")
+    parser.add_argument("--testsuite-args", metavar="ARGUMENTS", type=str, default="",
+            help="Additional optional arguments passed to the --testsuite-script")
     parser.add_argument("--timeout", metavar="MINUTES", type=int, default=0,
             help="Set a timeout for the test run (in minutes)")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
@@ -504,7 +506,7 @@ def main():
                 ac.reboot_node()
 
             logging.info("PHASE 3: Upstream testsuite")
-            command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script}"
+            command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script} {args.testsuite_args}"
             ac.execute_remote_command(command, artifacts_dir="~/testsuite-logs*")
 
     except SignalException:

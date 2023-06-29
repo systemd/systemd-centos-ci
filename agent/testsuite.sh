@@ -18,6 +18,10 @@ set -o pipefail
 
 trap at_exit EXIT
 
+if [[ "${1:-}" == "-n" ]]; then
+    export TEST_NO_QEMU=1
+fi
+
 ### TEST PHASE ###
 # Enable systemd-coredump
 if ! coredumpctl_init; then
