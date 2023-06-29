@@ -69,7 +69,14 @@ run_ppc64le_sanitizers() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_remaining_sanitizer_job run_coverage run_ppc64le_sanitizers; do
+run_c8s_full() {
+    # Run the full test suite on C8S (i.e. with QEMU tests as well)
+    ./agent-control.py --pool virt-ec2-t2-centos-8s-x86_64 \
+                       --kdump-collect \
+                       ${ARGS:+"${ARGS[@]}"}
+}
+
+for job in run_remaining_sanitizer_job run_coverage run_ppc64le_sanitizers run_c8s_full; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
