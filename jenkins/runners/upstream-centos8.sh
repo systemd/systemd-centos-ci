@@ -84,4 +84,7 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --timeout 180 --pool virt-ec2-t2-centos-8s-x86_64 --kdump-collect ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --pool virt-ec2-t2-centos-8s-x86_64 \
+                   --testsuite-args="-n" \
+                   --kdump-collect \
+                   ${ARGS:+"${ARGS[@]}"}
