@@ -67,7 +67,7 @@ touch /etc/mkinitcpio.ci.conf
     mkinitcpio -c /etc/mkinitcpio.ci.conf -A base,systemd,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
     # Enable as much debug logging as we can to make debugging easier
     # (especially for boot issues)
-    export KERNEL_APPEND="debug systemd.log_level=debug systemd.log_target=console"
+    export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console"
     export QEMU_TIMEOUT=600
     # Skip the nspawn version of the test
     export TEST_NO_NSPAWN=1
