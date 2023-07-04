@@ -72,6 +72,7 @@ run_ppc64le_sanitizers() {
 run_c8s_full() {
     # Run the full test suite on C8S (i.e. with QEMU tests as well)
     ./agent-control.py --pool virt-ec2-t2-centos-8s-x86_64 \
+                       --timeout 180 \
                        --kdump-collect \
                        ${ARGS:+"${ARGS[@]}"}
 }
