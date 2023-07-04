@@ -17,54 +17,6 @@ set -o pipefail
 
 ARGS=()
 
-analyze_fail() {
-    local ec=$?
-    set +e
-
-    case "$ec" in
-        124)
-            # The current way the EC2 T2 machines work is that they compete for
-            # CPU time in given region. If the region is oversaturated, the CPU
-            # time is not guaranteed and we might spend quite some time waiting
-            # for the hypervisor to allocate some for us. This is unfortunate,
-            # especially for the QEMU tests, which run without acceleration
-            # (since AWS VMs don't support nested virt) and the emulation is
-            # heavily dependent on CPU. The affected jobs will usually have
-            # runtime over 4 hours, wasting resources, so let's kill them earlier.
-            # See: https://lists.centos.org/pipermail/ci-users/2022-October/004618.html
-            echo "|------------------------------------------------------------|"
-            echo "|                         WARNING                            |"
-            echo "| The job exceeded the set timeout. This means that there's  |"
-            echo "| either something seriously wrong with the PR or the AWS    |"
-            echo "| region this job was run in is oversaturated, causing       |"
-            echo "| the hypervisor to steal our CPU time. Below you'll find    |"
-            echo "| a grep over the test suite logs for timeouts - if there    |"
-            echo "| are timeouts in both attempts of some more resource-heavy  |"
-            echo "| tests (TEST-02, TEST-04, TEST-06, TEST-64, ...) it's       |"
-            echo "| probably the latter case and you can ignore the failed     |"
-            echo "| tests.                                                     |"
-            echo "|----------------------------------------------------------- |"
-            echo
-            grep -Er "^TEST-.*?: \(timeout\)" artifacts_*
-            ;;
-        0)
-            return 0
-            ;;
-        *)
-            # "Workaround" for RHBZ#1956276
-            # Since the kernel panic still occurs scarcely, but still often enough to cause
-            # annoying noise, let's make use of the Jenkin's Naginator plugin to reschedule
-            # the job when it encounters a specific line in the job output.
-            #
-            # Jenkins part: Post-build Actions -> Retry build after failure
-            if grep -s "VFS: Busy inodes after unmount of" artifacts_*/kdumps/*/vmcore-dmesg.txt; then
-                echo "[NAGINATOR REQUEST] RHBZ#1956276 encountered, reschedule the job"
-            fi
-    esac
-}
-
-trap analyze_fail EXIT
-
 if [[ -v ghprbPullId && -n "$ghprbPullId" ]]; then
     ARGS+=(--pr "$ghprbPullId")
 
