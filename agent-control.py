@@ -408,7 +408,7 @@ def main():
             help="Script which runs tests on the bootstrapped machine")
     parser.add_argument("--testsuite-args", metavar="ARGUMENTS", type=str, default="",
             help="Additional optional arguments passed to the --testsuite-script")
-    parser.add_argument("--timeout", metavar="MINUTES", type=int, default=0,
+    parser.add_argument("--timeout", metavar="MINUTES", type=int, default=240,
             help="Set a timeout for the test run (in minutes)")
     parser.add_argument("--vagrant", metavar="DISTRO_TAG", type=str, default="",
             help="Run testing in Vagrant VMs on a distro specified by given distro tag")
