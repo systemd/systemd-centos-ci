@@ -46,7 +46,7 @@ setfacl --recursive --modify="d:u::rwX,d:g::rwX,d:o:rwX" --modify="u::rwX,g::rwX
 exectask "lcov_collect-build_dir-initial" "lcov_collect $COVERAGE_DIR/build_dir_initial.coverage-info $BUILD_DIR --initial"
 
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=5"
-exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR"
+exectask "lcov_collect-build_dir-ninja-test" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
@@ -180,21 +180,21 @@ done
 
 # Collect coverage metadata from the $BUILD_DIR (since we use the just-built nspawn
 # and other tools + networkd test suite)
-exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR"
+exectask "lcov_collect-build_dir-final" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR"
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Merge all "coverage-info" files from the integration tests into one file
-exectask "lcov_merge_coverage" "lcov_merge all-integration-tests.coverage-info $COVERAGE_DIR"
+exectask "lcov-merge-coverage" "lcov_merge all-integration-tests.coverage-info $COVERAGE_DIR"
 # Drop *.gperf files from the lcov files
 # See: https://github.com/eddyxu/cpp-coveralls/issues/126#issuecomment-946716583
 #      for reasoning
-exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
-exectask "lcov_coverage_report" "lcov --list everything.coverage-info"
+exectask "lcov-drop-gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
+exectask "lcov-dump-coverage-report" "lcov --list everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
-exectask "coveralls_upload" "coveralls report --format=lcov everything.coverage-info"
+exectask "coveralls-upload" "coveralls report --format=lcov everything.coverage-info"
 # Copy the final coverage report to artifacts for local analysis if needed
 cp -fv "everything.coverage-info" "$LOGDIR/"
 
