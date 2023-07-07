@@ -446,6 +446,24 @@ is_nested_kvm_enabled() {
     return 1
 }
 
+# Remove coverage metadata (*.gcda files) from given directory (recursively)
+#
+# Arguments:
+#   $1 - directory which will be search for metadata (recursively)
+#
+# Returns:
+#   0 on success, >0 otherwise
+lcov_clear_metadata() {
+    local dir="${1?}"
+
+    if [[ ! -d "$dir" ]]; then
+        _err "Invalid directory '$dir'"
+        return 1
+    fi
+
+    find "$dir" -name "*.gcda" -exec rm -f '{}' \;
+}
+
 # Collect coverage metadata from given directory and generate a coverage report
 #
 # Arguments:
@@ -454,8 +472,9 @@ is_nested_kvm_enabled() {
 lcov_collect() {
     local output_file="${1:?}"
     local build_dir="${2:?}"
+    shift 2
 
-    if ! lcov --directory "$build_dir" --capture --output-file "$output_file"; then
+    if ! lcov "$@" --directory "$build_dir" --capture --output-file "$output_file"; then
         _err "Failed to capture coverage data from '$build_dir'"
         return 1
     fi
@@ -464,6 +483,8 @@ lcov_collect() {
         _err "Failed to remove unrelated data from the capture file"
         return 1
     fi
+
+    lcov_clear_metadata "$build_dir"
 }
 
 # Collect all lcov reports from given directory (recursively) and merge them
@@ -502,22 +523,4 @@ lcov_merge() {
         _err "No coverage files (*.coverage-info) found in given directories"
         return 1
     fi
-}
-
-# Remove coverage metadata (*.gcda files) from given directory (recursively)
-#
-# Arguments:
-#   $1 - directory which will be search for metadata (recursively)
-#
-# Returns:
-#   0 on success, >0 otherwise
-lcov_clear_metadata() {
-    local dir="${1?}"
-
-    if [[ ! -d "$dir" ]]; then
-        _err "Invalid directory '$dir'"
-        return 1
-    fi
-
-    find "$dir" -name "*.gcda" -exec rm -f '{}' \;
 }

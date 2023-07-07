@@ -42,8 +42,11 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 # Tweak $BUILD_DIR's permissions, so anybody can read & write the gcov metadata
 setfacl --recursive --modify="d:u::rwX,d:g::rwX,d:o:rwX" --modify="u::rwX,g::rwX,o:rwX" "$BUILD_DIR"
 
+# Collect initial coverage
+exectask "lcov_collect-build_dir-initial" "lcov_collect $COVERAGE_DIR/build_dir_initial.coverage-info $BUILD_DIR --initial"
+
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=5"
-exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+exectask "lcov_collect-build_dir-ninja-test" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
@@ -66,12 +69,25 @@ EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test
     "test/TEST-25-IMPORT"         # flaky when paralellized (systemd/systemd#13973)
-    "test/TEST-46-HOMED"          # flaky test (systemd/systemd#21589)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU" # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
     "${FLAKE_LIST[@]}"
 )
+
+## Other integration tests ##
+# Prepare environment for the systemd-networkd testsuite
+systemctl disable --now dhcpcd dnsmasq
+systemctl reload dbus.service
+# FIXME
+# As the DHCP lease time in libvirt is quite short, and it's not configurable,
+# yet, let's start a DHCP daemon _only_ for the "master" network device to
+# keep it up during the systemd-networkd testsuite
+systemctl enable --now dhcpcd@eth0.service
+systemctl status dhcpcd@eth0.service
+
+exectask_p "systemd-networkd" \
+         "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
 
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
@@ -162,38 +178,23 @@ for t in "${EXECUTED_LIST[@]}"; do
     [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
 done
 
-## Other integration tests ##
-# Prepare environment for the systemd-networkd testsuite
-systemctl disable --now dhcpcd dnsmasq
-systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
-
 # Collect coverage metadata from the $BUILD_DIR (since we use the just-built nspawn
-# and other tools)
-exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
-
-exectask "systemd-networkd" \
-         "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
-exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+# and other tools + networkd test suite)
+exectask "lcov_collect-build_dir-final" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR"
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Merge all "coverage-info" files from the integration tests into one file
-exectask "lcov_merge_coverage" "lcov_merge all-integration-tests.coverage-info $COVERAGE_DIR"
+exectask "lcov-merge-coverage" "lcov_merge all-integration-tests.coverage-info $COVERAGE_DIR"
 # Drop *.gperf files from the lcov files
 # See: https://github.com/eddyxu/cpp-coveralls/issues/126#issuecomment-946716583
 #      for reasoning
-exectask "lcov_drop_gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
-exectask "lcov_coverage_report" "lcov --list everything.coverage-info"
+exectask "lcov-drop-gperf" "lcov -r all-integration-tests.coverage-info '*.gperf' -o everything.coverage-info"
+exectask "lcov-dump-coverage-report" "lcov --list everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
-exectask "coveralls_upload" "coveralls report --format=lcov everything.coverage-info"
+exectask "coveralls-upload" "coveralls report --format=lcov everything.coverage-info"
 # Copy the final coverage report to artifacts for local analysis if needed
 cp -fv "everything.coverage-info" "$LOGDIR/"
 
