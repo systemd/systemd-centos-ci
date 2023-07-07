@@ -472,8 +472,9 @@ lcov_clear_metadata() {
 lcov_collect() {
     local output_file="${1:?}"
     local build_dir="${2:?}"
+    shift 2
 
-    if ! lcov --directory "$build_dir" --capture --output-file "$output_file"; then
+    if ! lcov "$@" --directory "$build_dir" --capture --output-file "$output_file"; then
         _err "Failed to capture coverage data from '$build_dir'"
         return 1
     fi

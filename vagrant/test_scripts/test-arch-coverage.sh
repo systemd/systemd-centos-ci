@@ -42,6 +42,9 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 # Tweak $BUILD_DIR's permissions, so anybody can read & write the gcov metadata
 setfacl --recursive --modify="d:u::rwX,d:g::rwX,d:o:rwX" --modify="u::rwX,g::rwX,o:rwX" "$BUILD_DIR"
 
+# Collect initial coverage
+exectask "lcov_collect-build_dir-initial" "lcov_collect $COVERAGE_DIR/build_dir_initial.coverage-info $BUILD_DIR --initial"
+
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=5"
 exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
