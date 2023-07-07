@@ -72,6 +72,20 @@ SKIP_LIST=(
     "${FLAKE_LIST[@]}"
 )
 
+## Other integration tests ##
+# Prepare environment for the systemd-networkd testsuite
+systemctl disable --now dhcpcd dnsmasq
+systemctl reload dbus.service
+# FIXME
+# As the DHCP lease time in libvirt is quite short, and it's not configurable,
+# yet, let's start a DHCP daemon _only_ for the "master" network device to
+# keep it up during the systemd-networkd testsuite
+systemctl enable --now dhcpcd@eth0.service
+systemctl status dhcpcd@eth0.service
+
+exectask_p "systemd-networkd" \
+         "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
+
 for t in test/TEST-??-*; do
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
@@ -161,24 +175,9 @@ for t in "${EXECUTED_LIST[@]}"; do
     [[ -d "$t" ]] && make -C "$t" clean-again > /dev/null
 done
 
-## Other integration tests ##
-# Prepare environment for the systemd-networkd testsuite
-systemctl disable --now dhcpcd dnsmasq
-systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
-
 # Collect coverage metadata from the $BUILD_DIR (since we use the just-built nspawn
-# and other tools)
-exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
-
-exectask "systemd-networkd" \
-         "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
-exectask "lcov_networkd_collect_coverage" "lcov_collect $COVERAGE_DIR/systemd-networkd.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+# and other tools + networkd test suite)
+exectask "lcov_build_dir_collect" "lcov_collect $COVERAGE_DIR/build_dir.coverage-info $BUILD_DIR"
 
 # Collect coredumps using the coredumpctl utility, if any
 exectask "coredumpctl_collect" "coredumpctl_collect"
