@@ -43,7 +43,7 @@ pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 setfacl --recursive --modify="d:u::rwX,d:g::rwX,d:o:rwX" --modify="u::rwX,g::rwX,o:rwX" "$BUILD_DIR"
 
 exectask "ninja-test" "GCOV_ERROR_FILE=$LOGDIR/ninja-test-gcov-errors.log meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=5"
-exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR && lcov_clear_metadata $BUILD_DIR"
+exectask "ninja-test-collect-coverage" "lcov_collect $COVERAGE_DIR/unit-tests.coverage-info $BUILD_DIR"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 ## Integration test suite ##
