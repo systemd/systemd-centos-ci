@@ -86,7 +86,7 @@ systemctl reload dbus.service
 systemctl enable --now dhcpcd@eth0.service
 systemctl status dhcpcd@eth0.service
 
-exectask_p "systemd-networkd" \
+exectask_p "systemd-networkd-tests.py" \
          "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --with-coverage"
 
 for t in test/TEST-??-*; do

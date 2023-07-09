@@ -112,7 +112,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # integration tests, since it doesn't require much resources and should not
     # interfere with them (and vice versa), saving a non-insignificant amount
     # of time
-    exectask_p "systemd-networkd_sanitizers" \
+    exectask_p "systemd-networkd-tests.py" \
                "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
 
     # Run certain other integration tests under sanitizers to cover bigger
