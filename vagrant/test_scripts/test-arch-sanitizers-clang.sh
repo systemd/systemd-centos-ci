@@ -203,7 +203,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         fi
     done
 
-    exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+    exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd-tests.py*.log | check_for_sanitizer_errors"
 fi
 
 # Check the test logs for sanitizer errors as well, since some tests may
