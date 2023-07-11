@@ -7,6 +7,8 @@ LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
+export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+
 # EXIT signal handler
 at_exit() {
     set +e
@@ -37,9 +39,9 @@ set +e
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 # Run the internal unit tests (make check)
-exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
+exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
-[[ -d "build/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "build/meson-logs" "$LOGDIR"
+[[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
 
 # If we're not testing the main branch (the first diff) check if the tested
 # branch doesn't contain only man-related changes. If so, skip the integration
