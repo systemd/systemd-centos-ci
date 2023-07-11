@@ -219,7 +219,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
 
     exectask "systemd-networkd-tests.py" \
              "/bin/time -v -- timeout -k 60s 60m test/test-network/systemd-networkd-tests.py --build-dir=$BUILD_DIR --debug --asan-options=$ASAN_OPTIONS --ubsan-options=$UBSAN_OPTIONS"
-    exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd_sanitizers*.log | check_for_sanitizer_errors"
+    exectask "check-networkd-log-for-sanitizer-errors" "cat $LOGDIR/systemd-networkd-tests.py*.log | check_for_sanitizer_errors"
 fi
 
 # Check the test logs for sanitizer errors as well, since some tests may
