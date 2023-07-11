@@ -7,7 +7,8 @@ LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
-REPO_URL="https://github.com/systemd/systemd.git"
+export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
+REPO_URL="${REPO_URL:-https://github.com/systemd/systemd.git}"
 REMOTE_REF=""
 
 # EXIT signal handler
@@ -191,27 +192,28 @@ fi
 (
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
-    trap "[[ -d $PWD/build/meson-logs ]] && cp -r $PWD/build/meson-logs '$LOGDIR'" EXIT
-    meson build -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
-                -Dcpp_args='-Og' \
-                -Ddebug=true \
-                --werror \
-                -Dlog-trace=true \
-                -Dslow-tests=true \
-                -Dfuzz-tests=true \
-                -Dtests=unsafe \
-                -Dinstall-tests=true \
-                -Ddbuspolicydir=/etc/dbus-1/system.d \
-                -Dman=true \
-                -Dhtml=true
-    ninja -C build
+    trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
+    meson "$BUILD_DIR" \
+        -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
+        -Dcpp_args='-Og' \
+        -Ddebug=true \
+        --werror \
+        -Dlog-trace=true \
+        -Dslow-tests=true \
+        -Dfuzz-tests=true \
+        -Dtests=unsafe \
+        -Dinstall-tests=true \
+        -Ddbuspolicydir=/etc/dbus-1/system.d \
+        -Dman=true \
+        -Dhtml=true
+    ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build.log"
 
 # shellcheck disable=SC2119
 coredumpctl_set_ts
 
 # Install the compiled systemd
-ninja -C build install
+ninja -C "$BUILD_DIR" install
 
 # FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
 DRACUT_OPTS=()
