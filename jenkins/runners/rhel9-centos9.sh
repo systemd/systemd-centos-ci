@@ -43,6 +43,7 @@ cd systemd-centos-ci
                    --bootstrap-script="bootstrap-rhel9.sh" \
                    --bootstrap-args="-h unified" \
                    --testsuite-script="testsuite-rhel9.sh" \
+                   --testsuite-args="-n" \
                    ${ARGS:+"${ARGS[@]}"}
 
 # C9S job with legacy cgroup hierarchy
@@ -50,4 +51,5 @@ cd systemd-centos-ci
                    --bootstrap-script="bootstrap-rhel9.sh" \
                    --bootstrap-args="-h legacy" \
                    --testsuite-script="testsuite-rhel9.sh" \
+                   --testsuite-args="-n" \
                    ${ARGS:+"${ARGS[@]}"}

@@ -20,6 +20,11 @@ set -o pipefail
 
 trap at_exit EXIT
 
+if [[ "${1:-}" == "-n" ]]; then
+    echo "[NOTICE] Running only nspawn-based tests"
+    export TEST_NO_QEMU=1
+fi
+
 ### SETUP PHASE ###
 CGROUP_HIERARCHY="$(print_cgroup_hierarchy)"
 
