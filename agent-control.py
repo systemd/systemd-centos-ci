@@ -431,7 +431,7 @@ def main():
         ac.allocate_node(args.pool)
 
         if args.timeout > 0:
-            logging.info("Setting timeout to %d minutes", args.timeout * 60)
+            logging.info("Setting timeout to %d minutes", args.timeout)
             signal.alarm(args.timeout * 60)
 
         # Figure out a systemd branch to compile
