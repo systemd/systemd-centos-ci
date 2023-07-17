@@ -68,7 +68,7 @@ Vagrant.configure("2") do |config|
 
     # Compile & install tgt (iSCSI target utils)
     pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
-    git clone https://github.com/fujita/tgt tgt
+    git clone https://github.com/fujita/tgt
     pushd tgt
     make sbindir=/usr/bin ISCSI=1
     make sbindir=/usr/bin install
@@ -84,7 +84,7 @@ Vagrant.configure("2") do |config|
 
     # Compile & install netlabel_tools
     pacman --needed --noconfirm -S autoconf automake gcc libtool make pkg-config
-    git clone https://github.com/netlabel/netlabel_tools netlabel_tools
+    git clone https://github.com/netlabel/netlabel_tools
     pushd netlabel_tools
     ./autogen.sh
     ./configure --prefix=/usr
@@ -95,7 +95,7 @@ Vagrant.configure("2") do |config|
 
     # Compile & install dfuzzer
     pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
-    git clone https://github.com/dbus-fuzzer/dfuzzer dfuzzer
+    git clone https://github.com/dbus-fuzzer/dfuzzer
     pushd dfuzzer
     meson build
     ninja -C build install
