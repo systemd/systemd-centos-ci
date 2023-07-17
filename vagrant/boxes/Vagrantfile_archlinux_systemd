@@ -93,6 +93,19 @@ Vagrant.configure("2") do |config|
     popd
     rm -fr netlabel_tools
 
+    # Compile & install radvd
+    # FIXME: drop once [0] is relesed & lands in Arch Linux
+    # [0] https://github.com/radvd-project/radvd/pull/141
+    pacman --needed --noconfirm -S autoconf automake byacc flex gcc libbsd libtool make pkg-config
+    git clone https://github.com/radvd-project/radvd
+    pushd radvd
+    ./autogen.sh
+    ./configure --prefix=/usr --sysconfdir=/etc --mandir=/usr/share/man
+    make -j
+    make install
+    popd
+    rm -fr radvd
+
     # Compile & install dfuzzer
     pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
     git clone https://github.com/dbus-fuzzer/dfuzzer
