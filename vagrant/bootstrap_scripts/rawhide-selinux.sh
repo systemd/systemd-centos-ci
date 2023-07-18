@@ -1,7 +1,7 @@
 #!/bin/bash
 # Vagrant provider for a standard systemd setup
 
-set -eu
+set -eux
 set -o pipefail
 
 whoami

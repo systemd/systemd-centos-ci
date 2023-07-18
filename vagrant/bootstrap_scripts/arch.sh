@@ -2,7 +2,7 @@
 # shellcheck disable=SC2155
 # Vagrant provider for a standard systemd setup
 
-set -eu
+set -eux
 set -o pipefail
 
 whoami
