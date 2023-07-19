@@ -40,7 +40,6 @@ cat >"$ADDITIONAL_INFO_FILE" <<EOF
 <tr><td><strong>Console log:</strong></td>      <td><a href='$BUILD_URL/console'>$BUILD_URL/console</a></td></tr>
 <tr><td><strong>PR title:</strong></td>         <td>${ghprbPullTitle:-N/A}</td></tr>
 <tr><td><strong>Date:</strong></td>             <td>$(date --rfc-3339=seconds)</td></tr>
-<tr><td><strong>Reschedule count:</strong></td> <td>${NAGINATOR_COUNT:-0}</td></tr>
 </table>
 </br>
 </div>
