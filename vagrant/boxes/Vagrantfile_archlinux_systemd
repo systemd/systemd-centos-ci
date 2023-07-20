@@ -3,7 +3,7 @@
 
 Vagrant.configure("2") do |config|
   config.vm.define :archlinux_systemd
-  config.vm.box = "generic/arch"
+  config.vm.box = "archlinux/archlinux"
   # Don't replace the original Vagrant's insecure key
   config.ssh.insert_key = false
 
