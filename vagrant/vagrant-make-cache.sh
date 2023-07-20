@@ -55,13 +55,13 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Using '$BOX_NAME' as the Fedora Rawhide box name"
 
     sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANT_FILE"
-
-    echo "Installing btrfs-aware packages"
-    dnf -y install centos-release-hyperscale-experimental
-    dnf -y install btrfs-progs kernel libguestfs-tools-c
-    # Add the btrfs-progs package to the guestfs image
-    echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 fi
+
+echo "Installing btrfs-aware packages"
+dnf -y install centos-release-hyperscale-experimental
+dnf -y install btrfs-progs kernel libguestfs-tools-c
+# Add the btrfs-progs package to the guestfs image
+echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 
 # Start a VM described in the Vagrantfile with all provision steps
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
