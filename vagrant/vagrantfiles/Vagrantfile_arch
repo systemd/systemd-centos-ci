@@ -61,6 +61,8 @@ Vagrant.configure("2") do |config|
     # Enable nested KVM
     libvirt.nested = true
     libvirt.cpu_mode = "host-model"
+
+    libvirt.machine_type = "q35"
   end
 
   config.ssh.extra_args = [

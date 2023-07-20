@@ -16,6 +16,8 @@ Vagrant.configure("2") do |config|
 
     # Pass through /dev/random from the host to the VM
     libvirt.random :model => 'random'
+
+    libvirt.machine_type = "q35"
   end
 
   config.vm.synced_folder '.', '/vagrant', disabled: true
