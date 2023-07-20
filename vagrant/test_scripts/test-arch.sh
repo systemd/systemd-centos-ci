@@ -20,6 +20,8 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 # shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+bootctl status
+
 # Enable systemd-coredump
 if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
