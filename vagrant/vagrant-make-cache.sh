@@ -120,6 +120,7 @@ vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"
     sed -i '/^Vagrant.configure/a\  config.ssh.username = "root"' Vagrantfile
     sed -i '/^Vagrant.configure/a\  config.ssh.password = "vagrant"' Vagrantfile
     sed -i '/^Vagrant.configure/a\  config.ssh.insert_key = "true"' Vagrantfile
+    sed -i '/^Vagrant.configure/a\  config.vm.synced_folder ".", "/vagrant", disabled: true' Vagrantfile
     vagrant up --no-tty --provider=libvirt
     # shellcheck disable=SC2016
     vagrant ssh -c 'bash -exc "uname -a; id; [[ $UID == 0 ]]"' || INNER_EC=1
