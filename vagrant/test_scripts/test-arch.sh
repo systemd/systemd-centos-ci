@@ -42,7 +42,7 @@ exectask "ninja-test" "meson test -C $BUILD_DIR --print-errorlogs --timeout-mult
 # the kernel command line.
 # The exported INITRD variable is picked up by all following integration tests
 export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-if ! mkinitcpio -c /etc/mkinitcpio.ci.conf -A base,systemd,sd-encrypt,autodetect,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
+if ! mkinitcpio -c /etc/mkinitcpio.ci.conf -A base,systemd,sd-encrypt,modconf,block,filesystems,keyboard,fsck -g "$INITRD"; then
     echo >&2 "Failed to generate initrd, can't continue"
     exit 1
 fi
@@ -77,12 +77,6 @@ TEST_LIST=(
 # Prepare environment for the systemd-networkd testsuite
 systemctl disable --now dhcpcd dnsmasq
 systemctl reload dbus.service
-# FIXME
-# As the DHCP lease time in libvirt is quite short, and it's not configurable,
-# yet, let's start a DHCP daemon _only_ for the "master" network device to
-# keep it up during the systemd-networkd testsuite
-systemctl enable --now dhcpcd@eth0.service
-systemctl status dhcpcd@eth0.service
 
 for t in "${TEST_LIST[@]}"; do
     exectask_p "${t##*/}" "/bin/time -v -- timeout -k 60s 60m ./$t"

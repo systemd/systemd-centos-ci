@@ -11,7 +11,7 @@
 # around 10 minutes, which is pretty substantial time slice for a CI run, which
 # takes ~45 minutes.
 
-set -eu
+set -eux
 set -o pipefail
 
 EC=0
@@ -39,8 +39,8 @@ sestatus | grep -E "SELinux status:\s*disabled" || setenforce 0
 systemctl -q is-enabled firewalld && systemctl disable --now firewalld
 systemctl restart libvirtd
 
-TEMP_DIR="$(mktemp -d vagrant-cache-XXXXX)"
-pushd "$TEMP_DIR" || { echo >&2 "Can't pushd to $TEMP_DIR"; exit 1; }
+mkdir vagrant_cache
+pushd vagrant_cache
 
 # The URL for Fedora Rawhide Vagrant box changes over time, so let's attempt
 # to get the latest one
@@ -55,13 +55,13 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Using '$BOX_NAME' as the Fedora Rawhide box name"
 
     sed -i "/config.vm.box_url/s/BOX-NAME-PLACEHOLDER/$BOX_NAME/" "$VAGRANT_FILE"
-
-    echo "Installing btrfs-aware packages"
-    dnf -y install centos-release-hyperscale-experimental
-    dnf -y install btrfs-progs kernel libguestfs-tools-c
-    # Add the btrfs-progs package to the guestfs image
-    echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 fi
+
+echo "Installing btrfs-aware packages"
+dnf -y install centos-release-hyperscale-experimental
+dnf -y install btrfs-progs kernel libguestfs-tools-c
+# Add the btrfs-progs package to the guestfs image
+echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 
 # Start a VM described in the Vagrantfile with all provision steps
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
@@ -72,7 +72,7 @@ cp "$VAGRANT_FILE" Vagrantfile
 vagrant up --no-tty --provider=libvirt
 # Register a cleanup handler
 # shellcheck disable=SC2064
-trap "cd $PWD && vagrant destroy -f && cd / && rm -fr $TEMP_DIR" EXIT
+trap "cd $PWD && vagrant destroy -f && cd .. && rm -fr vagrant_cache" EXIT
 
 timeout 5m vagrant reload
 case $? in
@@ -89,14 +89,38 @@ case $? in
 esac
 vagrant halt
 
+# Workaround for `virt-{sysprep,resize,...}` - work with the image via qemu directly
+# instead of using libvirt
+export LIBGUESTFS_BACKEND=direct
+
+# A very convoluted way to expand the backing image from the original 20G (ATTOW)
+# to something more usable
+if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_archlinux_systemd" ]]; then
+    LIBVIRT_IMAGE="/var/lib/libvirt/images/vagrant_cache_archlinux_systemd.img"
+
+    # Convert the qcow2 image back into a raw one so it's easier to manipulate with
+    qemu-img convert -f qcow2 -O raw "$LIBVIRT_IMAGE" image.raw
+    # Prepare a sparse file for the expanded image
+    truncate -r image.raw new_image.raw
+    truncate -s +100G new_image.raw
+    # Expand the last partition in the image
+    LAST_PART="$(virt-filesystems --parts -a image.raw | sort -r | head -n1)"
+    virt-resize --expand "$LAST_PART" image.raw new_image.raw
+    # Convert the new image back to qcow2 and copy it back to the libvirt storage
+    # (and hope for the best)
+    qemu-img convert -f raw -O qcow2 new_image.raw "$LIBVIRT_IMAGE"
+    rm -f image.raw
+    # Check if the new image boots
+    vagrant up
+    vagrant ssh -c 'lsblk; df -h /'
+    vagrant halt
+fi
+
 # Create a box from the VM, so it can be reused later. The box name is suffixed
 # with '-new' to avoid using it immediately in "production".
 # Output file example:
 #   boxes/Vagrantfile_archlinux_systemd => archlinux_systemd-new
 BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
-# Workaround for `virt-sysprep` - work with the image via qemu directly
-# instead of using libvirt
-export LIBGUESTFS_BACKEND=direct
 # You guessed it, another workaround - let's include the original
 # Vagrantfile as well, as it usually contains important settings
 # which make the box actually bootable. For this, we need to detect the location
@@ -120,6 +144,7 @@ vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"
     sed -i '/^Vagrant.configure/a\  config.ssh.username = "root"' Vagrantfile
     sed -i '/^Vagrant.configure/a\  config.ssh.password = "vagrant"' Vagrantfile
     sed -i '/^Vagrant.configure/a\  config.ssh.insert_key = "true"' Vagrantfile
+    sed -i '/^Vagrant.configure/a\  config.vm.synced_folder ".", "/vagrant", disabled: true' Vagrantfile
     vagrant up --no-tty --provider=libvirt
     # shellcheck disable=SC2016
     vagrant ssh -c 'bash -exc "uname -a; id; [[ $UID == 0 ]]"' || INNER_EC=1
