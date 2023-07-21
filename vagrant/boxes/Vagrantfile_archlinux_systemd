@@ -124,15 +124,22 @@ Vagrant.configure("2") do |config|
     sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/ { s/quiet//; s/"$/ console=ttyS0"/ }' /etc/default/grub
     grub-mkconfig -o /boot/grub/grub.cfg
 
+    # Replace systemd-networkd with dhcpcd as the network manager for the default
+    # interface, so we can run the systemd-networkd test suite without having
+    # to worry about the network staying up
+    #
     # Tell systemd-networkd to ignore eth0 netdev, so we can keep it up
     # during the systemd-networkd testsuite
-    cat << EOF > /etc/systemd/network/eth0.network
+    cat >/etc/systemd/network/eth0.network <<EOF
     [Match]
     Name=eth0
 
     [Link]
     Unmanaged=yes
 EOF
-
+    # Remove the image-supplied eth* network file
+    rm -fv /etc/systemd/network/80-dhcp.network
+    # Enable dhcpcd for the eth0 interface
+    systemctl enable dhcpcd@eth0.service
   SHELL
 end

@@ -102,11 +102,6 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     # Prepare environment for the systemd-networkd testsuite
     systemctl disable --now dhcpcd dnsmasq
     systemctl reload dbus.service
-    # As the DHCP lease time in libvirt is quite short, and it's not configurable,
-    # yet, let's start a DHCP daemon _only_ for the "master" network device to
-    # keep it up during the systemd-networkd testsuite
-    systemctl enable --now dhcpcd@eth0.service
-    systemctl status dhcpcd@eth0.service
 
     # Run the systemd-networkd testsuite "in the background" while we run other
     # integration tests, since it doesn't require much resources and should not
