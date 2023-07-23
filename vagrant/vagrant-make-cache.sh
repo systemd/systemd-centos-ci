@@ -69,6 +69,7 @@ export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 
 # Provision the VM
 cp "$VAGRANT_FILE" Vagrantfile
+cp "$VAGRANT_ROOT"/boxes/*.sh .
 cp -fvL /usr/share/OVMF/OVMF_VARS.fd /tmp
 chmod o+rw /tmp/OVMF_VARS.fd
 vagrant up --no-tty --provider=libvirt
