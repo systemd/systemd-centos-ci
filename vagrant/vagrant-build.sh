@@ -107,8 +107,6 @@ pushd "$TEST_DIR" || { echo >&2 "Can't pushd to $TEST_DIR"; exit 1; }
 cp -L "$TEST_SCRIPT" "$TEST_DIR/"
 
 # Provision the machine
-cp -fvL /usr/share/OVMF/OVMF_VARS.fd /tmp
-chmod o+rw /tmp/OVMF_VARS.fd
 vagrant up --no-tty --provider=libvirt
 
 set +e
