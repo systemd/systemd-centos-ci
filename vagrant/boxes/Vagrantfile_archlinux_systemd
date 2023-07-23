@@ -1,38 +1,44 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vi: set ft=ruby ts=4 sw=4 et:
 
 Vagrant.configure("2") do |config|
-  config.vm.define :archlinux_systemd
-  config.vm.box = "archlinux/archlinux"
-  # Don't replace the original Vagrant's insecure key
-  config.ssh.insert_key = false
-  config.vm.synced_folder '.', '/vagrant', disabled: true
+    config.vm.define :archlinux_systemd
+    config.vm.box = "archlinux/archlinux"
+    # Don't replace the original Vagrant's insecure key
+    config.ssh.insert_key = false
+    config.vm.synced_folder '.', '/vagrant', disabled: true
 
-  ovmf_nvram = "/tmp/OVMF_VARS.arch.fd"
+    ovmf_nvram = "/tmp/OVMF_VARS.arch.fd"
 
-  # Note: CentOS CI infra specific overrides - you may want to change them
-  #       to run the VM locally
-  config.vm.provider :libvirt do |libvirt|
-    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
-    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
-    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
+    # Note: CentOS CI infra specific overrides - you may want to change them
+    #       to run the VM locally
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+        libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+        libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
 
-    # Pass through /dev/random from the host to the VM
-    libvirt.random :model => 'random'
+        # Pass through /dev/random from the host to the VM
+        libvirt.random :model => 'random'
 
-    libvirt.machine_type = "q35"
+        libvirt.machine_type = "q35"
 
-    libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
-    libvirt.nvram = ovmf_nvram
-  end
+        # Emulate UEFI using OVMF
+        libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+        libvirt.nvram = ovmf_nvram
 
-  config.trigger.before [:up, :provision] do |trigger|
-    trigger.run = {inline: "cp -u /usr/share/OVMF/OVMF_VARS.fd #{ovmf_nvram}"}
-  end
+        # Emulate TPM 2.0 using swtpm
+        libvirt.tpm_model = "tpm-crb"
+        libvirt.tpm_type = "emulator"
+        libvirt.tpm_version = "2.0"
+    end
 
-  config.trigger.after [:destroy] do |trigger|
-    trigger.run = {inline: "rm #{ovmf_nvram}"}
-  end
+    config.trigger.before [:up, :provision] do |trigger|
+        trigger.run = {inline: "cp -u /usr/share/OVMF/OVMF_VARS.fd #{ovmf_nvram}"}
+    end
 
-  config.vm.provision "shell", privileged: true, path: __dir__ + "/archlinux_systemd.sh"
+    config.trigger.after [:destroy] do |trigger|
+        trigger.run = {inline: "rm #{ovmf_nvram}"}
+    end
+
+    config.vm.provision "shell", privileged: true, path: __dir__ + "/archlinux_systemd.sh"
 end

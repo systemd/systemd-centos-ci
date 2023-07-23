@@ -1,25 +1,25 @@
 # -*- mode: ruby -*-
-# vi: set ft=ruby :
+# vi: set ft=ruby ts=4 sw=4 et:
 
 Vagrant.configure("2") do |config|
-  config.vm.define :rawhide_selinux
-  config.vm.box = "fedora-rawhide-cloud"
-  config.vm.box_url = "https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/BOX-NAME-PLACEHOLDER"
-  # Don't replace the original Vagrant's insecure key
-  config.ssh.insert_key = false
+    config.vm.define :rawhide_selinux
+    config.vm.box = "fedora-rawhide-cloud"
+    config.vm.box_url = "https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/BOX-NAME-PLACEHOLDER"
+    # Don't replace the original Vagrant's insecure key
+    config.ssh.insert_key = false
 
-  # Note: CentOS CI infra specific overrides - you may want to change them
-  #       to run the VM locally
-  config.vm.provider :libvirt do |libvirt|
-    libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
-    libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
-    libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
+    # Note: CentOS CI infra specific overrides - you may want to change them
+    #       to run the VM locally
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
+        libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
+        libvirt.cpus = ENV.fetch("VAGRANT_CPUS", "8")
 
-    # Pass through /dev/random from the host to the VM
-    libvirt.random :model => 'random'
-  end
+        # Pass through /dev/random from the host to the VM
+        libvirt.random :model => 'random'
+    end
 
-  config.vm.synced_folder '.', '/vagrant', disabled: true
+    config.vm.synced_folder '.', '/vagrant', disabled: true
 
-  config.vm.provision "shell", privileged: true, path: __dir__ + "/rawhide_selinux.sh"
+    config.vm.provision "shell", privileged: true, path: __dir__ + "/rawhide_selinux.sh"
 end

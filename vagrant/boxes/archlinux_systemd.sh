@@ -4,6 +4,10 @@ set -o pipefail
 
 whoami
 
+# We should have a working TPM 2.0 device
+stat /dev/tpm0
+[[ "$(</sys/class/tpm/tpm0/tpm_version_major)" == 2 ]]
+
 # Clear Pacman's caches
 pacman --noconfirm -Scc
 rm -fv /var/lib/pacman/sync/*.db
