@@ -14,7 +14,6 @@
 set -eux
 set -o pipefail
 
-EC=0
 DUFFY_SSH_KEY="/root/.ssh/duffy.key"
 VAGRANT_ROOT="$(dirname "$(readlink -f "$0")")"
 VAGRANT_FILE="$VAGRANT_ROOT/boxes/${1:?Missing argument: Vagrantfile}"
@@ -68,25 +67,15 @@ export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
 export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
 export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 
+# Provision the VM
 cp "$VAGRANT_FILE" Vagrantfile
+cp -fvL /usr/share/OVMF/OVMF_VARS.fd /tmp
+chmod o+rw /tmp/OVMF_VARS.fd
 vagrant up --no-tty --provider=libvirt
-# Register a cleanup handler
-# shellcheck disable=SC2064
-trap "cd $PWD && vagrant destroy -f && cd .. && rm -fr vagrant_cache" EXIT
-
-timeout 5m vagrant reload
-case $? in
-    0)
-        ;;
-    124)
-        echo >&2 "Timeout during machine reboot"
-        exit 124
-        ;;
-    *)
-        echo >&2 "Failed to reboot the VM using 'vagrant reload'"
-        exit 1
-        ;;
-esac
+# Make sure the VM is bootable after running the provision script
+timeout -v 5m vagrant reload
+# shellcheck disable=SC2016
+vagrant ssh -c 'bootctl status; ls -l /efi/$(</etc/machine-id)/$(uname -r)/'
 vagrant halt
 
 # Workaround for `virt-{sysprep,resize,...}` - work with the image via qemu directly
@@ -130,32 +119,44 @@ BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANT_FILE")"
 vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
+# Remove the VM we just packaged
+vagrant destroy -f
 
 # Check if we can build a usable VM from the just packaged box
-(
-    TEST_DIR="$(mktemp -d testbox.XXX)"
-    INNER_EC=0
+TEST_DIR="$(mktemp -d testbox.XXX)"
 
-    vagrant box remove -f testbox || :
-    vagrant box add --name testbox "$BOX_NAME"
-    pushd "$TEST_DIR"
-    vagrant init testbox
+vagrant box remove -f testbox || :
+vagrant box add --name testbox "$BOX_NAME"
+pushd "$TEST_DIR"
+cat >Vagrantfile <<EOF
+Vagrant.configure("2") do |config|
+    config.vm.define :testbox_vm
+    config.vm.box = "testbox"
+
     # Test root login via SSH, since that's what we use in tests
-    sed -i '/^Vagrant.configure/a\  config.ssh.username = "root"' Vagrantfile
-    sed -i '/^Vagrant.configure/a\  config.ssh.password = "vagrant"' Vagrantfile
-    sed -i '/^Vagrant.configure/a\  config.ssh.insert_key = "true"' Vagrantfile
-    sed -i '/^Vagrant.configure/a\  config.vm.synced_folder ".", "/vagrant", disabled: true' Vagrantfile
-    vagrant up --no-tty --provider=libvirt
-    # shellcheck disable=SC2016
-    vagrant ssh -c 'bash -exc "uname -a; id; [[ $UID == 0 ]]"' || INNER_EC=1
+    config.ssh.username = "root"
+    config.ssh.password = "vagrant"
+    config.ssh.insert_key = "true"
+    config.vm.synced_folder '.', '/vagrant', disabled: true
 
-    # Cleanup
-    vagrant destroy -f
-    vagrant box remove -f testbox
-    popd && rm -fr "$TEST_DIR"
+    config.vm.provider :libvirt do |libvirt|
+        libvirt.random :model => 'random'
+        libvirt.machine_type = "q35"
+        libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+        libvirt.nvram = "/tmp/OVMF_VARS.fd"
+    end
 
-    exit $INNER_EC
-)
+end
+EOF
+vagrant up --no-tty --provider=libvirt
+# shellcheck disable=SC2016
+vagrant ssh -c 'bash -exc "bootctl status; uname -a; id; [[ $UID == 0 ]]"'
+
+# Cleanup
+vagrant halt
+vagrant destroy -f
+vagrant box remove -f testbox
+popd && rm -fr "$TEST_DIR"
 
 # Upload the box to the CentOS CI artifact storage
 
@@ -165,5 +166,3 @@ mv "$BOX_NAME" vagrant_boxes
 
 rsync -e "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i $DUFFY_SSH_KEY" -av "vagrant_boxes" systemd@artifacts.ci.centos.org:/srv/artifacts/systemd/
 echo "Box URL: https://artifacts.ci.centos.org/systemd/vagrant_boxes/$BOX_NAME"
-
-exit $EC

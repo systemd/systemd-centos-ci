@@ -21,6 +21,8 @@ export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 # shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+bootctl status
+
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## Sanitizer-specific options

@@ -18,6 +18,14 @@ Vagrant.configure("2") do |config|
     libvirt.random :model => 'random'
 
     libvirt.machine_type = "q35"
+
+    # The OVMF_VARS file needs to be created in advance by copying
+    # /usr/share/OVMF/OVMF_VARS.fd to /tmp
+    # Note: Vagrant can't remove running VMs with an attached NVRAM, so you either
+    #       have to shut it off first (vagrant halt) or use `virsh undefine --nvram ...`
+    #       before `vagrant destroy -f`
+    libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+    libvirt.nvram = "/tmp/OVMF_VARS.fd"
   end
 
   config.vm.synced_folder '.', '/vagrant', disabled: true
@@ -41,7 +49,8 @@ Vagrant.configure("2") do |config|
     pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-completion clang compiler-rt docbook-xsl \
         ethtool gdm git gnu-efi-libs gperf intltool iptables kexec-tools kmod libbpf libcap libelf libfido2 libgcrypt libidn2 \
         libmicrohttpd libpwquality libseccomp libutil-linux libxkbcommon libxslt linux-api-headers llvm llvm-libs lvm2 lz4 \
-        meson multipath-tools ninja p11-kit pam pcre2 python-jinja python-lxml qrencode quota-tools rust tpm2-pkcs11 xz
+        meson multipath-tools ninja p11-kit pam pcre2 pesign python-jinja python-lxml python-pillow qrencode quota-tools rust \
+        sbsigntools tpm2-pkcs11 xz
     # Install test dependencies
     # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
     #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
@@ -131,15 +140,37 @@ Vagrant.configure("2") do |config|
     # Tell systemd-networkd to ignore eth0 netdev, so we can keep it up
     # during the systemd-networkd testsuite
     cat >/etc/systemd/network/eth0.network <<EOF
-    [Match]
-    Name=eth0
+[Match]
+Name=eth0
 
-    [Link]
-    Unmanaged=yes
+[Link]
+Unmanaged=yes
 EOF
     # Remove the image-supplied eth* network file
     rm -fv /etc/systemd/network/80-dhcp.network
     # Enable dhcpcd for the eth0 interface
     systemctl enable dhcpcd@eth0.service
+
+    # Replace GRUB with systemd-boot
+    #
+    # Note: this doesn't update the mkinitcpio preset file (/etc/mkinitcpio.d/linux.preset)
+    #       so any future updates of kernel/initrd will still get installed under /boot.
+    #       However, we don't really care about this as this is a single-purpose CI image.
+    MACHINE_ID="$(</etc/machine-id)"
+    KERNEL_VER="$(pacman -Q linux | sed -r 's/^linux\\s+([0-9\\.]+)\\.(.+)$/\\1-\\2/')"
+
+    bootctl install
+    cat >/efi/loader/entries/arch.conf <<EOF
+title ArchLinux
+linux /$MACHINE_ID/$KERNEL_VER/linux
+initrd /$MACHINE_ID/$KERNEL_VER/initrd
+options root=UUID=$(findmnt -n -o UUID /) rw console=ttyS0 net.ifnames=0
+EOF
+    # Follow the recommended layout from the Boot Loader Specification
+    mkdir -p "/efi/$MACHINE_ID/$KERNEL_VER"
+    mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
+    mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
+    bootctl status
+    pacman -Rcnsu --noconfirm grub
   SHELL
 end
