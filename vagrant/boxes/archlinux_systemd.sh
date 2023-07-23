@@ -94,14 +94,6 @@ ninja -C build install
 popd
 rm -fr dfuzzer
 
-# Disable 'quiet' mode on the kernel command line and forward everything
-# to ttyS0 instead of just tty0, so we can collect it using QEMU's
-# -serial file:xxx feature. Also, explicitly enable unified cgroups, since
-# the default on Arch is the hybrid hierarchy, which interferes with some
-# tests
-sed -i '/GRUB_CMDLINE_LINUX_DEFAULT/ { s/quiet//; s/"$/ console=ttyS0"/ }' /etc/default/grub
-grub-mkconfig -o /boot/grub/grub.cfg
-
 # Replace systemd-networkd with dhcpcd as the network manager for the default
 # interface, so we can run the systemd-networkd test suite without having
 # to worry about the network staying up
