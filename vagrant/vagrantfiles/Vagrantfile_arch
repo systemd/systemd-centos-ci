@@ -41,6 +41,8 @@ Vagrant.configure("2") do |config|
   config.ssh.password = "vagrant"
   config.ssh.insert_key = "true"
 
+  ovmf_nvram = "/tmp/OVMF_VARS.arch.fd"
+
   # Note: CentOS CI infra specific overrides - you may want to change them
   #       to run the VM locally
   config.vm.provider :libvirt do |libvirt|
@@ -64,13 +66,8 @@ Vagrant.configure("2") do |config|
 
     libvirt.machine_type = "q35"
 
-    # The OVMF_VARS file needs to be created in advance by copying
-    # /usr/share/OVMF/OVMF_VARS.fd to /tmp
-    # Note: Vagrant can't remove running VMs with an attached NVRAM, so you either
-    #       have to shut it off first (vagrant halt) or use `virsh undefine --nvram ...`
-    #       before `vagrant destroy -f`
     libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
-    libvirt.nvram = "/tmp/OVMF_VARS.fd"
+    libvirt.nvram = ovmf_nvram
   end
 
   config.ssh.extra_args = [
@@ -79,6 +76,14 @@ Vagrant.configure("2") do |config|
     "-o", "ServerAliveInterval=60",
     "-o", "TCPKeepAlive=no"
   ]
+
+  config.trigger.before [:up, :provision] do |trigger|
+    trigger.run = {inline: "cp -u /usr/share/OVMF/OVMF_VARS.fd #{ovmf_nvram}"}
+  end
+
+  config.trigger.after [:destroy] do |trigger|
+    trigger.run = {inline: "rm #{ovmf_nvram}"}
+  end
 
   # Use an external bootstrap script if set
   if ENV["VAGRANT_BOOTSTRAP_SCRIPT"] then
