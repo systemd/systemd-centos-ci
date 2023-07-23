@@ -22,8 +22,14 @@ Vagrant.configure("2") do |config|
 
         libvirt.machine_type = "q35"
 
+        # Emulate UEFI using OVMF
         libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
         libvirt.nvram = ovmf_nvram
+
+        # Emulate TPM 2.0 using swtpm
+        libvirt.tpm_model = "tpm-crb"
+        libvirt.tpm_type = "emulator"
+        libvirt.tpm_version = "2.0"
     end
 
     config.trigger.before [:up, :provision] do |trigger|
