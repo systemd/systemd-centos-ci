@@ -61,7 +61,10 @@ pushd selinux-policy
 dnf -y builddep selinux-policy.spec
 ./make-rhat-patches.sh
 fedpkg local
-dnf install -y noarch/selinux-policy-*
+# Temporarily use dnf4 (even though the binary says dnf-3...) to install
+# the just built RPMs until [0] is resolved
+# [0] https://bugzilla.redhat.com/show_bug.cgi?id=2225014
+dnf-3 install -y noarch/selinux-policy-*
 popd
 
 # Force relabel on next boot
