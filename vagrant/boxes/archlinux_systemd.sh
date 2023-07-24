@@ -51,7 +51,7 @@ systemctl get-default
 
 # Compile & install tgt (iSCSI target utils)
 pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
-git clone https://github.com/fujita/tgt
+git clone --depth=1 https://github.com/fujita/tgt
 pushd tgt
 make sbindir=/usr/bin ISCSI=1
 make sbindir=/usr/bin install
@@ -67,7 +67,7 @@ rm -fr tgt
 
 # Compile & install netlabel_tools
 pacman --needed --noconfirm -S autoconf automake gcc libtool make pkg-config
-git clone https://github.com/netlabel/netlabel_tools
+git clone --depth=1 https://github.com/netlabel/netlabel_tools
 pushd netlabel_tools
 ./autogen.sh
 ./configure --prefix=/usr
@@ -80,7 +80,7 @@ rm -fr netlabel_tools
 # FIXME: drop once [0] is relesed & lands in Arch Linux
 # [0] https://github.com/radvd-project/radvd/pull/141
 pacman --needed --noconfirm -S autoconf automake byacc flex gcc libbsd libtool make pkg-config
-git clone https://github.com/radvd-project/radvd
+git clone --depth=1 https://github.com/radvd-project/radvd
 pushd radvd
 ./autogen.sh
 ./configure --prefix=/usr --sysconfdir=/etc --mandir=/usr/share/man
@@ -91,7 +91,7 @@ rm -fr radvd
 
 # Compile & install dfuzzer
 pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
-git clone https://github.com/dbus-fuzzer/dfuzzer
+git clone --depth=1 https://github.com/dbus-fuzzer/dfuzzer
 pushd dfuzzer
 meson build
 ninja -C build install
