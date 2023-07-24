@@ -74,7 +74,7 @@ vagrant up --no-tty --provider=libvirt
 # Make sure the VM is bootable after running the provision script
 timeout -v 5m vagrant reload
 # shellcheck disable=SC2016
-vagrant ssh -c 'bootctl status; ls -l /efi/$(</etc/machine-id)/$(uname -r)/'
+vagrant ssh -c 'sudo bootctl status'
 vagrant halt
 
 # Workaround for `virt-{sysprep,resize,...}` - work with the image via qemu directly
