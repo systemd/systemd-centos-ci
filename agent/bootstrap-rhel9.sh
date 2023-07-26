@@ -116,10 +116,12 @@ cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Install necessary utils for tests without enabling epel system-wide
 cmd_retry dnf -y install --enablerepo epel busybox dfuzzer knot knot-dnssecutils screen
-# Install only scsi-target-utils from our Copr repo, since it's not available
-# in the official ones, nor in EPEL
+# Install scsi-target-utils from our Copr repo, since it's not available in the official
+# ones, nor in EPEL. Also, install a custom qemu-kvm version that enables a couple
+# of devices that are disabled in the official C9S builds that we need for the udev
+# test suite
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
-cmd_retry dnf -y install --enablerepo epel,epel-next scsi-target-utils
+cmd_retry dnf -y install --enablerepo epel,epel-next qemu-kvm scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
 # Fetch the upstream systemd repo
