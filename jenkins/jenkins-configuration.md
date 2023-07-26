@@ -20,6 +20,7 @@ Do ^ _after_ installing all the plugins below.
  - Kubernetes -> Kubernetes Cloud Details -> Set "Concurrency Limit" to 10
 
 ## Plugins
+ - ANSI Color (https://plugins.jenkins.io/ansicolor)
  - Configuration as Code (https://plugins.jenkins.io/configuration-as-code/)
  - Embeddable Build Status (https://plugins.jenkins.io/embeddable-build-status)
  - GitHub Pull Request Builder (https://plugins.jenkins.io/ghprb)

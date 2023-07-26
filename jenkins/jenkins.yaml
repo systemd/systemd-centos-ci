@@ -73,6 +73,8 @@ jenkins:
         name: "Upstream-stable"
 
 unclassified:
+  ansiColorBuildWrapper:
+    globalColorMapName: "xterm"
   ghprbTrigger:
     adminlist: "mrc0mmand"
     manageWebhooks: false
