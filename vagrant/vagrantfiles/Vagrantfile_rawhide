@@ -39,6 +39,8 @@ Vagrant.configure("2") do |config|
     config.ssh.password = "vagrant"
     config.ssh.insert_key = "true"
 
+    ovmf_nvram = "/tmp/OVMF_VARS.arch.fd"
+
     config.vm.provider :libvirt do |libvirt|
         libvirt.driver = ENV.fetch("VAGRANT_DRIVER", "kvm")
         libvirt.memory = ENV.fetch("VAGRANT_MEMORY", "8192")
@@ -57,8 +59,28 @@ Vagrant.configure("2") do |config|
         # Enable nested KVM
         libvirt.nested = true
         libvirt.cpu_mode = "host-model"
+
+        libvirt.machine_type = "q35"
+
+        # Emulate UEFI using OVMF
+        libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+        libvirt.nvram = ovmf_nvram
+
+        # Emulate TPM 2.0 using swtpm
+        libvirt.tpm_model = "tpm-crb"
+        libvirt.tpm_type = "emulator"
+        libvirt.tpm_version = "2.0"
     end
 
+    config.trigger.before [:up, :provision] do |trigger|
+        trigger.run = {inline: "cp -u /usr/share/OVMF/OVMF_VARS.fd #{ovmf_nvram}"}
+    end
+
+    config.trigger.after [:destroy] do |trigger|
+        trigger.run = {inline: "rm #{ovmf_nvram}"}
+    end
+
+    # Use an external bootstrap script if set
     # Use an external bootstrap script if set
     if ENV["VAGRANT_BOOTSTRAP_SCRIPT"] then
         @ui.info("Using a custom bootstrap script: " + ENV["VAGRANT_BOOTSTRAP_SCRIPT"])
