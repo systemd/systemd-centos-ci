@@ -113,13 +113,16 @@ dracut --no-hostonly --filesystems ext4 -a crypt -o multipath --rebuild "$INITRD
 # (usually we need to wait for the test to timeout, see $QEMU_TIMEOUT and
 # $NSPAWN_TIMEOUT above), let's try to sanity check systemd first by running
 # the basic integration test under systemd-nspawn
+
+curl -Ls https://github.com/systemd/systemd/commit/9dbbe005e04c46e016e87ef8bf31068851e7555a.patch | git apply
+#
 #
 # If the sanity check passes we can be at least somewhat sure the systemd
 # 'core' is stable and we can run the rest of the selected integration tests.
 # 1) Run it under systemd-nspawn
 export TESTDIR="/var/tmp/TEST-01-BASIC_sanitizers-nspawn"
 rm -fr "$TESTDIR"
-exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1 && touch $TESTDIR/pass"
+exectask "TEST-01-BASIC_sanitizers-nspawn" "make -C test/TEST-01-BASIC clean setup run clean-again TEST_NO_QEMU=1 debug=1 && touch $TESTDIR/pass"
 NSPAWN_EC=$?
 # Each integration test dumps the system journal when something breaks
 [[ ! -f "$TESTDIR/pass" ]] && rsync -aq "$TESTDIR/system.journal" "$LOGDIR/${TESTDIR##*/}/"
