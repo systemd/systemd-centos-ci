@@ -107,7 +107,6 @@ EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT" # flaky test, see below
     "test/TEST-50-DISSECT"        # flaky test, see below (systemd/systemd#17469)
-    "test/TEST-58-REPART"         # flaky test (until `udevadm wait` stuff is backported)
 )
 SKIP_LIST=(
     "test/TEST-29-PORTABLE"       # we don't ship portabled in RHEL 9
