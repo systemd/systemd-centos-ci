@@ -264,6 +264,17 @@ fi
             "-Db_sanitize=address,undefined"
             -Dc_args='-g -Og -ftrapv -fno-omit-frame-pointer'
         )
+
+        # FIXME: drop this once a C9S AMI with at least kernel-5.14.0-334.el9 lands in CentOS CI
+        #
+        # The sanitizer job doesn't reboot the machine, so we're stuck with the kernel provided
+        # by the respective AMI. So, until an updated AMI is released, let's check if the original
+        # workaround patches were reverted, and if so revert them to make nspawn happy on older
+        # kernels.
+        if ! grep -q "Operation not permitted" test/units/testsuite-13.sh; then
+            git config user.email "builder@localhost"
+            git revert --no-edit 2f4fd9002d0f438f7643ec98368bed709cb49442 3aab4694f97f96fc7d3608fb3a7bff047e390b4e
+        fi
     else
         CONFIGURE_OPTS+=(
             -Dc_args='-g -O0 -ftrapv'
