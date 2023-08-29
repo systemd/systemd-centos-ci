@@ -124,6 +124,10 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.clo
 cmd_retry dnf -y install --enablerepo epel,epel-next qemu-kvm scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
+# FIXME: kernel-5.14.0-360.el9 is FUBAR and causes a panic on shutdown
+# See: https://bugzilla.redhat.com/show_bug.cgi?id=2234390
+cmd_retry dnf -y install "kernel-5.14.0-354.el9"
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -399,7 +403,8 @@ if grep -q "GRUB_ENABLE_BLSCFG=false" /etc/default/grub; then
     grub2-mkconfig -o /boot/grub2/grub.cfg
 fi
 
-grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+# FIXME: revert back to using the latest available kernel once a working >360 build lands
+grubby --set-default "/boot/vmlinuz-5.14.0-354.el9.x86_64"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
