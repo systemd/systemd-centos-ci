@@ -74,7 +74,7 @@ vagrant up --no-tty --provider=libvirt
 # Make sure the VM is bootable after running the provision script
 timeout -v 5m vagrant reload
 # shellcheck disable=SC2016
-vagrant ssh -c 'sudo bootctl status'
+vagrant ssh -c 'set -x; sudo bootctl status; cat /etc/machine-id; sudo ls -lR /efi; sudo test -e "/efi/$(</etc/machine-id)"'
 vagrant halt
 
 # Workaround for `virt-{sysprep,resize,...}` - work with the image via qemu directly
@@ -85,6 +85,8 @@ export LIBGUESTFS_BACKEND=direct
 # to something more usable
 if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_archlinux_systemd" ]]; then
     LIBVIRT_IMAGE="/var/lib/libvirt/images/vagrant_cache_archlinux_systemd.img"
+
+    virt-cat -a "$LIBVIRT_IMAGE" /etc/machine-id
 
     # Convert the qcow2 image back into a raw one so it's easier to manipulate with
     qemu-img convert -f qcow2 -O raw "$LIBVIRT_IMAGE" image.raw
@@ -98,10 +100,15 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_archlinux_systemd" ]]; then
     # (and hope for the best)
     qemu-img convert -f raw -O qcow2 new_image.raw "$LIBVIRT_IMAGE"
     rm -f image.raw
+
+    virt-cat -a "$LIBVIRT_IMAGE" /etc/machine-id
+
     # Check if the new image boots
     vagrant up
-    vagrant ssh -c 'lsblk; df -h /'
+    vagrant ssh -c 'set -x; lsblk; df -h /; cat /etc/machine-id; sudo ls -lR /efi; sudo test -e "/efi/$(</etc/machine-id)"'
     vagrant halt
+
+    virt-cat -a "$LIBVIRT_IMAGE" /etc/machine-id
 fi
 
 # Create a box from the VM, so it can be reused later. The box name is suffixed
@@ -117,12 +124,20 @@ BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
 # which contains the box name, but all slashes are replaced by
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANT_FILE")"
+export VAGRANT_LIBVIRT_VIRT_SYSPREP_OPERATIONS="defaults,-machine-id"
 vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
 # Remove the VM we just packaged
 vagrant destroy -f
 
 # Check if we can build a usable VM from the just packaged box
 TEST_DIR="$(mktemp -d testbox.XXX)"
+
+mkdir _foo
+pushd _foo
+tar xvf  "../$BOX_NAME"
+virt-cat -a box.img /etc/machine-id
+popd
+rm -fr _foo
 
 vagrant box remove -f testbox || :
 vagrant box add --name testbox "$BOX_NAME"
@@ -151,7 +166,7 @@ cp -fvL /usr/share/OVMF/OVMF_VARS.fd /tmp
 chmod o+rw /tmp/OVMF_VARS.fd
 vagrant up --no-tty --provider=libvirt
 # shellcheck disable=SC2016
-vagrant ssh -c 'bash -exc "bootctl status; uname -a; id; [[ $UID == 0 ]]"'
+vagrant ssh -c 'bash -exc "bootctl status; uname -a; id; [[ $UID == 0 ]]"; cat /etc/machine-id; ls -lR /efi; test -e "/efi/$(</etc/machine-id)"'
 
 # Cleanup
 vagrant halt

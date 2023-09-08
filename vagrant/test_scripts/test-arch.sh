@@ -21,6 +21,8 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
 bootctl status
+cat /etc/machine-id
+ls -lR /efi /boot
 
 # Enable systemd-coredump
 if ! coredumpctl_init; then

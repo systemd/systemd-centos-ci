@@ -4,6 +4,8 @@ set -o pipefail
 
 whoami
 
+cat /etc/machine-id
+
 # We should have a working TPM 2.0 device
 stat /dev/tpm0
 [[ "$(</sys/class/tpm/tpm0/tpm_version_major)" == 2 ]]
@@ -137,3 +139,5 @@ mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
 mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
 bootctl status
 pacman -Rcnsu --noconfirm grub
+
+cat /etc/machine-id
