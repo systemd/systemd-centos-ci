@@ -117,6 +117,9 @@ BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
 # which contains the box name, but all slashes are replaced by
 # "-VAGRANTSLASH-" (and that's what the bash substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANT_FILE")"
+# Tell virt-sysprep to not truncate the already existing /etc/machine-id, since
+# we use it in paths to kernel and initrd images on the ESP
+export VAGRANT_LIBVIRT_VIRT_SYSPREP_OPERATIONS="defaults,-machine-id"
 vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
 # Remove the VM we just packaged
 vagrant destroy -f
