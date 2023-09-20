@@ -64,6 +64,7 @@ install -Dm644 scripts/tgtd.service /usr/lib/systemd/system/tgtd.service
 sed -i '/^ExecStart=\/usr\/sbin\/tgtd/aExecStartPost=\/bin\/sleep 5' /usr/lib/systemd/system/tgtd.service
 popd
 rm -fr tgt
+tgtadm --version
 
 # Compile & install netlabel_tools
 pacman --needed --noconfirm -S autoconf automake gcc libtool make pkg-config
@@ -75,6 +76,7 @@ make -j
 make install
 popd
 rm -fr netlabel_tools
+netlabelctl --help
 
 # Compile & install radvd
 # FIXME: drop once [0] is released & lands in Arch Linux
@@ -88,6 +90,8 @@ make -j
 make install
 popd
 rm -fr radvd
+# radvd returns 1 for both --version and --help, so we need to be a bit more creative here
+(radvd --version || :) |& grep "^Version"
 
 # Compile & install dfuzzer
 pacman --needed --noconfirm -S docbook-xsl gcc glib2 libxslt meson pkg-config
@@ -97,6 +101,7 @@ meson build
 ninja -C build install
 popd
 rm -fr dfuzzer
+dfuzzer --version
 
 # Replace systemd-networkd with dhcpcd as the network manager for the default
 # interface, so we can run the systemd-networkd test suite without having
