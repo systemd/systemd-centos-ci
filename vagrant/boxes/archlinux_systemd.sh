@@ -49,6 +49,8 @@ systemctl enable gdm.service
 systemctl set-default graphical.target
 systemctl get-default
 
+cd /tmp
+
 # Compile & install tgt (iSCSI target utils)
 pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
 git clone --depth=1 https://github.com/fujita/tgt

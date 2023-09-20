@@ -64,7 +64,7 @@ echo "btrfs-progs" >>/usr/lib64/guestfs/supermin.d/packages
 
 # Start a VM described in the Vagrantfile with all provision steps
 export VAGRANT_DRIVER="${VAGRANT_DRIVER:-kvm}"
-export VAGRANT_MEMORY="${VAGRANT_MEMORY:-8192}"
+export VAGRANT_MEMORY="${VAGRANT_MEMORY:-32768}"
 export VAGRANT_CPUS="${VAGRANT_CPUS:-$(nproc)}"
 
 # Provision the VM
