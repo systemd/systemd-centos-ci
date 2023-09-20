@@ -77,7 +77,7 @@ popd
 rm -fr netlabel_tools
 
 # Compile & install radvd
-# FIXME: drop once [0] is relesed & lands in Arch Linux
+# FIXME: drop once [0] is released & lands in Arch Linux
 # [0] https://github.com/radvd-project/radvd/pull/141
 pacman --needed --noconfirm -S autoconf automake byacc flex gcc libbsd libtool make pkg-config
 git clone --depth=1 https://github.com/radvd-project/radvd
