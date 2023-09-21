@@ -537,7 +537,7 @@ def main():
             rc = 1
 
     finally:
-        if rc == 0 and args.keep_node == "on-fail":
+        if rc == 0 and args.keep == "on-fail":
             ac.keep_node = False
 
         if os.path.isfile("utils/generate-index.sh") and artifacts_dir and not args.no_index:
