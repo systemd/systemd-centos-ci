@@ -266,7 +266,7 @@ class AgentControl():
 
         self.wait_for_node(ping_attempts=30, ssh_attempts=20)
 
-    def kexec_to_latest(self):
+    def kexec_to_latest(self, args=""):
         """Reboot the node using kexec
 
         This is quite useful for the metal AWS nodes, where the firmware setup during
@@ -275,13 +275,7 @@ class AgentControl():
         assert self.node, "Can't continue without a valid node"
 
         logging.info("Rebooting node %s using kexec", self.node)
-        # Load the latest available kernel into the current kernel
-        self.execute_remote_command(
-                "KVER=$(rpm -q kernel --qf '%{EVR}.%{ARCH}\n' | sort -Vr | head -n1);" \
-                "echo Loading kernel-$KVER;" \
-                "kexec --load --initrd=/boot/initramfs-$KVER.img --reuse-cmdline --load /boot/vmlinuz-$KVER")
-        # Reboot into the just loaded kernel
-        self.execute_remote_command("kexec --exec", 255, ignore_rc=True)
+        self.execute_remote_command(f"{GITHUB_CI_REPO}/utils/kexec.sh {args}", 255, ignore_rc=True)
 
         self.wait_for_node(ping_attempts=10, ssh_attempts=10)
 
@@ -480,7 +474,7 @@ def main():
         pkg_man = "yum" if "centos-7-" in args.pool else "dnf"
         # Clean dnf/yum caches to drop stale metadata and prevent unexpected
         # installation fails before installing core dependencies
-        dep_cmd = f"{pkg_man} clean all && {pkg_man} makecache && {pkg_man} -y install bash git kexec-tools rsync"
+        dep_cmd = f"{pkg_man} clean all && {pkg_man} makecache && {pkg_man} -y install bash git rsync"
 
         # Actual testing process
         logging.info("PHASE 1: Setting up basic dependencies to configure CI repository")
