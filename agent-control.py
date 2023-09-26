@@ -519,7 +519,7 @@ def main():
 
             if args.kexec:
                 ac.kexec_to_latest()
-            else
+            else:
                 ac.reboot_node()
 
             logging.info("PHASE 3: Upstream testsuite")
