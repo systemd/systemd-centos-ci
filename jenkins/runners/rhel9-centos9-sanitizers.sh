@@ -28,5 +28,5 @@ cd systemd-centos-ci
                    --bootstrap-script="bootstrap-rhel9.sh" \
                    --bootstrap-args="-h unified -z" \
                    --testsuite-script="testsuite-rhel9-sanitizers.sh" \
-                   --skip-reboot \
+                   --kexec \
                    ${ARGS:+"${ARGS[@]}"}
