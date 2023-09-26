@@ -519,6 +519,8 @@ def main():
 
             if args.kexec:
                 ac.kexec_to_latest()
+            else
+                ac.reboot_node()
 
             logging.info("PHASE 3: Upstream testsuite")
             command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script} {args.testsuite_args}"
