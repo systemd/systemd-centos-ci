@@ -41,14 +41,7 @@ class AgentControl():
         self._client = DuffyClient(API_BASE, "systemd", self.duffy_key)
 
     def __del__(self):
-        if not self._session_id:
-            return
-
-        # Deallocate the allocated node on script exit, if not requested otherwise
-        if not self.keep_node:
-            self.free_session()
-        else:
-            logging.info("Not returning the node %s back to the pool", self.node)
+        self.free_session()
 
     @property
     def node(self):
@@ -214,9 +207,13 @@ class AgentControl():
         if not self._session_id:
             return
 
-        # Dump info about the session we're about to free, to debug a possible
-        # race in Duffy
-        self.show_session()
+        if self.keep_node:
+            logging.info("Not returning the node %s back to the pool", self.node)
+            return
+
+        # Make sure we don't get disturbed by any signal Jenkins might send us
+        for s in [signal.SIGTERM, signal.SIGHUP, signal.SIGINT]:
+            signal.signal(s, signal.SIG_IGN)
 
         # Try a bit harder when retiring the session, since the API might return an error
         # when attempting to do so, leaving orphaned sessions laying around taking
@@ -367,9 +364,6 @@ class AgentControl():
         if self.execute_local_command(command) != 0:
             raise RuntimeError(f"Failed to upload file {local_source} to {self.node}")
 
-class SignalException(Exception):
-    pass
-
 class AlarmException(Exception):
     pass
 
@@ -382,11 +376,7 @@ def handle_signal(signum, _frame):
     if signum == signal.SIGALRM:
         raise AlarmException()
 
-    # Raise the exception only for the first signal we handle, to avoid raising
-    # exceptions in the exception handler
-    if not hasattr(handle_signal, "handled"):
-        handle_signal.handled = True
-        raise SignalException()
+    sys.exit(signum)
 
 def main():
     # Setup logging
@@ -525,10 +515,6 @@ def main():
             logging.info("PHASE 3: Upstream testsuite")
             command = f"{GITHUB_CI_REPO}/agent/{args.testsuite_script} {args.testsuite_args}"
             ac.execute_remote_command(command, artifacts_dir="~/testsuite-logs*")
-
-    except SignalException:
-        if not ac.keep_node:
-            ac.free_session()
 
     except Exception as e:
         if ac.node and args.kdump_collect:
