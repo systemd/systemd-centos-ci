@@ -11,7 +11,7 @@ jenkins:
       # Allow viewing jobs to anonymous users
       # Note: this _replaces_ the whole permissions matrix
       permissions:
-        - "GORUP:Overall/Read:anonymous"
+        - "GROUP:Overall/Read:anonymous"
         - "GROUP:Job/Discover:anonymous"
         - "GROUP:Job/Read:anonymous"
         - "GROUP:Job/ViewStatus:anonymous"
