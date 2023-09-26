@@ -11,17 +11,11 @@ jenkins:
       # Allow viewing jobs to anonymous users
       # Note: this _replaces_ the whole permissions matrix
       permissions:
-        - group:
-            name: anonymous
-            permissions:
-              - "Job/Discover"
-              - "Job/Read"
-              - "Job/ViewStatus"
-              - "Overall/Read"
-        - user:
-            name: mrc0mmand-admin-edit-view
-            permissions:
-              - "Overall/Administer"
+        - "GORUP:Overall/Read:anonymous"
+        - "GROUP:Job/Discover:anonymous"
+        - "GROUP:Job/Read:anonymous"
+        - "GROUP:Job/ViewStatus:anonymous"
+        - "USER:Overall/Administer:mrc0mmand-admin-edit-view"
 
   globalNodeProperties:
     # Set LANG=en_US.utf8 everywhere to avoid encoding issues when viewing
