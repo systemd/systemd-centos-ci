@@ -191,7 +191,12 @@ systemctl enable dhcpcd@eth0.service
 #       so any future updates of kernel/initrd will still get installed under /boot.
 #       However, we don't really care about this as this is a single-purpose CI image.
 MACHINE_ID="$(</etc/machine-id)"
-KERNEL_VER="$(pacman -Q linux | sed -r 's/^linux\s+([0-9\.]+)\.(.+)$/\1-\2/')"
+# Since the linux{,-lts} package version format differs from the version reported by
+# `uname -a`, let's just parse the version part from the full path to the actual kernel
+# image in the respective kernel package. The additional sed shenanigans just ensure
+# we return non-zero if we, for whatever reason, fail to parse the version, just to make
+# debugging easier.
+KERNEL_VER="$(pacman -Ql linux | grep vmlinuz | sed -nr 's/^.+\/([^/]+)\/vmlinuz$/\1/p;tx;q1;:x')"
 
 bootctl install
 cat >/efi/loader/entries/arch.conf <<EOF
