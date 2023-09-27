@@ -206,3 +206,5 @@ mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
 mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
 bootctl status
 pacman -Rcnsu --noconfirm grub
+# shellcheck disable=SC2114
+rm -rf /boot
