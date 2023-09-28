@@ -8,6 +8,32 @@ whoami
 stat /dev/tpm0
 [[ "$(</sys/class/tpm/tpm0/tpm_version_major)" == 2 ]]
 
+# FIXME: pin repos to 2023-09-24 with glibc 2.38-3 until [0] is resolved
+#
+# [0] https://bugs.archlinux.org/task/79810
+cat >/etc/pacman.conf <<\EOF
+[options]
+HoldPkg = pacman glibc
+Architecture = auto
+NoProgressBar
+VerbosePkgLists
+ParallelDownloads = 5
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[core]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+
+[extra]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+
+[community]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+EOF
+
 # Clear Pacman's caches
 pacman --noconfirm -Scc
 rm -fv /var/lib/pacman/sync/*.db
@@ -16,7 +42,7 @@ pacman-key --init
 pacman-key --populate archlinux
 pacman --needed --noconfirm -Sy archlinux-keyring
 # Upgrade the system
-pacman --noconfirm -Syu
+pacman --noconfirm -Syuu
 # Install build dependencies
 # Package groups: base, base-devel
 pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-completion clang compiler-rt docbook-xsl \
