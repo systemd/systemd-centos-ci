@@ -101,6 +101,9 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_archlinux_systemd" ]]; then
     # Check if the new image boots
     vagrant up
     vagrant ssh -c 'lsblk; df -h /'
+    # Also, sanity-check the whole BLS stuff
+    # shellcheck disable=SC2016
+    vagrant ssh -c 'sudo bash -xec "ls -lR /efi; cat /etc/machine-id; [[ -e /efi/$(</etc/machine-id)/$(uname -r)/linux ]]"'
     vagrant halt
 fi
 

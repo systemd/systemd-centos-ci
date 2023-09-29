@@ -8,6 +8,32 @@ whoami
 stat /dev/tpm0
 [[ "$(</sys/class/tpm/tpm0/tpm_version_major)" == 2 ]]
 
+# FIXME: pin repos to 2023-09-24 with glibc 2.38-3 until [0] is resolved
+#
+# [0] https://bugs.archlinux.org/task/79810
+cat >/etc/pacman.conf <<\EOF
+[options]
+HoldPkg = pacman glibc
+Architecture = auto
+NoProgressBar
+VerbosePkgLists
+ParallelDownloads = 5
+SigLevel = Required DatabaseOptional
+LocalFileSigLevel = Optional
+
+[core]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+
+[extra]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+
+[community]
+SigLevel = PackageRequired
+Server=https://archive.archlinux.org/repos/2023/09/24/$repo/os/$arch
+EOF
+
 # Clear Pacman's caches
 pacman --noconfirm -Scc
 rm -fv /var/lib/pacman/sync/*.db
@@ -16,7 +42,7 @@ pacman-key --init
 pacman-key --populate archlinux
 pacman --needed --noconfirm -Sy archlinux-keyring
 # Upgrade the system
-pacman --noconfirm -Syu
+pacman --noconfirm -Syuu
 # Install build dependencies
 # Package groups: base, base-devel
 pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-completion clang compiler-rt docbook-xsl \
@@ -191,7 +217,14 @@ systemctl enable dhcpcd@eth0.service
 #       so any future updates of kernel/initrd will still get installed under /boot.
 #       However, we don't really care about this as this is a single-purpose CI image.
 MACHINE_ID="$(</etc/machine-id)"
-KERNEL_VER="$(pacman -Q linux | sed -r 's/^linux\s+([0-9\.]+)\.(.+)$/\1-\2/')"
+# Since the linux{,-lts} package version format differs from the version reported by
+# `uname -a`, let's just parse the version part from the full path to the actual kernel
+# image in the respective kernel package. The additional sed shenanigans just ensure
+# we return non-zero if we, for whatever reason, fail to parse the version, just to make
+# debugging easier.
+pacman --noconfirm -S linux-lts
+pacman --noconfirm -R linux
+KERNEL_VER="$(pacman -Ql linux-lts | grep vmlinuz | sed -nr 's/^.+\/([^/]+)\/vmlinuz$/\1/p;tx;q1;:x')"
 
 bootctl install
 cat >/efi/loader/entries/arch.conf <<EOF
@@ -202,7 +235,9 @@ options root=UUID=$(findmnt -n -o UUID /) rw console=ttyS0 net.ifnames=0
 EOF
 # Follow the recommended layout from the Boot Loader Specification
 mkdir -p "/efi/$MACHINE_ID/$KERNEL_VER"
-mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
-mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
+mv -v /boot/vmlinuz-linux-lts "/efi/$MACHINE_ID/$KERNEL_VER/linux"
+mv -v /boot/initramfs-linux-lts.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
 bootctl status
 pacman -Rcnsu --noconfirm grub
+# shellcheck disable=SC2114
+rm -rf /boot
