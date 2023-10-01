@@ -126,7 +126,6 @@ for t in "${INTEGRATION_TESTS[@]}"; do
     fi
 
     ## Configure test environment
-    export TASK_RETRIES=2
     # Tell the test framework to copy the base image for each test, so we
     # can run them in parallel
     export TEST_PARALLELIZE=1
@@ -141,11 +140,11 @@ for t in "${INTEGRATION_TESTS[@]}"; do
     #
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
-    exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass; rm -fv \$TESTDIR/*.img; test -e \$TESTDIR/pass" "${TASK_RETRIES:?}"
+    exectask_retry_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch \$TESTDIR/pass; rm -fv \$TESTDIR/*.img; test -e \$TESTDIR/pass"
     # Retried tasks are suffixed with an index, so update the $CHECK_LIST
     # array with all possible task names correctly find the respective journals
     # shellcheck disable=SC2207
-    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRIES"))
+    CHECK_LIST+=($(seq -f "${t}_%g" 1 "$TASK_RETRY_DEFAULT"))
 done
 
 # Wait for remaining running tasks
