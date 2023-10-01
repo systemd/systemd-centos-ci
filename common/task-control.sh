@@ -26,7 +26,7 @@ declare -r FAILED_TASKS_STATE="$LOGDIR/.failed_tasks"
 # Variables for parallel tasks
 declare -A TASK_QUEUE=()
 # Default number of retries for exectask_retry()
-declare -ri TASK_RETRY_DEFAULT=3
+declare -ri TASK_RETRY_DEFAULT=2
 # Try to determine the optimal values for parallel execution using the nproc
 # utility. If that fails, fall back to using default values for necessary
 # variables.
