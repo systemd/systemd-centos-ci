@@ -370,6 +370,12 @@ coredumpctl_collect() {
         return 0
     fi
 
+    # Explicitly enable debuginfod if gdb supports it. This needs to be done
+    # via the gdbinit file, otherwise the debug symbols won't be loaded
+    if gdb --configuration | grep -q -- --with-debuginfod; then
+        echo "set debuginfod enabled on" >>~/.gdbinit
+    fi
+
     # For each unique executable path call 'coredumpctl info' to get the stack
     # trace and other useful info
     while read -r path; do
