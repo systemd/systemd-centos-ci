@@ -70,7 +70,7 @@ popd
 # Force relabel on next boot
 fixfiles -v -F onboot
 
-dracut -f --regenerate-all
+dracut --install /usr/lib/systemd/systemd-executor -f --regenerate-all
 
 systemd-analyze set-log-level debug
 systemd-analyze set-log-target console
