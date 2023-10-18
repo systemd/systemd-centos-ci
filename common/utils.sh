@@ -8,6 +8,14 @@ set -u
 __COREDUMPCTL_TS=""
 # Keep a map of test-specific excludes to avoid code duplication
 declare -Arx COREDUMPCTL_EXCLUDE_MAP=(
+    # test-execute - certain subtests die with SIGSEGV intentionally
+    # systemd-executor - there's a couple of instances where test-execute blocks exec
+    #                    syscalls through a seccomp filter which then kills the test
+    #                    with SIGSYS, and with systemd/systemd#27890 the coredump
+    #                    executable will be set to the new systemd-executor binary
+    # python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
+    #             (since systemd/systemd#16675)
+    ["test/TEST-02-UNITTESTS"]="/(bin/python3.[0-9]+|platform-python3.[0-9]+|systemd-executor|test-execute)$"
     ["test/TEST-17-UDEV"]="/(sleep|udevadm)$"
     ["test/TEST-59-RELOADING-RESTART"]="/(sleep|bash|systemd-notify)$"
 )
@@ -350,20 +358,13 @@ coredumpctl_collect() {
     # The filter can be overridden using the $COREDUMPCTL_EXCLUDE_RX env variable.
     # See also the $COREDUMPCTL_EXCLUDE_MAP at the beginning of this file.
     # EXCLUDE_RX:
-    #   test-execute - certain subtests die with SIGSEGV intentionally
     #   dhcpcd - [temporary] keeps crashing intermittently with SIGABRT, needs
     #            further investigation
-    #   python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
-    #               (since systemd/systemd#16675)
     #   sleep/bash - intentional SIGABRT caused by TEST-57
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
     #   auditd - bug in C8S
     #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    #   systemd-executor - there's a couple of instances where test-execute blocks exec
-    #                      syscalls through a seccomp filter which then kills the test
-    #                      with SIGSYS, and with systemd/systemd#27890 the coredump
-    #                      executable will be set to the new systemd-executor binary
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(test-execute|dhcpcd|bin/python3.[0-9]+|platform-python3.[0-9]+|bash|sleep|systemd-notify|auditd|test(-usr)?-dump|systemd-executor)$}"
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(dhcpcd|bash|sleep|systemd-notify|auditd|test(-usr)?-dump)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
