@@ -305,7 +305,7 @@ coredumpctl_init() {
 #
 #   $1: timestamp to set. If empty, the current date & time is used instead
 coredumpctl_set_ts() {
-    __COREDUMPCTL_TS="${1:-$(date +"%Y-%m-%d %H:%M:%S")}"
+    __COREDUMPCTL_TS="$(date +"%Y-%m-%d %H:%M:%S")"
 }
 
 # Attempt to dump info about relevant coredumps using the coredumpctl utility.
