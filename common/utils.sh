@@ -381,7 +381,7 @@ coredumpctl_collect() {
     # trace and other useful info
     while read -r path; do
         local exe
-        local gdb_cmd="bt full"
+        local gdb_cmd="set print pretty on\nbt full"
 
         _log "Collecting coredumps for '$path'"
         "$coredumpctl_bin" "${args[@]}" info "$path"
