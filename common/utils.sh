@@ -396,7 +396,7 @@ coredumpctl_collect() {
             # $BUILD_DIR is set and we found the binary in it, let's override
             # the gdb command
             exe="$BUILD_DIR/${path##*/}"
-            gdb_cmd="file $exe\nthread apply all bt\nbt full"
+            gdb_cmd="file $exe\nthread apply all bt\n$gdb_cmd"
             _log "\$BUILD_DIR is set and '${path##*/}' was found in it"
             _log "Overriding the executable to '$exe' and gdb command to '$gdb_cmd'"
         fi
