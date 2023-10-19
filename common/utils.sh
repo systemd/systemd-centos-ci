@@ -13,9 +13,10 @@ declare -Arx COREDUMPCTL_EXCLUDE_MAP=(
     #                    syscalls through a seccomp filter which then kills the test
     #                    with SIGSYS, and with systemd/systemd#27890 the coredump
     #                    executable will be set to the new systemd-executor binary
+    # bash - same as above, but sometimes _EXE is set to /bin/bash
     # python3.x - one of the test-execute subtests triggers SIGSYS in python3.x
     #             (since systemd/systemd#16675)
-    ["test/TEST-02-UNITTESTS"]="/(bin/python3.[0-9]+|platform-python3.[0-9]+|systemd-executor|test-execute)$"
+    ["test/TEST-02-UNITTESTS"]="/(bash|bin/python3.[0-9]+|platform-python3.[0-9]+|systemd-executor|test-execute)$"
     ["test/TEST-17-UDEV"]="/(sleep|udevadm)$"
     ["test/TEST-59-RELOADING-RESTART"]="/(sleep|bash|systemd-notify)$"
 )
