@@ -363,9 +363,8 @@ coredumpctl_collect() {
     #            further investigation
     #   sleep/bash - intentional SIGABRT caused by TEST-57
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
-    #   auditd - bug in C8S
     #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(dhcpcd|bash|sleep|systemd-notify|auditd|test-execute|test(-usr)?-dump)$}"
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(dhcpcd|bash|sleep|systemd-notify|test-execute|test(-usr)?-dump)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
