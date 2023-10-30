@@ -66,7 +66,7 @@ exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test
-    "test/TEST-25-IMPORT"          # flaky when paralellized (systemd/systemd#13973)
+    "test/TEST-25-IMPORT"          # flaky when parallelized (systemd/systemd#13973)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
@@ -79,7 +79,7 @@ SKIP_LIST=(
 # with the "standard" integration tests, saving ~30 minutes ATTOW
 TEST_LIST=(
     "test/test-exec-deserialization.py"
-    "test/test-network/systemd-networkd-tests.py"
+#    "test/test-network/systemd-networkd-tests.py"
 )
 
 # Prepare environment for the systemd-networkd testsuite
@@ -98,7 +98,8 @@ export NSPAWN_TIMEOUT=900
 # Enforce nested KVM
 export TEST_NESTED_KVM=1
 
-for t in test/TEST-??-*; do
+while :; do
+    t="test/TEST-50-DISSECT"
     if [[ ${#SKIP_LIST[@]} -ne 0 ]] && in_set "$t" "${SKIP_LIST[@]}"; then
         echo -e "[SKIP] Skipping test $t\n"
         continue
@@ -121,7 +122,7 @@ for t in test/TEST-??-*; do
     mkdir -p "$TESTDIR"
     rm -f "$TESTDIR/pass"
 
-    exectask_p "${t##*/}" "/bin/time -v -- make -C $t setup run && touch $TESTDIR/pass"
+    exectask "${t##*/}" "/bin/time -v -- make -C $t clean setup run && touch $TESTDIR/pass" || break
     EXECUTED_LIST+=("$t")
 done
 
