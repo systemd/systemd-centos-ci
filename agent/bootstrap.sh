@@ -86,6 +86,7 @@ ADDITIONAL_DEPS=(
     netlabel_tools
     nftables
     nmap-ncat
+    nvme-cli
     openssl-devel
     pcre2-devel
     python38
