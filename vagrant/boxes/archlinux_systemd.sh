@@ -8,6 +8,19 @@ whoami
 stat /dev/tpm0
 [[ "$(</sys/class/tpm/tpm0/tpm_version_major)" == 2 ]]
 
+cat >/etc/pacman.conf <<EOF
+[options]
+Architecture = auto
+[core-testing]
+Include = /etc/pacman.d/mirrorlist
+[extra-testing]
+Include = /etc/pacman.d/mirrorlist
+[core]
+Include = /etc/pacman.d/mirrorlist
+[extra]
+Include = /etc/pacman.d/mirrorlist
+EOF
+
 # Clear Pacman's caches
 pacman --noconfirm -Scc
 rm -fv /var/lib/pacman/sync/*.db
@@ -16,7 +29,7 @@ pacman-key --init
 pacman-key --populate archlinux
 pacman --needed --noconfirm -Sy archlinux-keyring
 # Upgrade the system
-pacman --noconfirm -Syu
+pacman --noconfirm -Syuu
 # Install build dependencies
 # Package groups: base, base-devel
 pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-completion clang compiler-rt docbook-xsl \
