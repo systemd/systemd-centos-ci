@@ -66,8 +66,7 @@ exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=
 EXECUTED_LIST=()
 FLAKE_LIST=(
     "test/TEST-16-EXTEND-TIMEOUT"  # flaky test
-    "test/TEST-25-IMPORT"          # flaky when parallelized (systemd/systemd#13973)
-    "test/TEST-50-DISSECT"         # flaky, see systemd/systemd#28141
+    "test/TEST-25-IMPORT"          # flaky when paralellized (systemd/systemd#13973)
 )
 SKIP_LIST=(
     "test/TEST-61-UNITTESTS-QEMU"  # redundant test, runs the same tests as TEST-02, but only QEMU (systemd/systemd#19969)
