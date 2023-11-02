@@ -85,6 +85,7 @@ ADDITIONAL_DEPS=(
     mtools
     net-tools
     nmap-ncat
+    nvme-cli
     openssl-devel
     pcre2-devel
     python3-jinja2
