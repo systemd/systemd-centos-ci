@@ -28,10 +28,10 @@ pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-c
 # Note: openbsd-netcat in favor of gnu-netcat is used intentionally, as
 #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
 pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd diffutils dnsmasq dosfstools e2fsprogs erofs-utils \
-    evemu expect fsverity-utils gdb inetutils jq knot keyutils lcov libdwarf libelf mdadm mtools net-tools nfs-utils nftables ntp \
-    nvme-cli openbsd-netcat open-iscsi perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect python-psutil \
-    python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools swtpm vim \
-    wireguard-tools
+    evemu expect fsverity-utils gdb gnutls inetutils jq knot keyutils lcov libdwarf libelf mdadm mtools net-tools nfs-utils \
+    nftables ntp nvme-cli open-iscsi openbsd-netcat opensc perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect \
+    python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
+    softhsm swtpm vim wireguard-tools
 
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
