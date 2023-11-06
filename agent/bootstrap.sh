@@ -64,6 +64,7 @@ ADDITIONAL_DEPS=(
     fsverity-utils # EPEL
     gcc-c++
     glibc-langpack-en
+    gnutls-utils
     integritysetup
     iproute-tc
     iscsi-initiator-utils
@@ -87,6 +88,7 @@ ADDITIONAL_DEPS=(
     nftables
     nmap-ncat
     nvme-cli
+    opensc
     openssl-devel
     pcre2-devel
     python38
@@ -105,6 +107,7 @@ ADDITIONAL_DEPS=(
     scsi-target-utils
     selinux-policy-devel
     socat
+    softhsm # EPEL
     squashfs-tools
     strace
     stress # EPEL
