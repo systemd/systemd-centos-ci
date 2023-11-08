@@ -219,6 +219,16 @@ coredumpctl_set_ts
 # Install the compiled systemd
 ninja -C "$BUILD_DIR" install
 
+# Tell systemd-networkd to ignore eth0 netdev, so we can keep it up
+# during the systemd-networkd testsuite
+cat >/etc/systemd/network/10-eth0.network <<EOF
+[Match]
+Name=eth0
+
+[Link]
+Unmanaged=yes
+EOF
+
 # FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
 DRACUT_OPTS=()
 [[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
