@@ -174,7 +174,7 @@ userdel -fr builder
 #
 # Tell systemd-networkd to ignore eth0 netdev, so we can keep it up
 # during the systemd-networkd testsuite
-cat >/etc/systemd/network/eth0.network <<EOF
+cat >/etc/systemd/network/10-eth0.network <<EOF
 [Match]
 Name=eth0
 
