@@ -233,6 +233,16 @@ fi
     ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build-$(uname -m).log"
 
+# Tell systemd-networkd to ignore eth0 netdev, so we can keep it up during the
+# systemd-networkd testsuite
+cat >/etc/systemd/network/10-eth0.network <<EOF
+[Match]
+Name=eth0
+
+[Link]
+Unmanaged=yes
+EOF
+
 # Reboot the machine here to switch to the latest kernel if available
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
