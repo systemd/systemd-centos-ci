@@ -47,6 +47,7 @@ ADDITIONAL_DEPS=(
     bpftool
     busybox
     clang
+    compiler-rt
     cryptsetup
     device-mapper-event
     device-mapper-multipath
@@ -175,9 +176,7 @@ fi
 # Unlike gcc's ASan, clang's ASan DSO is in a non-standard path, thus any binary
 # compiled with -shared-libasan using clang will fail to start. Let's add the
 # necessary path to the ldconfig cache to avoid that.
-ARCH="$(uname -m)"
-[[ $ARCH == ppc64le ]] && ARCH=powerpc64le
-if ! ASAN_RT_PATH="$(${CC:-clang} --print-file-name "libclang_rt.asan-$ARCH.so")" || ! [[ -f "$ASAN_RT_PATH" ]]; then
+if ! ASAN_RT_PATH="$(readlink -f "$(${CC:-clang} --print-file-name "libclang_rt.asan.so")")" || ! [[ -f "$ASAN_RT_PATH" ]]; then
     echo >&2 "Couldn't detect path to the clang's ASan RT library"
     exit 1
 fi
@@ -208,6 +207,12 @@ fi
 # See:
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
+
+# FIXME (-fno-sanitize=function)
+# systemd's hashmap implementation fails miserably with -fsanitize=function,
+# so let's disable it until [0] is resolved.
+#
+# [0] https://github.com/systemd/systemd/issues/29972
 (
     export CC=clang
     export CXX=clang++
@@ -215,10 +220,10 @@ fi
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
     meson "$BUILD_DIR" \
-        -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
-        -Dc_link_args="-shared-libasan" \
-        -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
-        -Dcpp_link_args="-shared-libasan" \
+        -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
+        -Dc_link_args="-shared-libasan -fno-sanitize=function" \
+        -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
+        -Dcpp_link_args="-shared-libasan -fno-sanitize=function" \
         -Db_asneeded=false `# See the FIXME (--as-needed) above` \
         -Ddebug=true \
         --werror \
