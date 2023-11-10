@@ -47,6 +47,7 @@ ADDITIONAL_DEPS=(
     bpftool
     busybox
     clang
+    compiler-rt
     cryptsetup
     device-mapper-event
     device-mapper-multipath
