@@ -176,9 +176,7 @@ fi
 # Unlike gcc's ASan, clang's ASan DSO is in a non-standard path, thus any binary
 # compiled with -shared-libasan using clang will fail to start. Let's add the
 # necessary path to the ldconfig cache to avoid that.
-ARCH="$(uname -m)"
-[[ $ARCH == ppc64le ]] && ARCH=powerpc64le
-if ! ASAN_RT_PATH="$(${CC:-clang} --print-file-name "libclang_rt.asan-$ARCH.so")" || ! [[ -f "$ASAN_RT_PATH" ]]; then
+if ! ASAN_RT_PATH="$(${CC:-clang} --print-file-name "libclang_rt.asan.so")" || ! [[ -f "$ASAN_RT_PATH" ]]; then
     echo >&2 "Couldn't detect path to the clang's ASan RT library"
     exit 1
 fi
