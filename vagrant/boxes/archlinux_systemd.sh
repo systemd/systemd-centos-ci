@@ -52,6 +52,12 @@ systemctl get-default
 
 cd /tmp
 
+# Since makepkg won't run under root, we need to create a separate use and give it
+# access to paswordless sudo
+useradd --create-home builder
+mkdir -p /etc/sudoers.d
+echo "builder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/builder
+
 # Compile & install tgt (iSCSI target utils)
 pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
 git clone --depth=1 https://github.com/fujita/tgt
@@ -132,14 +138,6 @@ rm -fr canokey-qemu
 pkg-config --libs --cflags canokey-qemu
 
 # 2) Rebuild QEMU with --enable-canokey
-#
-# 2a) Since makepkg won't run under root, we need to create a separate user
-#     and give it access to paswordless sudo
-useradd --create-home builder
-mkdir -p /etc/sudoers.d
-echo "builder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/builder
-
-# 2b) Patch QEMU's PKGBUILD, rebuild it, and install the rebuilt packages
 pacman --needed --noconfirm -S bison fakeroot flex
 git clone --depth=1 https://gitlab.archlinux.org/archlinux/packaging/packages/qemu.git
 chown -R builder qemu
@@ -164,7 +162,7 @@ popd
 rm -fr qemu
 qemu-system-x86_64 -usb -device canokey,help
 
-# 2c) Cleanup
+# Remove the makepkg user
 rm /etc/sudoers.d/builder
 userdel -fr builder
 
