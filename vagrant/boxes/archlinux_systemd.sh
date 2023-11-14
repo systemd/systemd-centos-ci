@@ -58,6 +58,34 @@ useradd --create-home builder
 mkdir -p /etc/sudoers.d
 echo "builder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/builder
 
+# Build SELinux userspace tools
+#
+# https://wiki.archlinux.org/title/SELinux
+#
+# Note for future me: don't sort alphabetically, as the later packages depend on earlier ones
+pacman --needed --noconfirm -S fakeroot
+for package in libsepol libselinux semodule-utils libsemanage checkpolicy policycoreutils selinux-refpolicy-arch; do
+    git clone --depth=1 "https://aur.archlinux.org/$package.git" "$package"
+    chown -R builder "$package"
+    pushd "$package"
+    runuser -u builder -- makepkg --noconfirm --needed --clean --syncdeps --rmdeps --install --skippgpcheck
+    popd
+    rm -rf "$package"
+done
+
+# Rebuild a couple of packages so they become SELinux-aware
+for package in coreutils findutils psmisc util-linux; do
+    git clone --depth=1 "https://gitlab.archlinux.org/archlinux/packaging/packages/$package" "$package"
+    chown -R builder "$package"
+    pushd "$package"
+    # Let's skip the check() here to speed things up, since we're doing just a rebuild
+    # (and hope for the best). Also, drop --needed, so we always reinstall the just
+    # build package without bumping $pkgrel.
+    runuser -u builder -- makepkg --noconfirm --clean --syncdeps --rmdeps --install --skippgpcheck --nocheck
+    popd
+    rm -rf "$package"
+done
+
 # Compile & install tgt (iSCSI target utils)
 pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
 git clone --depth=1 https://github.com/fujita/tgt
