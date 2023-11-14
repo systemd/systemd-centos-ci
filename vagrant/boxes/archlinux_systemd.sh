@@ -31,7 +31,7 @@ pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd 
     evemu expect fsverity-utils gdb gnutls inetutils jq knot keyutils lcov libdwarf libelf mdadm mtools net-tools nfs-utils \
     nftables ntp nvme-cli open-iscsi openbsd-netcat opensc perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect \
     python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
-    softhsm swtpm vim wireguard-tools
+    softhsm swtpm vim wireguard-tools qemu-base
 
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
@@ -111,56 +111,6 @@ ninja -C build install
 popd
 rm -fr dfuzzer
 dfuzzer --version
-
-# Configure a FIDO2 QEMU device using CanoKey
-#
-# This has 2 steps:
-#   1) Build & install canokey-qemu
-#   2) Rebuild QEMU with --enable-canokey
-#
-# After this we should have a CanoKey device available through
-#   qemu-system-x86_64 -usb -device canokey,file=...
-#
-# References:
-#   - https://www.qemu.org/docs/master/system/devices/canokey.html
-#   - https://github.com/canokeys/canokey-qemu
-#
-# 1) Build & install canokey-qemu
-pacman --needed --noconfirm -S cmake gcc make patch pkgconf
-git clone --depth=1 --recursive https://github.com/canokeys/canokey-qemu
-mkdir canokey-qemu/build
-pushd canokey-qemu/build
-cmake .. -DCMAKE_INSTALL_PREFIX=/usr
-make -j
-make install
-popd
-rm -fr canokey-qemu
-pkg-config --libs --cflags canokey-qemu
-
-# 2) Rebuild QEMU with --enable-canokey
-pacman --needed --noconfirm -S bison fakeroot flex
-git clone --depth=1 https://gitlab.archlinux.org/archlinux/packaging/packages/qemu.git
-chown -R builder qemu
-pushd qemu
-sed -i 's/^pkgrel=.*$/pkgrel=999/' PKGBUILD
-sed -i '/local configure_options=(/a\    --enable-canokey' PKGBUILD
-# The GPG key ID can be found at https://www.qemu.org/download/
-runuser -u builder -- gpg --receive-keys CEACC9E15534EBABB82D3FA03353C9CEF108B584
-runuser -u builder -- makepkg --noconfirm --needed --clean --syncdeps --rmdeps
-# This part is a bit convoluted, since we can't use makepkg --install or install
-# all the just built packages explicitly, as some of the packages conflict with
-# each other. So, in order to leave dependency resolving on pacman, let's create
-# a local repo from the just built packages and instruct pacman to use it
-repo-add "$PWD/qemu.db.tar.gz" ./*.zst
-cp /etc/pacman.conf pacman.conf
-echo -ne "[qemu]\nSigLevel=Optional\nServer=file://$PWD\n" >>pacman.conf
-# Note: we _need_ to prefix the qemu-base meta package with our local repo name,
-#       otherwise pacman will install the first qemu-base package it encounters,
-#       which would be the regular one from the extras repository
-pacman --noconfirm -Sy qemu/qemu-base --config pacman.conf
-popd
-rm -fr qemu
-qemu-system-x86_64 -usb -device canokey,help
 
 # Remove the makepkg user
 rm /etc/sudoers.d/builder
