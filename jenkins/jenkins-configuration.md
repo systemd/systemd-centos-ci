@@ -36,3 +36,9 @@ Do ^ _after_ installing all the plugins below.
  - Display URL for Blue Ocean
  - Personalization for Blue Ocean
  - ...
+
+# Useful links & stuff
+- cico-workspace image: https://quay.io/repository/centosci/cico-workspace
+- cico-workspace template: https://github.com/CentOS/ansible-infra-playbooks/blob/master/templates/openshift/jenkins-ci-workspace.yml
+- spawn a debug pod: `oc run cico-workspace-debug --image quay.io/centosci/cico-workspace:latest --attach=false --leave-stdin-open --tty --stdin --command -- /bin/bash`
+- (re)attach: `oc exec -it cico-workspace-debug -- bash
