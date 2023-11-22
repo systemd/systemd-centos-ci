@@ -15,7 +15,7 @@ at_exit() {
     # Let's collect some build-related logs
     set +e
     rsync -amq /var/tmp/systemd-test*/system.journal "$LOGDIR/sanity-boot-check.journal" &>/dev/null || :
-    exectask "journalctl-bootstrap" "journalctl -b --no-pager"
+    exectask "journalctl-bootstrap" "journalctl -b -o short-monotonic --no-hostname --no-pager"
     exectask "list-of-installed-packages" "rpm -qa"
 }
 

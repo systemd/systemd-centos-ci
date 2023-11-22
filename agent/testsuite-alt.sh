@@ -14,7 +14,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 # EXIT signal handler
 at_exit() {
     set +e
-    exectask "journalctl-testsuite" "journalctl -b --no-pager"
+    exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
 }
 
 trap at_exit EXIT

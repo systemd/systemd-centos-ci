@@ -12,7 +12,7 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 # EXIT signal handler
 at_exit() {
     set +e
-    exectask "journalctl-testsuite" "journalctl -b --no-pager"
+    exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
 }
 
 set -eu

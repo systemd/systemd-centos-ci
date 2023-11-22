@@ -235,6 +235,6 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 # Summary
 show_task_summary
 
-exectask "journalctl-testsuite" "journalctl -b --no-pager"
+exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
 
 finish_and_exit

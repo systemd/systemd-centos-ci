@@ -13,7 +13,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 
 at_exit() {
     set +e
-    journalctl -b --no-pager > "$LOGDIR/journalctl-vagrant-host.log"
+    journalctl -b -o short-monotonic --no-hostname --no-pager >"$LOGDIR/journalctl-vagrant-host.log"
     # Copy over all vagrant-related artifacts, so the Jenkins artifact plugin
     # can gather them for further investigation
     if [[ -v SYSTEMD_ROOT ]]; then
