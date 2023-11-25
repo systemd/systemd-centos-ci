@@ -33,6 +33,9 @@ pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd 
     python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
     softhsm swtpm vim wireguard-tools qemu-base
 
+# Temporarily pin multipath-tools to 0.9.6, see https://bugs.archlinux.org/task/80346
+pacman --noconfirm -U https://archive.archlinux.org/repos/2023/11/22/extra/os/x86_64/multipath-tools-0.9.6-1-x86_64.pkg.tar.zst
+
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
 echo -e 'vagrant\nvagrant' | passwd
@@ -173,9 +176,7 @@ MACHINE_ID="$(</etc/machine-id)"
 # image in the respective kernel package. The additional sed shenanigans just ensure
 # we return non-zero if we, for whatever reason, fail to parse the version, just to make
 # debugging easier.
-pacman --noconfirm -S linux-lts
-pacman --noconfirm -R linux
-KERNEL_VER="$(pacman -Ql linux-lts | grep vmlinuz | sed -nr 's/^.+\/([^/]+)\/vmlinuz$/\1/p;tx;q1;:x')"
+KERNEL_VER="$(pacman -Ql linux | grep vmlinuz | sed -nr 's/^.+\/([^/]+)\/vmlinuz$/\1/p;tx;q1;:x')"
 
 bootctl install
 cat >/efi/loader/entries/arch.conf <<EOF
@@ -186,8 +187,8 @@ options root=UUID=$(findmnt -n -o UUID /) rw console=ttyS0 net.ifnames=0
 EOF
 # Follow the recommended layout from the Boot Loader Specification
 mkdir -p "/efi/$MACHINE_ID/$KERNEL_VER"
-mv -v /boot/vmlinuz-linux-lts "/efi/$MACHINE_ID/$KERNEL_VER/linux"
-mv -v /boot/initramfs-linux-lts.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
+mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
+mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
 bootctl status
 pacman -Rcnsu --noconfirm grub
 # shellcheck disable=SC2114
