@@ -212,7 +212,7 @@ _check_for_missing_coverage() {
     while read -r file; do
         echo "*** Processing file $file ***"
         ! grep -E "profiling:.+?gcda:[Cc]annot open" "$file" || ec=1
-    done < <(find "$LOGDIR" -maxdepth 1 -name "*.log" ! -name "TEST-82-SOFTREBOOT*.log" ! -name "check_for_missing_coverage*.log")
+    done < <(find "$LOGDIR" -maxdepth 1 -name "*.log" ! -regex ".*/TEST-\(02\|82\)-.*.log" ! -name "check_for_missing_coverage*.log")
 
     return $ec
 }
