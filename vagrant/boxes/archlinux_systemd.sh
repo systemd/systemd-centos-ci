@@ -33,9 +33,6 @@ pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd 
     python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
     softhsm swtpm vim wireguard-tools qemu-base
 
-# Temporarily pin multipath-tools to 0.9.6, see https://bugs.archlinux.org/task/80346
-pacman --noconfirm -U https://archive.archlinux.org/repos/2023/11/22/extra/os/x86_64/multipath-tools-0.9.6-1-x86_64.pkg.tar.zst
-
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
 echo -e 'vagrant\nvagrant' | passwd
