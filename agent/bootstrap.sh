@@ -145,6 +145,9 @@ fi
 alternatives --set python /usr/bin/python3.8
 alternatives --list
 
+# Pin kernel to 4.18.0-521.el8
+dnf install -y kernel-4.18.0-521.el8
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 echo "Cloning repo: $REPO_URL"
@@ -302,7 +305,9 @@ GRUBBY_ARGS=(
     "panic=3"
 )
 # Make sure the latest kernel is the one we're going to boot into
-grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+# FIXME
+grubby --set-default "/boot/vmlinuz-4.18.0-521.el8.x86_64"
+#grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
