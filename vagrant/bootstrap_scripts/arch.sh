@@ -37,6 +37,7 @@ pacman -Q > vagrant-arch-installed-pkgs.txt
 
 rm -fr "$BUILD_DIR"
 # Build phase
+# shellcheck disable=SC2046
 meson "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
@@ -50,7 +51,7 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dlocalegen-path=/usr/bin/locale-gen \
-      "$(grep -q default-network meson_options.txt && echo -Ddefault-network=true)" \
+      $(grep -q default-network meson_options.txt && echo -Ddefault-network=true) \
       -Dman=true \
       -Dhtml=true
 ninja -C "$BUILD_DIR"
