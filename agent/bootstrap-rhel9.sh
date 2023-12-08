@@ -259,6 +259,12 @@ fi
         )
     fi
 
+    if grep -q ukify meson_options.txt; then
+        CONFIGURE_OPTS+=(
+            -Dukify=true
+        )
+    fi
+
     if [[ $SANITIZE -ne 0 ]]; then
         CONFIGURE_OPTS+=(
             "-Db_sanitize=address,undefined"
