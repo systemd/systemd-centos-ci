@@ -91,8 +91,10 @@ ADDITIONAL_DEPS=(
     openssl-devel
     pcre2-devel
     python3-jinja2
+    python3-pefile
     python3-pexpect
     python3-pyparsing
+    python3-pytest
     qemu-kvm
     quota
     rust
@@ -256,6 +258,12 @@ fi
             -Dgnu-efi=true
             # Added in 9.2 by https://gitlab.com/redhat/centos-stream/rpms/systemd/-/merge_requests/56
             -Ddefault-net-naming-scheme=rhel-9.0
+        )
+    fi
+
+    if grep -q ukify meson_options.txt; then
+        CONFIGURE_OPTS+=(
+            -Dukify=true
         )
     fi
 
