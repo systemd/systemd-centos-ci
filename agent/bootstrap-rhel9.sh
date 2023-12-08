@@ -91,8 +91,10 @@ ADDITIONAL_DEPS=(
     openssl-devel
     pcre2-devel
     python3-jinja2
+    python3-pefile
     python3-pexpect
     python3-pyparsing
+    python3-pytest
     qemu-kvm
     quota
     rust
