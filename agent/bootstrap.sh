@@ -235,14 +235,17 @@ DRACUT_OPTS=()
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut "${DRACUT_OPTS[@]}" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    # FIXME
+    dracut --kver 4.18.0-521.el8.x86_64 "${DRACUT_OPTS[@]}" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
     # (for QEMU tests)
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    # FIXME
+    export KERNEL_VER="4.18.0-521.el8.x86_64"
+    export KERNEL_BIN="/boot/vmlinuz-$KERNEL_VER"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console systemd.default_standard_output=journal+console"
     # Set timeout for QEMU tests to kill them in case they get stuck
