@@ -149,9 +149,6 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
-# Pin kernel to 4.18.0-521.el8
-dnf install -y kernel-4.18.0-521.el8
-
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -250,9 +247,6 @@ Name=eth0
 [Link]
 Unmanaged=yes
 EOF
-
-# FIXME
-grubby --set-default "/boot/vmlinuz-4.18.0-521.el8.ppc64le"
 
 # Reboot the machine here to switch to the latest kernel if available
 echo "-----------------------------"

@@ -90,9 +90,6 @@ if alternatives --display nmap; then
     alternatives --display nmap
 fi
 
-# Pin kernel to 4.18.0-521.el8
-dnf install -y kernel-4.18.0-521.el8
-
 # Fetch the systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
@@ -230,17 +227,14 @@ fi
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    # FIXME
-    dracut --kver 4.18.0-521.el8.x86_64 -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
     # (for QEMU tests)
-    # FIXME
-    export KERNEL_VER="4.18.0-521.el8.x86_64"
-    export KERNEL_BIN="/boot/vmlinuz-$KERNEL_VER"
+    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console $CGROUP_KERNEL_ARGS"
     # Set timeout for QEMU tests to kill them in case they get stuck
@@ -275,9 +269,7 @@ fi
 echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
 # Make sure the latest kernel is the one we're going to boot into
-# FIXME
-grubby --set-default "/boot/vmlinuz-4.18.0-521.el8.x86_64"
-#grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 grubby --args="$CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/
