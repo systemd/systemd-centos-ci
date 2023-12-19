@@ -211,6 +211,7 @@ ninja -C build install
 getent group systemd-resolve &>/dev/null || groupadd -r -g 193 systemd-resolve 2>&1
 getent passwd systemd-resolve &>/dev/null || useradd -r -u 193 -l -g systemd-resolve -d / -s /sbin/nologin -c "systemd Resolver" systemd-resolve &>/dev/null
 
+LATEST_KERNEL="$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 # Configure the selected cgroup hierarchy for both the host machine and each
 # integration test VM
 if [[ "$CGROUP_HIERARCHY" == unified ]]; then
@@ -227,14 +228,15 @@ fi
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut --kver "$LATEST_KERNEL" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
     # (for QEMU tests)
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    export KERNEL_BIN="/boot/vmlinuz-$LATEST_KERNEL"
+    export KERNEL_VER="$LATEST_KERNEL"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console $CGROUP_KERNEL_ARGS"
     # Set timeout for QEMU tests to kill them in case they get stuck
@@ -269,7 +271,7 @@ fi
 echo "Configuring $CGROUP_HIERARCHY cgroup hierarchy using '$CGROUP_KERNEL_ARGS'"
 
 # Make sure the latest kernel is the one we're going to boot into
-grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+grubby --set-default "/boot/vmlinuz-$LATEST_KERNEL"
 grubby --args="$CGROUP_KERNEL_ARGS" --update-kernel="$(grubby --default-kernel)"
 # grub on RHEL 8 uses BLS
 grep -r "systemd.unified_cgroup_hierarchy" /boot/loader/entries/

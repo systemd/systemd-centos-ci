@@ -303,6 +303,7 @@ fi
 # Install the compiled systemd
 ninja -C build install
 
+LATEST_KERNEL="$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 # Configure the selected cgroup hierarchy for both the host machine and each
 # integration test VM
 if [[ "$CGROUP_HIERARCHY" == unified ]]; then
@@ -320,14 +321,15 @@ fi
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut --kver "$LATEST_KERNEL" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
     # (for QEMU tests)
-    export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
+    export KERNEL_BIN="/boot/vmlinuz-$LATEST_KERNEL"
+    export KERNEL_VER="$LATEST_KERNEL"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console systemd.default_standard_output=journal+console ${CGROUP_KERNEL_ARGS[*]}"
     # Set timeout for QEMU tests to kill them in case they get stuck
@@ -396,7 +398,7 @@ if grep -q "GRUB_ENABLE_BLSCFG=false" /etc/default/grub; then
     grub2-mkconfig -o /boot/grub2/grub.cfg
 fi
 
-grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+grubby --set-default "/boot/vmlinuz-$LATEST_KERNEL"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
