@@ -145,9 +145,6 @@ fi
 alternatives --set python /usr/bin/python3.8
 alternatives --list
 
-# Pin kernel to 4.18.0-521.el8
-dnf install -y kernel-4.18.0-521.el8
-
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 echo "Cloning repo: $REPO_URL"
@@ -222,6 +219,7 @@ coredumpctl_set_ts
 # Install the compiled systemd
 ninja -C "$BUILD_DIR" install
 
+LATEST_KERNEL="$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
 # FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
 DRACUT_OPTS=()
 [[ -x /usr/lib/systemd/systemd-executor ]] && DRACUT_OPTS+=(--install /usr/lib/systemd/systemd-executor)
@@ -235,17 +233,15 @@ DRACUT_OPTS=()
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    # FIXME
-    dracut --kver 4.18.0-521.el8.x86_64 "${DRACUT_OPTS[@]}" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut "${DRACUT_OPTS[@]}" --kver "$LATEST_KERNEL" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
     ## Configure test environment
     # Explicitly set paths to initramfs (see above) and kernel images
     # (for QEMU tests)
-    # FIXME
-    export KERNEL_VER="4.18.0-521.el8.x86_64"
-    export KERNEL_BIN="/boot/vmlinuz-$KERNEL_VER"
+    export KERNEL_BIN="/boot/vmlinuz-$LATEST_KERNEL"
+    export KERNEL_VER="$LATEST_KERNEL"
     # Enable kernel debug output for easier debugging when something goes south
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console systemd.default_standard_output=journal+console"
     # Set timeout for QEMU tests to kill them in case they get stuck
@@ -308,9 +304,7 @@ GRUBBY_ARGS=(
     "panic=3"
 )
 # Make sure the latest kernel is the one we're going to boot into
-# FIXME
-grubby --set-default "/boot/vmlinuz-4.18.0-521.el8.x86_64"
-#grubby --set-default "/boot/vmlinuz-$(rpm -q kernel --qf "%{EVR}.%{ARCH}\n" | sort -Vr | head -n1)"
+grubby --set-default "/boot/vmlinuz-$LATEST_KERNEL"
 grubby --args="${GRUBBY_ARGS[*]}" --update-kernel="$(grubby --default-kernel)"
 # Check if the $GRUBBY_ARGS were applied correctly
 for arg in "${GRUBBY_ARGS[@]}"; do
