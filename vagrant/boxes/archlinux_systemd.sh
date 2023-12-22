@@ -64,11 +64,25 @@ echo "builder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/builder
 #
 # Note for future me: don't sort alphabetically, as the later packages depend on earlier ones
 pacman --needed --noconfirm -S fakeroot
-for package in libsepol libselinux semodule-utils libsemanage checkpolicy policycoreutils selinux-refpolicy-arch; do
+for package in libsepol libselinux semodule-utils libsemanage checkpolicy policycoreutils selinux-refpolicy-arch {pambase,pam}-selinux; do
     git clone --depth=1 "https://aur.archlinux.org/$package.git" "$package"
     chown -R builder "$package"
     pushd "$package"
-    runuser -u builder -- makepkg --noconfirm --needed --clean --syncdeps --rmdeps --install --skippgpcheck
+    (
+        # Temporarily unset pipefail, since we don't care about SIGPIPEs from `yes`
+        set +o pipefail
+        # Can't use --noconfirm here, since it doesn't mean "--assumeyes", meaning that
+        # pacman will bail out when trying to install a package that conflicts with
+        # an already installed one instead of replacing it, as that's the default
+        # resolution (this is the case for pambase/pambase-selinux and pam/pam-selinux).
+        #
+        # Also, use `systemd-run` instead of `runuser` here to avoid creating a new PAM
+        # session, since installing pambase-selinux breaks the PAM stack, as it's
+        # missing the pam_selinux.so module, but we need pambase-selinux installed
+        # to be able to build pam-selinux. Ugh...
+        yes y | systemd-run --wait --pipe -p "User=builder" --working-directory="$PWD" -- \
+            makepkg --needed --clean --syncdeps --rmdeps --install --skippgpcheck
+    )
     popd
     rm -rf "$package"
 done
