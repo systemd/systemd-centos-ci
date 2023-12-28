@@ -76,8 +76,8 @@ export QEMU_SMP=$(nproc)
 export SKIP_INITRD=no
 # Enforce nested KVM
 export TEST_NESTED_KVM=1
-# Bump the SUT memory to 4G, mainly for dfuzzer
-export QEMU_MEM=4G
+# Bump the SUT memory to 8G, mainly for dfuzzer
+export QEMU_MEM=8G
 # Don't strip systemd binaries installed into test images, so we can get nice
 # stack traces when something crashes
 export STRIP_BINARIES=no
