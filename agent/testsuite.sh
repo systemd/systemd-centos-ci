@@ -99,8 +99,6 @@ exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=
 # with the "standard" integration tests, saving ~30 minutes ATTOW (this excludes
 # dusty nodes, where any kind of parallelism leads to unstable tests)
 TEST_LIST=(
-# FIXME: flaky when run in parallel with systemd-nspawn
-#    "test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"
 )
 

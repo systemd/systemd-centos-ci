@@ -78,7 +78,6 @@ SKIP_LIST=(
 # runtime without requiring too much resources, hence it can run in parallel
 # with the "standard" integration tests, saving ~30 minutes ATTOW
 TEST_LIST=(
-    "test/test-exec-deserialization.py"
     "test/test-network/systemd-networkd-tests.py"
 )
 
