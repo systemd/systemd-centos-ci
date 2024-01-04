@@ -35,7 +35,7 @@ exectask "coredumpctl_collect_boot" "coredumpctl_collect"
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## Sanitizer-specific options
-export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2:handle_ioctl=1:print_cmdline=1
+export ASAN_OPTIONS=strict_string_checks=1:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1:detect_invalid_pointer_pairs=2:handle_ioctl=1:print_cmdline=1:disable_coredump=0:use_madv_dontdump=1
 export UBSAN_OPTIONS=print_stacktrace=1:print_summary=1:halt_on_error=1
 
 # Dump current ASan config
