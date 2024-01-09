@@ -219,7 +219,7 @@ fi
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
-    meson "$BUILD_DIR" \
+    meson setup "$BUILD_DIR" \
         -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
         -Dc_link_args="-shared-libasan -fno-sanitize=function" \
         -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
@@ -232,7 +232,7 @@ fi
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
-        -Dman=false \
+        -Dman=disabled \
         -Db_sanitize=address,undefined \
         -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
     ninja -C "$BUILD_DIR"

@@ -51,7 +51,7 @@ rm -fr "$BUILD_DIR"
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
 
-meson "$BUILD_DIR" \
+meson setup "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Dcpp_args='-fno-omit-frame-pointer -ftrapv' \
@@ -65,7 +65,7 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dlocalegen-path=/usr/bin/locale-gen \
-      -Dman=false \
+      -Dman=disabled \
       -Db_sanitize=address,undefined
 ninja -C "$BUILD_DIR"
 

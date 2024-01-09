@@ -73,7 +73,7 @@ fi
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
 
-meson "$BUILD_DIR" \
+meson setup "$BUILD_DIR" \
       --werror \
       -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
       -Dc_link_args="-shared-libasan" \
@@ -90,7 +90,7 @@ meson "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dlocalegen-path=/usr/bin/locale-gen \
-      -Dman=false \
+      -Dman=disabled \
       -Db_sanitize=address,undefined \
       -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
 ninja -C "$BUILD_DIR"

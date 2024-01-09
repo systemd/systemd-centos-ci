@@ -197,7 +197,7 @@ fi
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
-    meson "$BUILD_DIR" \
+    meson setup "$BUILD_DIR" \
         -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
         -Dcpp_args='-Og' \
         -Ddebug=true \
@@ -208,8 +208,8 @@ fi
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
-        -Dman=true \
-        -Dhtml=true
+        -Dman=enabled \
+        -Dhtml=enabled
     ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build.log"
 
