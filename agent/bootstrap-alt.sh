@@ -232,7 +232,7 @@ fi
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
-        -Dman=false \
+        -Dman=disabled \
         -Db_sanitize=address,undefined \
         -Db_lundef=false # See https://github.com/mesonbuild/meson/issues/764
     ninja -C "$BUILD_DIR"

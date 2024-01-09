@@ -208,8 +208,8 @@ fi
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
-        -Dman=true \
-        -Dhtml=true
+        -Dman=enabled \
+        -Dhtml=enabled
     ninja -C "$BUILD_DIR"
 ) 2>&1 | tee "$LOGDIR/build.log"
 

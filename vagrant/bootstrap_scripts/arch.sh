@@ -52,8 +52,8 @@ meson setup "$BUILD_DIR" \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dlocalegen-path=/usr/bin/locale-gen \
       $(grep -q default-network meson_options.txt && echo -Ddefault-network=true) \
-      -Dman=true \
-      -Dhtml=true
+      -Dman=enabled \
+      -Dhtml=enabled
 ninja -C "$BUILD_DIR"
 ninja -C "$BUILD_DIR" install
 
