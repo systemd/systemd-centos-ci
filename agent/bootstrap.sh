@@ -197,7 +197,7 @@ fi
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
-    meson "$BUILD_DIR" \
+    meson setup "$BUILD_DIR" \
         -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
         -Dcpp_args='-Og' \
         -Ddebug=true \

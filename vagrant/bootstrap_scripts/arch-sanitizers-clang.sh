@@ -73,7 +73,7 @@ fi
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
 
-meson "$BUILD_DIR" \
+meson setup "$BUILD_DIR" \
       --werror \
       -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
       -Dc_link_args="-shared-libasan" \

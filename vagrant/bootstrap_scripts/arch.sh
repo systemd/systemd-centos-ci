@@ -38,7 +38,7 @@ pacman -Q > vagrant-arch-installed-pkgs.txt
 rm -fr "$BUILD_DIR"
 # Build phase
 # shellcheck disable=SC2046
-meson "$BUILD_DIR" \
+meson setup "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
       -Ddebug=true \
