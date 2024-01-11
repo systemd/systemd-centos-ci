@@ -62,7 +62,7 @@ ninja -C "$BUILD_DIR" install
     # We need a custom initrd (with the systemd module) for integration tests
     # See vagrant-test.sh for reasoning
     export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-    mkinitcpio -A base,systemd,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
+    mkinitcpio -c /dev/null -A base,systemd,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
     # Enable as much debug logging as we can to make debugging easier
     # (especially for boot issues)
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console"
