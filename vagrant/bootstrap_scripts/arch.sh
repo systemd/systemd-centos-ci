@@ -57,16 +57,12 @@ meson setup "$BUILD_DIR" \
 ninja -C "$BUILD_DIR"
 ninja -C "$BUILD_DIR" install
 
-# FIXME: drop once https://github.com/systemd/systemd/pull/27890 lands
-touch /etc/mkinitcpio.ci.conf
-[[ -x /usr/lib/systemd/systemd-executor ]] && echo 'BINARIES=(/usr/lib/systemd/systemd-executor)' >/etc/mkinitcpio.ci.conf
-
 # Make sure the revision we just compiled is actually bootable
 (
     # We need a custom initrd (with the systemd module) for integration tests
     # See vagrant-test.sh for reasoning
     export INITRD="$(mktemp /var/tmp/initrd-testsuite-XXX.img)"
-    mkinitcpio -c /etc/mkinitcpio.ci.conf -A base,systemd,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
+    mkinitcpio -A base,systemd,modconf,block,filesystems,keyboard,fsck -g "$INITRD"
     # Enable as much debug logging as we can to make debugging easier
     # (especially for boot issues)
     export KERNEL_APPEND="debug systemd.log_level=debug rd.systemd.log_target=console"
