@@ -407,8 +407,6 @@ def main():
             help="Pull request ID to check out (systemd repository)")
     parser.add_argument("--pool", metavar="POOL_NAME",
             help="Name of the machine pool to allocate a machine from")
-    parser.add_argument("--skip-reboot", action="store_const", const=True,
-            help="Skip reboot between bootstrap and test phases (on baremetal machines)")
     parser.add_argument("--testsuite-script", metavar="SCRIPT", type=str, default="testsuite.sh",
             help="Script which runs tests on the bootstrapped machine")
     parser.add_argument("--testsuite-args", metavar="ARGUMENTS", type=str, default="",
