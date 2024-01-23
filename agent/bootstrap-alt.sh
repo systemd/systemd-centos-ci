@@ -69,9 +69,9 @@ ADDITIONAL_DEPS=(
     iproute-tc
     iscsi-initiator-utils
     jq
-    "kernel-modules-$(uname -r)"
-    "kernel-modules-extra-$(uname -r)"
-    "kernel-tools-$(uname -r)"
+    kernel-modules
+    kernel-modules-extra
+    kernel-tools
     keyutils
     kmod-wireguard # Kmods SIG
     knot
@@ -86,6 +86,8 @@ ADDITIONAL_DEPS=(
     mdadm
     mtools
     net-tools
+    netlabel_tools
+    nftables
     nmap-ncat
     nvme-cli
     opensc
