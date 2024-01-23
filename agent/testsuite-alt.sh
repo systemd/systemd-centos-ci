@@ -79,6 +79,11 @@ sed -i '/bin_rx=/s/[sg]etfacl|//g' test/test-functions
 # cause is figured out, let's temporarily skip this test to not disturb CI runs.
 echo 'int main(void) { return 77; }' > src/test/test-execute.c
 
+# FIXME: skip test_wireguard
+# Since fa724cd52c1 the test relies on credentials to provide private keys which
+# systemd on C8S doesn't support
+sed -i '/def test_wireguard/i\    @unittest.skip("C8S systemd does not support credentials")' test/test-network/systemd-networkd-tests.py
+
 exectask "ninja-test_sanitizers_$(uname -m)" "meson test -C $BUILD_DIR --print-errorlogs --timeout-multiplier=5"
 exectask "check-meson-logs-for-sanitizer-errors" "cat $BUILD_DIR/meson-logs/testlog*.txt | check_for_sanitizer_errors"
 [[ -d "$BUILD_DIR/meson-logs" ]] && rsync -amq --include '*.txt' --include '*/' --exclude '*' "$BUILD_DIR/meson-logs" "$LOGDIR"
