@@ -126,6 +126,10 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.clo
 cmd_retry dnf -y install --enablerepo epel,epel-next qemu-kvm scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
+# FIXME: pin kernel to kernel-5.14.0-407.el9.x86_64 until RHEL-22465 is resolved
+cmd_retry dnf -y install "kernel-5.14.0-407.el9.x86_64" "kernel-modules-extra-5.14.0-407.el9.x86_64"
+cmd_retry dnf -y remove "kernel-5.14.0-410.el9.x86_64" "kernel-modules-extra-5.14.0-410.el9.x86_64"
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
