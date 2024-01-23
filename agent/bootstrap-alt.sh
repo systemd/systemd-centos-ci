@@ -86,6 +86,8 @@ ADDITIONAL_DEPS=(
     mdadm
     mtools
     net-tools
+    netlabel_tools
+    nftables
     nmap-ncat
     nvme-cli
     opensc
