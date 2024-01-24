@@ -38,14 +38,6 @@ EC=0
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-run_coverage() {
-    # Collect test coverage & upload it to Coveralls
-    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
-                       --vagrant arch-coverage \
-                       --no-index \
-                       ${ARGS:+"${ARGS[@]}"}
-}
-
 run_remaining_sanitizer_job() {
     # Run the "leftover" ASan/UBSan job (i.e. the one which is not run by
     # the `upstream-vagrant-archlinux-sanitizers` job for each PR)
@@ -77,7 +69,7 @@ run_c8s_full() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_coverage run_remaining_sanitizer_job run_ppc64le_sanitizers run_c8s_full; do
+for job in run_remaining_sanitizer_job run_ppc64le_sanitizers run_c8s_full; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
