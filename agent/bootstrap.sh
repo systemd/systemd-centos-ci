@@ -100,7 +100,6 @@ ADDITIONAL_DEPS=(
     python3-pyelftools # EPEL
     python3-pyparsing
     python3-pytest
-    qemu-kvm
     qrencode-devel
     quota
     rust
@@ -112,7 +111,6 @@ ADDITIONAL_DEPS=(
     squashfs-tools
     strace
     stress # EPEL
-    swtpm
     time
     tpm2-tools
     tpm2-tss-devel
@@ -122,12 +120,18 @@ ADDITIONAL_DEPS=(
     zstd
 )
 
+if [[ "$(uname -m)" != ppc64le ]]; then
+    # There's noo qemu-kvm and swtpm on ppc64le
+    ADDITIONAL_DEPS+=(qemu-kvm swtpm)
+fi
+
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core gdb
 cmd_retry dnf -y config-manager --enable epel --enable epel-next --enable crb
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y update
-cmd_retry dnf -y builddep systemd
+# --skip-unavailable is necessary for archs without gnu-efi (like ppc64le)
+cmd_retry dnf -y --skip-unavailable builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Remove setroubleshoot-server if it's installed, since we don't use it anyway
 # and it's causing some weird performance issues

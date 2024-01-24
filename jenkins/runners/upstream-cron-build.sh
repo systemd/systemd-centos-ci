@@ -52,11 +52,10 @@ run_remaining_sanitizer_job() {
     #                   ${ARGS:+"${ARGS[@]}"}
 }
 
-run_ppc64le_sanitizers() {
-    # Run the integration test suite on C8S ppc64le with sanitizers
-    ./agent-control.py --pool virt-one-medium-centos-8s-ppc64le \
-                       --bootstrap-script="bootstrap-alt.sh" \
-                       --testsuite-script="testsuite-alt.sh" \
+run_ppc64le() {
+    # Run the integration test suite on C9S ppc64le
+    ./agent-control.py --pool virt-one-medium-centos-9s-ppc64le \
+                       --testsuite-args="-n" \
                        --no-index \
                        ${ARGS:+"${ARGS[@]}"}
 }
@@ -69,7 +68,7 @@ run_c9s_full() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_remaining_sanitizer_job run_ppc64le_sanitizers run_c9s_full; do
+for job in run_remaining_sanitizer_job run_ppc64le run_c9s_full; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
