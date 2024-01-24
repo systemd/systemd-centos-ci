@@ -74,6 +74,7 @@ ADDITIONAL_DEPS=(
     kmod-wireguard # Kmods SIG
     knot
     knot-dnssecutils
+    libarchive-devel
     libasan
     libfdisk-devel
     libpwquality-devel
