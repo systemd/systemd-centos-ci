@@ -65,7 +65,7 @@ meson setup "$BUILD_DIR" \
       -Dinstall-tests=true \
       -Ddbuspolicydir=/usr/share/dbus-1/system.d \
       -Dlocalegen-path=/usr/bin/locale-gen \
-      -Dman=disabled \
+      -Dman=false \
       -Db_sanitize=address,undefined
 ninja -C "$BUILD_DIR"
 
