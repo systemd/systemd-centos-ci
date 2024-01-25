@@ -171,16 +171,21 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
     CHECK_LIST=()
     INTEGRATION_TESTS=(
         test/TEST-04-JOURNAL        # systemd-journald
+        test/TEST-07-PID1           # PID1 & core stuff
         test/TEST-13-NSPAWN-SMOKE   # systemd-nspawn
         test/TEST-15-DROPIN         # dropin logic
         test/TEST-17-UDEV           # systemd-udevd
         test/TEST-21-DFUZZER        # fuzz all systemd D-Bus interfaces
         test/TEST-22-TMPFILES       # systemd-tmpfiles
         test/TEST-23-TYPE-EXEC
+        test/TEST-23-UNIT-FILE
+        test/TEST-24-CRYPTSETUP     # systemd-cryptsetup + generator
         test/TEST-26-SYSTEMCTL      # systemctl & friends
         # We don't ship portabled in RHEL
         #test/TEST-29-PORTABLE       # systemd-portabled
         test/TEST-34-DYNAMICUSERMIGRATE
+        # Can't enable on C9S until https://bugzilla.redhat.com/show_bug.cgi?id=2098125 is fixed there
+        #test/TEST-35-LOGIN          # systemd-logind
         test/TEST-45-TIMEDATE       # systemd-timedated
         # We don't ship homed in RHEL
         #test/TEST-46-HOMED          # systemd-homed
@@ -190,6 +195,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-58-REPART         # systemd-repart
         test/TEST-64-UDEV-STORAGE   # systemd-udevd with various storage setups
         test/TEST-65-ANALYZE        # systemd-analyze
+        test/TEST-70-TPM2           # systemd-cryptenroll
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
