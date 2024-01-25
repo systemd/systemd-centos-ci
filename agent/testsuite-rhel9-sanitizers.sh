@@ -195,7 +195,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-58-REPART         # systemd-repart
         test/TEST-64-UDEV-STORAGE   # systemd-udevd with various storage setups
         test/TEST-65-ANALYZE        # systemd-analyze
-        test/TEST-70-TPM2           # systemd-cryptenroll
+        # test/TEST-70-TPM2 is included below
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
