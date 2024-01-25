@@ -69,7 +69,7 @@ run_c8s_full() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_ppc64le_sanitizers run_c8s_full; do
+for job in run_remaining_sanitizer_job run_ppc64le_sanitizers run_c8s_full; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))

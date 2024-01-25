@@ -49,8 +49,7 @@ set +e
     # Check if it doesn't break anything
     ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-new ${ARGS:+"${ARGS[@]}"}
     ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-clang-new ${ARGS:+"${ARGS[@]}"}
-    # FIXME
-    # ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-gcc-new ${ARGS:+"${ARGS[@]}"}
+    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 --no-index --vagrant arch-sanitizers-gcc-new ${ARGS:+"${ARGS[@]}"}
     # Overwrite the production image with the just tested one. Since the CentOS CI
     # artifact server supports only rsync protocol, use a single-purpose script
     # to do that

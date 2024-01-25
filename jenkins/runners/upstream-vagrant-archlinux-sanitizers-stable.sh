@@ -48,12 +48,11 @@ git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
 # Run both jobs, since we don't run the other-half-of-this-job in cron in this case
-# FIXME
-#./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
-#                   --bootstrap-args='-s https://github.com/systemd/systemd-stable.git' \
-#                   --no-index \
-#                   --vagrant arch-sanitizers-gcc \
-#                   ${ARGS:+"${ARGS[@]}"}
+./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+                   --bootstrap-args='-s https://github.com/systemd/systemd-stable.git' \
+                   --no-index \
+                   --vagrant arch-sanitizers-gcc \
+                   ${ARGS:+"${ARGS[@]}"}
 
 ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
                    --bootstrap-args='-s https://github.com/systemd/systemd-stable.git' \
