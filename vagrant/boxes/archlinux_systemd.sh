@@ -158,6 +158,19 @@ dfuzzer --version
 rm /etc/sudoers.d/builder
 userdel -fr builder
 
+# FIXME: install fixed gcc build [0], since the latest official build doesn't contain
+#        [1] that's already in the gcc repo. Kudos to loqs for providing the build [2],
+#        otherwise I'd be still compiling gcc to this day
+#
+# [0] https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/issues/20
+# [1] https://gitlab.archlinux.org/archlinux/packaging/packages/gcc/-/commit/15cbe5ecc28cc4f52a38bad5a5cecaaa8a66a020
+# [2] https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/issues/20#note_156677
+pacman --needed --noconfirm -S wget
+wget https://artifacts.ci.centos.org/systemd/tmp/gcc-13.2.1-3.1-x86_64.pkg.tar.zst \
+     https://artifacts.ci.centos.org/systemd/tmp/gcc-libs-13.2.1-3.1-x86_64.pkg.tar.zst
+pacman --noconfirm -U ./gcc*.zst
+rm -f ./gcc*.zst
+
 # Replace systemd-networkd with dhcpcd as the network manager for the default
 # interface, so we can run the systemd-networkd test suite without having
 # to worry about the network staying up
