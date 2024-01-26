@@ -9,7 +9,7 @@
 #
 # set -e
 #
-# curl -q -o runner.sh https://../upstream-centos8-stable.sh
+# curl -q -o runner.sh https://../upstream-centos9.sh
 # chmod +x runner.sh
 # ./runner.sh
 set -eu
@@ -36,8 +36,7 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --pool virt-ec2-t2-centos-8s-x86_64 \
-                   --bootstrap-args="-s https://github.com/systemd/systemd-stable.git" \
+./agent-control.py --pool virt-ec2-t2-centos-9s-x86_64 \
                    --testsuite-args="-n" \
                    --kdump-collect \
                    ${ARGS:+"${ARGS[@]}"}
