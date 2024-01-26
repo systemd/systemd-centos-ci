@@ -24,5 +24,5 @@ if ! command -v kexec >/dev/null; then
 fi
 
 echo "Loading & executing kernel $LATEST_KERNEL"
-kexec --load --initrd="/boot/initramfs-$LATEST_KERNEL.img" --reuse-cmdline --load "/boot/vmlinuz-$LATEST_KERNEL"
+kexec --initrd="/boot/initramfs-$LATEST_KERNEL.img" --reuse-cmdline --load "/boot/vmlinuz-$LATEST_KERNEL"
 kexec --exec
