@@ -71,12 +71,13 @@ ADDITIONAL_DEPS=(
     jq
     kernel-modules-extra
     keyutils
-    kmod-wireguard # Kmods SIG
     knot
     knot-dnssecutils
     libarchive-devel
     libasan
+    libbpf-devel
     libfdisk-devel
+    libfido2-devel
     libpwquality-devel
     libzstd-devel
     llvm
@@ -92,7 +93,6 @@ ADDITIONAL_DEPS=(
     opensc
     openssl-devel
     pcre2-devel
-    python38
     python3-jinja2
     python3-pefile # EPEL
     python3-pexpect
@@ -123,12 +123,9 @@ ADDITIONAL_DEPS=(
 )
 
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core gdb
-cmd_retry dnf -y config-manager --enable epel --enable epel-next --enable powertools
-# Install the Kmods SIG repository for certain kernel modules
-# See: https://sigs.centos.org/kmods/repositories/
-cmd_retry dnf -y install centos-release-kmods
-# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
+cmd_retry dnf -y config-manager --enable epel --enable epel-next --enable crb
+# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
+cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y update
 cmd_retry dnf -y builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
@@ -137,14 +134,6 @@ cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 if rpm -q setroubleshoot-server; then
     dnf -y remove setroubleshoot-server
 fi
-# Use the Nmap's version of nc, since TEST-13-NSPAWN-SMOKE doesn't seem to work
-# with the OpenBSD version present on CentOS 8
-if alternatives --display nmap; then
-    alternatives --set nmap /usr/bin/ncat
-fi
-# Set Python 3.8 as the default Python
-alternatives --set python /usr/bin/python3.8
-alternatives --list
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -177,17 +166,6 @@ if ! coredumpctl_init; then
     echo >&2 "Failed to configure systemd-coredump/coredumpctl"
     exit 1
 fi
-
-# Compile & install libbpf-next
-(
-    git clone --depth=1 https://github.com/libbpf/libbpf libbpf
-    pushd libbpf/src
-    LD_FLAGS="-Wl,--no-as-needed" NO_PKG_CONFIG=1 make
-    make install
-    ldconfig
-    popd
-    rm -fr libbpf
-)
 
 # Compile systemd
 #   - slow-tests=true: enables slow tests
@@ -286,6 +264,13 @@ if ! lsinitrd -m "/boot/initramfs-$(uname -r).img" | grep "^systemd$"; then
     exit 1
 fi
 
+# For some reason the C9S AMIs have BLS in grub switched off. If that's the case
+# let's re-enable it before tweaking the grub configuration further.
+if grep -q "GRUB_ENABLE_BLSCFG=false" /etc/default/grub; then
+    sed -i 's/GRUB_ENABLE_BLSCFG=false/GRUB_ENABLE_BLSCFG=true/' /etc/default/grub
+    grub2-mkconfig -o /boot/grub2/grub.cfg
+fi
+
 GRUBBY_ARGS=(
     # As the RTC on CentOS CI machines is notoriously incorrect, let's override
     # it early in the boot process to properly execute units using
@@ -323,12 +308,6 @@ coredumpctl_collect
 kdumpctl status || kdumpctl restart
 kdumpctl showmem
 kdumpctl rebuild
-
-# Let's leave this here for a while for debugging purposes
-echo "Current date:         $(date)"
-echo "RTC:                  $(hwclock --show)"
-echo "/usr mtime:           $(date -r /usr)"
-echo "/etc/.updated mtime:  $(date -r /etc/.updated)"
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
