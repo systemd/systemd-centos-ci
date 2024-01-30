@@ -23,6 +23,12 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 # Use systemd repo path specified by SYSTEMD_ROOT
 pushd /build
 
+# FIXME: monkey-patch systemd's mkinitcpio hook to install libkmod as well,
+#        as it's a dlopen() dep since [0]. Drop this once a new systemd release
+#        is out and the hook in Arch is tweaked.
+# [0] https://github.com/systemd/systemd/pull/31131
+sed -i 's/qrencode; do/qrencode kmod; do/' /usr/lib/initcpio/install/systemd
+
 # Dump list of installed packages
 pacman -Q > vagrant-arch-installed-pkgs.txt
 # Dump additional OS info
