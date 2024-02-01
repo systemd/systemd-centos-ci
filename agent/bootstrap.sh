@@ -135,6 +135,10 @@ if rpm -q setroubleshoot-server; then
     dnf -y remove setroubleshoot-server
 fi
 
+# Temporarily use the official qemu-kvm build to have an actionable stack trace
+# once it crashes
+dnf install -y qemu-kvm-8.2.0-2.el9.x86_64
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 echo "Cloning repo: $REPO_URL"
