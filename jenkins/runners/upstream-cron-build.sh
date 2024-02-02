@@ -60,6 +60,14 @@ run_ppc64le() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
+run_aarch64() {
+    # Run the integration test suite on C9S aarch64
+    ./agent-control.py --pool virt-ec2-c6g-centos-9s-aarch64 \
+                       --testsuite-args="-n" \
+                       --no-index \
+                       ${ARGS:+"${ARGS[@]}"}
+}
+
 run_c9s_full() {
     # Run the full test suite on C9S (i.e. with QEMU tests as well)
     ./agent-control.py --pool virt-ec2-t2-centos-9s-x86_64 \
@@ -68,7 +76,7 @@ run_c9s_full() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_remaining_sanitizer_job run_ppc64le run_c9s_full; do
+for job in run_remaining_sanitizer_job run_ppc64le run_aarch64 run_c9s_full; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
