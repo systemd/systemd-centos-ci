@@ -184,6 +184,11 @@ centos_ensure_qemu_symlink() {
     local source="/usr/libexec/qemu-kvm"
     local target
 
+    if [[ "$(rpm -q --qf "%{release}" bash)" =~ .el9$ && "$(uname -m)" == ppc64le ]]; then
+        _log "QEMU is not supported on ppc64le in C9S"
+        return 0
+    fi
+
     if [[ ! -x "$source" ]]; then
         _err "Missing /usr/libexec/qemu-kvm binary, can't continue"
         return 1

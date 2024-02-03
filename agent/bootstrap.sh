@@ -100,7 +100,6 @@ ADDITIONAL_DEPS=(
     python3-pyelftools # EPEL
     python3-pyparsing
     python3-pytest
-    qemu-kvm
     qrencode-devel
     quota
     rust
@@ -112,7 +111,6 @@ ADDITIONAL_DEPS=(
     squashfs-tools
     strace
     stress # EPEL
-    swtpm
     time
     tpm2-tools
     tpm2-tss-devel
@@ -122,22 +120,24 @@ ADDITIONAL_DEPS=(
     zstd
 )
 
+if [[ "$(uname -m)" != ppc64le ]]; then
+    # There's noo qemu-kvm and swtpm on ppc64le
+    ADDITIONAL_DEPS+=(qemu-kvm swtpm)
+fi
+
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core gdb
 cmd_retry dnf -y config-manager --enable epel --enable epel-next --enable crb
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y update
-cmd_retry dnf -y builddep systemd
+# --skip-unavailable is necessary for archs without gnu-efi (like ppc64le)
+cmd_retry dnf -y --skip-unavailable builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
 # Remove setroubleshoot-server if it's installed, since we don't use it anyway
 # and it's causing some weird performance issues
 if rpm -q setroubleshoot-server; then
     dnf -y remove setroubleshoot-server
 fi
-
-# Temporarily use the official qemu-kvm build to have an actionable stack trace
-# once it crashes
-dnf install -y qemu-kvm-8.2.0-2.el9.x86_64
 
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
@@ -180,6 +180,12 @@ fi
     # Make sure we copy over the meson logs even if the compilation fails
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
+
+    # FIXME: binaries built with C9S's gcc crash on ppc64le due to stack smashing
+    #        when linked against both libasan and libcap. Until that's resolved,
+    #        skip the fuzz tests there
+    [[ "$(uname -m)" == ppc64le ]] && FUZZ_TESTS=false || FUZZ_TESTS=true
+
     meson setup "$BUILD_DIR" \
         -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
         -Dcpp_args='-Og' \
@@ -187,7 +193,7 @@ fi
         --werror \
         -Dlog-trace=true \
         -Dslow-tests=true \
-        -Dfuzz-tests=true \
+        -Dfuzz-tests="$FUZZ_TESTS" \
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
