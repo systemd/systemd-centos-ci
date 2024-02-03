@@ -186,6 +186,9 @@ fi
     #        skip the fuzz tests there
     [[ "$(uname -m)" == ppc64le ]] && FUZZ_TESTS=false || FUZZ_TESTS=true
 
+    # Skip ukify on ppc64le, since EFI is not supported there
+    [[ "$(uname -m)" == ppc64le ]] && UKIFY=false || UKIFY=true
+
     meson setup "$BUILD_DIR" \
         -Dc_args='-fno-omit-frame-pointer -ftrapv -Og' \
         -Dcpp_args='-Og' \
@@ -197,6 +200,7 @@ fi
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
+        -Dukify="$UKIFY" \
         -Dman=true \
         -Dhtml=true
     ninja -C "$BUILD_DIR"
