@@ -38,7 +38,7 @@ EC=0
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-run_remaining_sanitizer_job() {
+run_arch_remaining_sanitizer_job() {
     # Run the "leftover" ASan/UBSan job (i.e. the one which is not run by
     # the `upstream-vagrant-archlinux-sanitizers` job for each PR)
     ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
@@ -52,7 +52,7 @@ run_remaining_sanitizer_job() {
     #                   ${ARGS:+"${ARGS[@]}"}
 }
 
-run_ppc64le() {
+run_c9s_ppc64le() {
     # Run the integration test suite on C9S ppc64le
     ./agent-control.py --pool virt-one-medium-centos-9s-ppc64le \
                        --testsuite-args="-n" \
@@ -60,7 +60,7 @@ run_ppc64le() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-run_aarch64() {
+run_c9s_aarch64() {
     # Run the integration test suite on C9S aarch64
     ./agent-control.py --pool virt-ec2-c6g-centos-9s-aarch64 \
                        --testsuite-args="-n" \
@@ -76,7 +76,14 @@ run_c9s_full() {
                        ${ARGS:+"${ARGS[@]}"}
 }
 
-for job in run_remaining_sanitizer_job run_ppc64le run_aarch64 run_c9s_full; do
+JOBS=(
+    run_arch_remaining_sanitizer_job
+    run_c9s_ppc64le
+    run_c9s_aarch64
+    run_c9s_full
+)
+
+for job in "${JOBS[@]}"; do
     if ! "$job"; then
         FAILED+=("$job")
         EC=$((EC + 1))
