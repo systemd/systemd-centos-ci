@@ -83,6 +83,17 @@ if ! vagrant plugin list | grep vagrant-libvirt; then
     export GEM_PATH=$GEM_HOME:/opt/vagrant/embedded/gems
     export PATH=/opt/vagrant/embedded/bin:$PATH
     cmd_retry vagrant plugin install vagrant-libvirt
+
+    # FIXME: forgive me, Father, for I have sinned
+    # vagrant-libvirt seems to be incompatible with ruby-libvirt 0.8.1. Unfortunately,
+    # the Vagrant plugin mechanism is "dumb" and doesn't allow us to pin the dependency
+    # directly, so we have to do a very ugly thing by manually overwriting files of the
+    # just installed ruby-libvirt package with an older version (which we need to fetch
+    # and build first)
+    TEMP_GEM="$(mktemp -d)"
+    gem install -i "$TEMP_GEM" ruby-libvirt --version 0.8.0
+    cp -rvf "$TEMP_GEM"/gems/ruby-libvirt-0.8.0/* ~/.vagrant.d/gems/*/gems/ruby-libvirt-0.8.*/
+    rm -rf "$TEMP_GEM"
 fi
 
 vagrant --version
