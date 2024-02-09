@@ -73,6 +73,7 @@ run_c9s_full() {
     ./agent-control.py --pool virt-ec2-t2-centos-9s-x86_64 \
                        --timeout 180 \
                        --kdump-collect \
+                       --no-index \
                        ${ARGS:+"${ARGS[@]}"}
 }
 
