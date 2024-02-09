@@ -194,6 +194,37 @@ centos_ensure_qemu_symlink() {
         return 1
     fi
 
+    # FIXME: workaround for intermittent QEMU segfaults when running TCG VMs in AWS on C9S
+    #
+    # See: https://issues.redhat.com/browse/RHEL-23844
+    if [[ "$(rpm -q --qf "%{release}" bash)" =~ .el9$ && "$(uname -m)" == x86_64 ]] && systemd-detect-virt -q; then
+        target="/bin/qemu-system-$(uname -m)"
+
+        cat >"$target" <<EOF
+#!/bin/bash
+set -ux
+
+for _ in {0..2}; do
+    "$source" "\$@"
+    ec=\$?
+
+    # 128 + 11 (SIGSEGV)
+    if [[ \$ec -eq 139 ]]; then
+        continue
+    fi
+
+    exit \$ec
+done
+
+echo "QEMU crashed three times in a row, we're doomed"
+exit 1
+EOF
+        chmod +x "$target"
+        "$target" --version
+
+        return 0
+    fi
+
     systemd-detect-virt -q && target="/bin/qemu-system-$(uname -m)" || target=/bin/qemu-kvm
     if [[ ! -x "${target:?}" ]]; then
         ln -svf "${source:?}" "${target:?}"
