@@ -29,9 +29,6 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-# Collect any coredumps that happened during boot
-exectask "coredumpctl_collect_boot" "coredumpctl_collect"
-
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## Sanitizer-specific options
