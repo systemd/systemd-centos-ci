@@ -48,7 +48,10 @@ if [[ $COLLECT_COREDUMPS -ne 0 ]]; then
     fi
 
     # Collect any coredumps that happened during boot
-    exectask "coredumpctl_collect_boot" "coredumpctl_collect"
+    if ! exectask "coredumpctl_collect_boot" "coredumpctl_collect"; then
+        echo >&2 "Detected coredump(s) during system bootup"
+        exit 1
+    fi
 fi
 
 set +e

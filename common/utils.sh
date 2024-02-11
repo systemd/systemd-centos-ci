@@ -334,6 +334,19 @@ coredumpctl_init() {
         _err "coredumpctl is not in operative state"
         return 1
     fi
+
+    # gdb should use debuginfd automatically if $DEBUGINFOD_URLS is set - this
+    # env variable is set in /etc/profile.d/debuginfod.sh that's shipped with
+    # gdb. However, in certain cases we might install gdb and not restart the
+    # shell (like when running in Vagrant with sanitizers), so the env variable
+    # is never set. Let's work around this by sourcing the file explicitly if
+    # it exists
+    if [[ -f /etc/profile.d/debuginfod.sh ]]; then
+        # shellcheck source=/dev/null
+        source /etc/profile.d/debuginfod.sh
+    fi
+
+    return 0
 }
 
 # Set the timestamp for future coredump collection using coredumpctl_collect()
@@ -404,12 +417,6 @@ coredumpctl_collect() {
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
         return 0
-    fi
-
-    # Explicitly enable debuginfod if gdb supports it. This needs to be done
-    # via the gdbinit file, otherwise the debug symbols won't be loaded
-    if gdb --configuration | grep -q -- --with-debuginfod; then
-        echo "set debuginfod enabled on" >>~/.gdbinit
     fi
 
     # For each unique executable path call 'coredumpctl info' to get the stack

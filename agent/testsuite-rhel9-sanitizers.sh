@@ -53,9 +53,6 @@ if ! coredumpctl_init; then
     exit 1
 fi
 
-# Collect any coredumps that happened during boot
-exectask "coredumpctl_collect_boot" "coredumpctl_collect"
-
 centos_ensure_qemu_symlink
 
 if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then

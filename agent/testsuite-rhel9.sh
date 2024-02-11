@@ -43,7 +43,10 @@ if ! coredumpctl_init; then
 fi
 
 # Collect any coredumps that happened during boot
-exectask "coredumpctl_collect_boot" "coredumpctl_collect"
+if ! exectask "coredumpctl_collect_boot" "coredumpctl_collect"; then
+    echo >&2 "Detected coredump(s) during system bootup"
+    exit 1
+fi
 
 if [[ $(cat /proc/sys/user/max_user_namespaces) -le 0 ]]; then
     echo >&2 "user.max_user_namespaces must be > 0"
