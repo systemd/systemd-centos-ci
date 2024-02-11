@@ -3,7 +3,7 @@
 
 LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/task-control.sh
-. "$LIB_ROOT/task-control.sh" "testsuite-logs-upstream" || exit 1
+. "$LIB_ROOT/task-control.sh" "testsuite-logs-$(uname -m)" || exit 1
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
