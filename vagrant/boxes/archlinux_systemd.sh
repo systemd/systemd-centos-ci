@@ -32,6 +32,21 @@ pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd 
     nftables ntp nvme-cli open-iscsi openbsd-netcat opensc perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect \
     python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
     softhsm swtpm vim wireguard-tools qemu-base
+# Install SELinux-aware packages
+# See:
+#   - https://github.com/archlinuxhardened/selinux
+#   - https://wiki.archlinux.org/title/SELinux
+cat >>/etc/pacman.conf <<EOF
+[selinux]
+Server = https://github.com/archlinuxhardened/selinux/releases/download/ArchLinux-SELinux
+SigLevel = Never
+EOF
+# Note: can't use --noconfirm here, as the default resolution for a package conflict is to bail out, so pacman just
+#       exits without replacing any packages. Also, ignore SIGPIPE from `yes`.
+set +o pipefail
+yes y | pacman --needed -Sy checkpolicy coreutils-selinux findutils-selinux libselinux libsemanage libsepol pam-selinux \
+    pambase-selinux policycoreutils psmisc-selinux selinux-refpolicy-arch semodule-utils util-linux-selinux
+set -o pipefail
 
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
@@ -57,48 +72,6 @@ cd /tmp
 useradd --create-home builder
 mkdir -p /etc/sudoers.d
 echo "builder ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/builder
-
-# Build SELinux userspace tools
-#
-# https://wiki.archlinux.org/title/SELinux
-#
-# Note for future me: don't sort alphabetically, as the later packages depend on earlier ones
-pacman --needed --noconfirm -S fakeroot
-for package in libsepol libselinux semodule-utils libsemanage checkpolicy policycoreutils selinux-refpolicy-arch {pambase,pam}-selinux; do
-    git clone --depth=1 "https://aur.archlinux.org/$package.git" "$package"
-    chown -R builder "$package"
-    pushd "$package"
-    (
-        # Temporarily unset pipefail, since we don't care about SIGPIPEs from `yes`
-        set +o pipefail
-        # Can't use --noconfirm here, since it doesn't mean "--assumeyes", meaning that
-        # pacman will bail out when trying to install a package that conflicts with
-        # an already installed one instead of replacing it, as that's the default
-        # resolution (this is the case for pambase/pambase-selinux and pam/pam-selinux).
-        #
-        # Also, use `systemd-run` instead of `runuser` here to avoid creating a new PAM
-        # session, since installing pambase-selinux breaks the PAM stack, as it's
-        # missing the pam_selinux.so module, but we need pambase-selinux installed
-        # to be able to build pam-selinux. Ugh...
-        yes y | systemd-run --wait --pipe -p "User=builder" --working-directory="$PWD" -- \
-            makepkg --needed --clean --syncdeps --rmdeps --install --skippgpcheck
-    )
-    popd
-    rm -rf "$package"
-done
-
-# Rebuild a couple of packages so they become SELinux-aware
-for package in coreutils findutils psmisc util-linux; do
-    git clone --depth=1 "https://gitlab.archlinux.org/archlinux/packaging/packages/$package" "$package"
-    chown -R builder "$package"
-    pushd "$package"
-    # Let's skip the check() here to speed things up, since we're doing just a rebuild
-    # (and hope for the best). Also, drop --needed, so we always reinstall the just
-    # build package without bumping $pkgrel.
-    runuser -u builder -- makepkg --noconfirm --clean --syncdeps --rmdeps --install --skippgpcheck --nocheck
-    popd
-    rm -rf "$package"
-done
 
 # Compile & install tgt (iSCSI target utils)
 pacman --needed --noconfirm -S docbook-xsl libxslt perl-config-general
