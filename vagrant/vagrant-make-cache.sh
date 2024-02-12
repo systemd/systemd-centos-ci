@@ -112,18 +112,18 @@ fi
 # Output file example:
 #   boxes/Vagrantfile_archlinux_systemd => archlinux_systemd-new
 BOX_NAME="${VAGRANT_FILE##*/Vagrantfile_}-new"
-# You guessed it, another workaround - let's include the original
-# Vagrantfile as well, as it usually contains important settings
-# which make the box actually bootable. For this, we need to detect the location
-# of the box, from the original box name (i.e. generic/arch, see the
-# beautiful awk below), and then transform it to a path to the Vagrantfile,
-# which contains the box name, but all slashes are replaced by
-# "-VAGRANTSLASH-" (and that's what the bash substitution is for)
+# You guessed it, another workaround - let's include the original Vagrantfile
+# as well, as it usually contains important settings which make the box
+# actually bootable. For this, we need to detect the location of the box, from
+# the original box name (i.e. generic/arch, see the beautiful awk below), and
+# then transform it to a path to the Vagrantfile, which contains the box name,
+# but all slashes are replaced by "-VAGRANTSLASH-" (and that's what the bash
+# substitution is for)
 ORIGINAL_BOX_NAME="$(awk 'match($0, /^[^#]*config.vm.box\s*=\s*"([^"]+)"/, m) { print m[1]; exit 0; }' "$VAGRANT_FILE")"
 # Tell virt-sysprep to not truncate the already existing /etc/machine-id, since
 # we use it in paths to kernel and initrd images on the ESP
 export VAGRANT_LIBVIRT_VIRT_SYSPREP_OPERATIONS="defaults,-machine-id"
-vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/libvirt/Vagrantfile
+vagrant package --no-tty --output "$BOX_NAME" --vagrantfile ~/.vagrant.d/boxes/"${ORIGINAL_BOX_NAME//\//-VAGRANTSLASH-}"/*/*/libvirt/Vagrantfile
 # Remove the VM we just packaged
 vagrant destroy -f
 
