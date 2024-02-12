@@ -23,7 +23,7 @@ dnf builddep -y systemd
 
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
-echo -e 'vagrant\nvagrant' | passwd
+echo "vagrant" | passwd --stdin
 passwd -S root
 # Fedora's default for PermitRootLogin= is 'prohibit-password' which breaks
 # Vagrant 'insert_key' feature
