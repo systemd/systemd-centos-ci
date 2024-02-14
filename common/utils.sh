@@ -412,7 +412,7 @@ coredumpctl_collect() {
     #   sleep/bash - intentional SIGABRT caused by TEST-57
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
     #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(bash|gnome-shell|sleep|systemd-notify|test-execute|test(-usr)?-dump)$}"
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(bash|gnome-shell|qemu-kvm|sleep|systemd-notify|test-execute|test(-usr)?-dump)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
