@@ -76,6 +76,7 @@ trap at_exit EXIT
 
 pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 git_checkout_pr "$REMOTE_REF"
+git revert --no-commit 7eb7e3ec4f5dbc13ee729557e1544527f3101187
 
 # Create a Coveralls configuration file if the Coveralls token is present
 # (the file is provided by the agent-control.py script)
