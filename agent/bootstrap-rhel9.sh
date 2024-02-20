@@ -357,7 +357,7 @@ fi
 # the old systemd binary was incompatible with the unit files on disk and
 # prevented the system from reboot
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
-SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
+[[ -n "${XDG_RUNTIME_DIR:-}" ]] && SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
 dracut -f --regenerate-all
 
