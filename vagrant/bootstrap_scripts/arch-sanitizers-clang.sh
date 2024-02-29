@@ -104,6 +104,10 @@ cp -fv src/network/org.freedesktop.network1.conf /usr/share/dbus-1/system.d/
 # See: https://github.com/systemd/systemd/pull/14415#issuecomment-579307925
 cp -fv "$BUILD_DIR/units/systemd-networkd.service" /usr/lib/systemd/system/systemd-networkd.service
 cp -fv "$BUILD_DIR/units/systemd-networkd-wait-online.service" /usr/lib/systemd/system/systemd-networkd-wait-online.service
+if [[ -f "$BUILD_DIR/units/systemd-networkd-dhcp-server.service" ]]; then
+    # Introduced in https://github.com/systemd/systemd/pull/30021
+    cp -v "$BUILD_DIR/units/systemd-networkd-dhcp-server.service" /usr/lib/systemd/system/systemd-networkd-dhcp-server.service
+fi
 
 # Support udevadm/systemd-udevd merge efforts from
 # https://github.com/systemd/systemd/pull/15918
