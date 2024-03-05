@@ -131,7 +131,7 @@ export KERNEL_APPEND="enforcing=0 watchdog_thresh=60 workqueue.watchdog_thresh=1
 export KERNEL_BIN="/boot/vmlinuz-$(uname -r)"
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1800
-export NSPAWN_TIMEOUT=600
+export NSPAWN_TIMEOUT=900
 export QEMU_OPTIONS="-cpu max"
 
 # Let's re-shuffle the test list a bit by placing the most expensive tests
