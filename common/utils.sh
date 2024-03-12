@@ -205,7 +205,10 @@ centos_ensure_qemu_symlink() {
 set -ux
 
 for _ in {0..2}; do
-    "$source" "\$@"
+    # Hardcode the timeout invocation into the wrapper, since the upstream test suite runs it with --foreground,
+    # and with this wrapper in place qemu-kvm is no longer the "main" process (and timeout with --foreground won't
+    # touch children of the monitored process).
+    timeout 30m "$source" "\$@"
     ec=\$?
 
     # 128 + 11 (SIGSEGV)
