@@ -72,12 +72,18 @@ fi
 # See:
 #   https://bugzilla.redhat.com/show_bug.cgi?id=1827338#c3
 #   https://github.com/systemd/systemd-centos-ci/issues/247
+#
+# FIXME (-fno-sanitize=function)
+# systemd's hashmap implementation fails miserably with -fsanitize=function,
+# so let's disable it until [0] is resolved.
+#
+# [0] https://github.com/systemd/systemd/issues/29972
 
 meson setup "$BUILD_DIR" \
       --werror \
-      -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
+      -Dc_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
       -Dc_link_args="-shared-libasan" \
-      -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan' \
+      -Dcpp_args='-Og -fno-omit-frame-pointer -ftrapv -shared-libasan -fno-sanitize=function' \
       -Dcpp_link_args="-shared-libasan" \
       -Db_asneeded=false `# See the FIXME (--as-needed) above` \
       -Ddebug=true \
