@@ -181,11 +181,6 @@ fi
     # shellcheck disable=SC2064
     trap "[[ -d $BUILD_DIR/meson-logs ]] && cp -r $BUILD_DIR/meson-logs '$LOGDIR'" EXIT
 
-    # FIXME: binaries built with C9S's gcc crash on ppc64le due to stack smashing
-    #        when linked against both libasan and libcap. Until that's resolved,
-    #        skip the fuzz tests there
-    [[ "$(uname -m)" == ppc64le ]] && FUZZ_TESTS=false || FUZZ_TESTS=true
-
     # Skip ukify on ppc64le, since EFI is not supported there
     [[ "$(uname -m)" == ppc64le ]] && UKIFY=false || UKIFY=true
 
@@ -196,7 +191,7 @@ fi
         --werror \
         -Dlog-trace=true \
         -Dslow-tests=true \
-        -Dfuzz-tests="$FUZZ_TESTS" \
+        -Dfuzz-tests=true \
         -Dtests=unsafe \
         -Dinstall-tests=true \
         -Ddbuspolicydir=/etc/dbus-1/system.d \
