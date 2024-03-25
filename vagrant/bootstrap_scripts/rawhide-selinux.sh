@@ -40,8 +40,8 @@ setenforce 0
 sed -ri 's/^SELINUX=\w+$/SELINUX=permissive/' /etc/selinux/config
 cat /etc/selinux/config
 
+# Build & install latest systemd
 rm -fr "$BUILD_DIR"
-# Build phase
 meson setup "$BUILD_DIR" \
       --werror \
       -Dc_args='-fno-omit-frame-pointer -ftrapv' \
@@ -49,6 +49,7 @@ meson setup "$BUILD_DIR" \
       --optimization=g \
       -Dsysvinit-path=/etc/rc.d/init.d \
       -Drc-local=/etc/rc.d/rc.local \
+      -Ddefault-dnssec=no \
       -Dtests=true \
       -Dinstall-tests=true
 ninja -C "$BUILD_DIR" install
