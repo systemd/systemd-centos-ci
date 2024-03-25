@@ -46,7 +46,7 @@ pushd vagrant_cache
 if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_rawhide_selinux" ]]; then
     echo "Fetching Vagrant name URL for Fedora Rawhide"
 
-    if ! BOX_NAME="$(curl -s https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/ | grep -Po -m1 '(?<=")Fedora.*?vagrant-libvirt.box(?=")')"; then
+    if ! BOX_NAME="$(curl -s https://dl.fedoraproject.org/pub/fedora/linux/development/rawhide/Cloud/x86_64/images/ | grep -Po -m1 '(?<=")Fedora.*?vagrant.libvirt.box(?=")')"; then
         echo >&2 "Failed to fetch the box name for Fedora Rawhide (got: $BOX_NAME)"
         exit 1
     fi
