@@ -173,9 +173,6 @@ git_checkout_pr() {
         esac
     ) || return 1
 
-    # Initialize git submodules, if any
-    git submodule update --init --recursive
-
     _log "Checked out version: $(git describe)"
     git log -1
 }
