@@ -43,6 +43,7 @@ fi
 
 # Disable swap, since it seems to cause CPU soft lock-ups in some cases
 swapoff -av
+swapon --show
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 

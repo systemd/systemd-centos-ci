@@ -49,9 +49,8 @@ Vagrant.configure("2") do |config|
         # Collect output from a serial console into a file to make debugging easier
         # The -nographic option allows us to collect BIOS messages as well
         libvirt.qemuargs :value => "-nographic"
-        libvirt.qemuargs :value => "-serial"
         # This file needs to be collected later by vagrant-ci-wrapper.sh
-        libvirt.qemuargs :value => "file:/tmp/vagrant-rawhide-serial-console.log"
+        libvirt.serial :type => "file", :source => {:path => "/tmp/vagrant-arch-serial-console.log"}
 
         # Pass through /dev/random from the host to the VM
         libvirt.random :model => 'random'
@@ -63,7 +62,7 @@ Vagrant.configure("2") do |config|
         libvirt.machine_type = "q35"
 
         # Emulate UEFI using OVMF
-        libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+        libvirt.loader = "/usr/share/edk2/ovmf/OVMF_CODE.fd"
         libvirt.nvram = ovmf_nvram
 
         # Emulate TPM 2.0 using swtpm
@@ -73,7 +72,7 @@ Vagrant.configure("2") do |config|
     end
 
     config.trigger.before [:up, :provision] do |trigger|
-        trigger.run = {inline: "cp -u /usr/share/OVMF/OVMF_VARS.fd #{ovmf_nvram}"}
+        trigger.run = {inline: "cp -u /usr/share/edk2/ovmf/OVMF_VARS.fd #{ovmf_nvram}"}
     end
 
     config.trigger.after [:destroy] do |trigger|
