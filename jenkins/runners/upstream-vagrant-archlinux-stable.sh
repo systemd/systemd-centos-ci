@@ -33,7 +33,7 @@ fi
 git clone https://github.com/systemd/systemd-centos-ci
 cd systemd-centos-ci
 
-./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+./agent-control.py --pool metal-ec2-c5n-centos-9s-x86_64 \
                    --bootstrap-args='-s https://github.com/systemd/systemd-stable.git' \
                    --vagrant arch \
                    ${ARGS:+"${ARGS[@]}"}
