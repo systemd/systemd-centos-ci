@@ -502,6 +502,11 @@ def main():
                     token_file.flush()
                     ac.upload_file(token_file.name, "/.coveralls.token")
 
+            # Upgrade the hypervisor, so we get the latest QEMU & kernel
+            logging.info("PHASE 1.5: Upgrading the hypervisor")
+            ac.execute_remote_command("dnf -y --refresh upgrade")
+            ac.kexec_to_latest()
+
             # Setup Vagrant and run the tests inside VM
             logging.info("PHASE 2: Run tests in Vagrant VMs")
             command = f"{GITHUB_CI_REPO}/vagrant/vagrant-ci-wrapper.sh -d '{args.vagrant}' -r '{remote_ref}' {args.bootstrap_args}"
