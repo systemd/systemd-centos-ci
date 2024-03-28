@@ -191,6 +191,40 @@ centos_ensure_qemu_symlink() {
         return 1
     fi
 
+    # FIXME: workaround for intermittent QEMU segfaults when running TCG VMs in AWS on C9S
+    #
+    # See: https://issues.redhat.com/browse/RHEL-23844
+    if [[ "$(rpm -q --qf "%{release}" bash)" =~ .el9$ && "$(uname -m)" == x86_64 ]] && systemd-detect-virt -q; then
+        target="/bin/qemu-system-$(uname -m)"
+
+        cat >"$target" <<EOF
+#!/bin/bash
+set -ux
+
+for _ in {0..2}; do
+    # Hardcode the timeout invocation into the wrapper, since the upstream test suite runs it with --foreground,
+    # and with this wrapper in place qemu-kvm is no longer the "main" process (and timeout with --foreground won't
+    # touch children of the monitored process).
+    timeout 30m "$source" "\$@"
+    ec=\$?
+
+    # 128 + 11 (SIGSEGV)
+    if [[ \$ec -eq 139 ]]; then
+        continue
+    fi
+
+    exit \$ec
+done
+
+echo "QEMU crashed three times in a row, we're doomed"
+exit 1
+EOF
+        chmod +x "$target"
+        "$target" --version
+
+        return 0
+    fi
+
     systemd-detect-virt -q && target="/bin/qemu-system-$(uname -m)" || target=/bin/qemu-kvm
     if [[ ! -x "${target:?}" ]]; then
         ln -svf "${source:?}" "${target:?}"
@@ -378,7 +412,7 @@ coredumpctl_collect() {
     #   sleep/bash - intentional SIGABRT caused by TEST-57
     #   systemd-notify - intermittent (and intentional) SIGABRT caused by TEST-59
     #   test(-usr)?-dump - intentional coredumps from systemd-coredump tests in TEST-74
-    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(bash|gnome-shell|sleep|systemd-notify|test-execute|test(-usr)?-dump)$}"
+    local exclude_rx="${COREDUMPCTL_EXCLUDE_RX:-/(bash|gnome-shell|qemu-kvm|sleep|systemd-notify|test-execute|test(-usr)?-dump)$}"
     _log "Excluding coredumps matching '$exclude_rx'"
     if ! "$coredumpctl_bin" "${args[@]}" -F COREDUMP_EXE | grep -Ev "$exclude_rx" > "$tempfile"; then
         _log "No relevant coredumps found"
