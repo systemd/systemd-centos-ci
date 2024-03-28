@@ -152,13 +152,13 @@ Vagrant.configure("2") do |config|
     config.vm.provider :libvirt do |libvirt|
         libvirt.random :model => 'random'
         libvirt.machine_type = "q35"
-        libvirt.loader = "/usr/share/OVMF/OVMF_CODE.fd"
+        libvirt.loader = "/usr/share/edk2/ovmf/OVMF_CODE.fd"
         libvirt.nvram = "/tmp/OVMF_VARS.fd"
     end
 
 end
 EOF
-cp -fvL /usr/share/OVMF/OVMF_VARS.fd /tmp
+cp -fvL /usr/share/edk2/ovmf/OVMF_VARS.fd /tmp
 chmod o+rw /tmp/OVMF_VARS.fd
 vagrant up --no-tty --provider=libvirt
 # shellcheck disable=SC2016

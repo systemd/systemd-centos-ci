@@ -69,7 +69,7 @@ fi
 
 if ! vagrant plugin list | grep vagrant-libvirt; then
     # Install vagrant-libvirt dependencies
-    cmd_retry dnf -y install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
+    cmd_retry dnf -y --enablerepo crb install gcc libguestfs-tools-c libvirt libvirt-devel libgcrypt make qemu-kvm ruby-devel
     # Start libvirt daemon
     systemctl start libvirtd
     systemctl status libvirtd
@@ -88,9 +88,6 @@ fi
 vagrant --version
 vagrant plugin list
 
-# Install OVMF so we can enable UEFI in the Vagrant VMs
-# Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos8/
-cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos8-stream8/mrc0mmand-systemd-centos-ci-centos8-stream8.repo"
 cmd_retry dnf -y install edk2-ovmf
 
 # Configure NFS for Vagrant's shared folders

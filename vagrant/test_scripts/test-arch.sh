@@ -36,6 +36,7 @@ fi
 
 # Disable swap, since it seems to cause CPU soft lock-ups in some cases
 swapoff -av
+swapon --show
 
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
@@ -63,7 +64,7 @@ fi
 export STRIP_BINARIES=no
 
 # Initialize the 'base' image (default.img) on which the other images are based
-exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/var/tmp/systemd-test-TEST-01-BASIC"
+exectask "setup-the-base-image" "make -C test/TEST-01-BASIC clean setup TESTDIR=/tmp/systemd-test-TEST-01-BASIC"
 
 # Parallelized tasks
 EXECUTED_LIST=()
@@ -111,7 +112,7 @@ for t in test/TEST-??-*; do
     # can run them in parallel
     export TEST_PARALLELIZE=1
     # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    export TESTDIR="/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$OPTIMAL_QEMU_SMP
@@ -133,7 +134,7 @@ exectask_p_finish
 for t in "${FLAKE_LIST[@]}"; do
     ## Configure test environment
     # Set the test dir to something predictable so we can refer to it later
-    export TESTDIR="/var/tmp/systemd-test-${t##*/}"
+    export TESTDIR="/tmp/systemd-test-${t##*/}"
     # Set QEMU_SMP appropriately (regarding the parallelism)
     # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
     export QEMU_SMP=$(nproc)
@@ -145,13 +146,13 @@ for t in "${FLAKE_LIST[@]}"; do
     # Retried tasks are suffixed with an index, so update the $EXECUTED_LIST
     # array accordingly to correctly find the respective journals
     for ((i = 1; i <= TASK_RETRY_DEFAULT; i++)); do
-        [[ -d "/var/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
+        [[ -d "/tmp/systemd-test-${t##*/}_${i}" ]] && EXECUTED_LIST+=("${t}_${i}")
     done
 done
 
 # Save journals created by integration tests
 for t in "${EXECUTED_LIST[@]}"; do
-    testdir="/var/tmp/systemd-test-${t##*/}"
+    testdir="/tmp/systemd-test-${t##*/}"
     if [[ -f "$testdir/system.journal" ]]; then
         # Filter out test-specific coredumps which are usually intentional
         # Note: $COREDUMPCTL_EXCLUDE_MAP resides in common/utils.sh
