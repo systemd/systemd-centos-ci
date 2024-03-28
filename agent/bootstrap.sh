@@ -147,6 +147,18 @@ pushd systemd || { echo >&2 "Can't pushd to systemd"; exit 1; }
 
 git_checkout_pr "$REMOTE_REF"
 
+# XXX
+dnf remove -y qemu-kvm
+dnf builddep -y --enablerepo crb qemu-kvm
+dnf install -y bzip2
+git clone https://gitlab.com/qemu-project/qemu --branch staging-8.2
+pushd qemu
+./configure --target-list=x86_64-softmmu --enable-debug
+make -j "$(nproc)"
+./build/qemu-system-x86_64 --version
+ln -svf "$PWD/build/qemu-system-x86_64" /usr/bin/qemu-system-x86_64
+popd
+
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
 # Set SELinux to permissive on the test hosts to avoid false positives, but
