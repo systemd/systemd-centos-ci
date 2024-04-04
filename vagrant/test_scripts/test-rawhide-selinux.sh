@@ -14,6 +14,13 @@ export BUILD_DIR="${BUILD_DIR:-/systemd-meson-build}"
 # shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+at_exit() {
+    set +e
+    exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
+}
+
+trap at_exit EXIT
+
 pushd /build || { echo >&2 "Can't pushd to /build"; exit 1; }
 
 ## SETUP ##

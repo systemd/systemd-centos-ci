@@ -21,6 +21,13 @@ export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 # shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+at_exit() {
+    set +e
+    exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
+}
+
+trap at_exit EXIT
+
 bootctl status
 
 # Enable systemd-coredump
@@ -231,7 +238,4 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Summary
 show_task_summary
-
-exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
-
 finish_and_exit

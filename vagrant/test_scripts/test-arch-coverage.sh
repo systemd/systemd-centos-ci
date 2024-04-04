@@ -22,6 +22,13 @@ export COREDUMPCTL_BIN="$BUILD_DIR/coredumpctl"
 # shellcheck source=common/utils.sh
 . "$SCRIPT_DIR/utils.sh" || exit 1
 
+at_exit() {
+    set +e
+    exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
+}
+
+trap at_exit EXIT
+
 COVERAGE_DIR="$(mktemp -d)"
 if ! meson_get_bool "$BUILD_DIR" "b_coverage"; then
     echo >&2 "systemd is not built with -Db_coverage=true, can't collect coverage"
@@ -223,7 +230,4 @@ exectask "check_for_missing_coverage" "_check_for_missing_coverage"
 
 # Summary
 show_task_summary
-
-exectask "journalctl-testsuite" "journalctl -b -o short-monotonic --no-hostname --no-pager"
-
 finish_and_exit
