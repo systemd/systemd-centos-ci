@@ -71,7 +71,12 @@ popd
 # Force relabel on next boot
 fixfiles -v -F onboot
 
-dracut -f --regenerate-all
+# FIXME: with [0] merged we need to pull in libkmod explicitly; drop this once
+#        [1] lands in Fedora
+#
+# [0] https://github.com/systemd/systemd/pull/31131$
+# [1] https://github.com/dracut-ng/dracut-ng/pull/118
+dracut -f --install /usr/lib64/libkmod.so.2 --regenerate-all
 
 systemd-analyze set-log-level debug
 systemd-analyze set-log-target console
