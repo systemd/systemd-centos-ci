@@ -53,7 +53,6 @@ meson setup "$BUILD_DIR" \
       -Dtests=true \
       -Dinstall-tests=true
 ninja -C "$BUILD_DIR" install
-
 popd
 
 # Install the latest SELinux policy
@@ -71,12 +70,13 @@ popd
 # Force relabel on next boot
 fixfiles -v -F onboot
 
-# FIXME: with [0] merged we need to pull in libkmod explicitly; drop this once
-#        [1] lands in Fedora
-#
-# [0] https://github.com/systemd/systemd/pull/31131$
-# [1] https://github.com/dracut-ng/dracut-ng/pull/118
-dracut -f --install /usr/lib64/libkmod.so.2 --regenerate-all
+# Build & install latest dracut-ng
+git clone https://github.com/dracut-ng/dracut-ng
+pushd dracut-ng
+./configure
+make -j "$(nproc)"
+make install
+dracut --version
 
 systemd-analyze set-log-level debug
 systemd-analyze set-log-target console
