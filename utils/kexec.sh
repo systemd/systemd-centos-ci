@@ -9,7 +9,7 @@ if [[ "${1:-}" == "-u" ]]; then
 fi
 
 RUNNING_KERNEL="$(uname -r)"
-LATEST_KERNEL="$(rpm -q kernel --qf '%{EVR}.%{ARCH}\n' | sort -Vr | head -n1)"
+LATEST_KERNEL="$(rpm -q kernel --qf '%{VERSION}-%{RELEASE}.%{ARCH}\n' | sort -Vr | head -n1)"
 
 echo "Running kernel: $RUNNING_KERNEL"
 echo "Latest installed kernel: $LATEST_KERNEL"
