@@ -161,7 +161,9 @@ class AgentControl():
         logging.info("Executing a REMOTE command on node '%s': %s", self.node, command)
         try:
             rc = self.execute_local_command(command_wrapper)
+            logging.info(f"Remote command exited with {rc}")
         except AlarmException:
+            logging.info("Remote command was interrupted by timeout")
             # Delay the timeout exception, so we can fetch artifacts first
             timeout = True
 
