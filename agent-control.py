@@ -109,7 +109,7 @@ class AgentControl():
 
         return proc.wait()
 
-    def execute_remote_command(self, command, expected_rc=0, artifacts_dir=None, ignore_rc=False):
+    def execute_remote_command(self, command, expected_rcode=0, artifacts_dir=None, ignore_rc=False):
         """Execute a command on a remote host
 
         Technically the function wraps the command in an ssh command and executes
@@ -119,7 +119,7 @@ class AgentControl():
         -------
         command : str
             Command to execute on the remote host
-        expected_rc : int (default: 0)
+        expected_rcode : int or list(int) (default: 0)
             Expected return code
         artifacts_dir : str (default: None)
             If not None and `self.artifacts_storage` is set, all files from the
@@ -136,11 +136,16 @@ class AgentControl():
 
         Throws:
         -------
-        An exception if the `ignore_rc` is False and the return code != `expected_rc`
+        An exception if the `ignore_rc` is False and the return code != `expected_rcode`
         """
         assert self.node, "Can't continue without a valid node"
 
         timeout = False
+
+        if isinstance(expected_rcode, list):
+            expected_rcodes = expected_rcode
+        else:
+            expected_rcodes = [expected_rcode]
 
         command_wrapper = [
             "/usr/bin/ssh", "-t",
@@ -169,9 +174,9 @@ class AgentControl():
         if timeout:
             raise AlarmException()
 
-        if not ignore_rc and rc != expected_rc:
+        if not ignore_rc and rc not in expected_rcodes:
             raise RuntimeError("Remote command exited with an unexpected return code "
-                               f"(got: {rc}, expected: {expected_rc}), bailing out")
+                               f"(got: {rc}, expected: {expected_rcode}), bailing out")
         return rc
 
     def fetch_artifacts(self, remote_dir, local_dir):
@@ -272,7 +277,7 @@ class AgentControl():
         assert self.node, "Can't continue without a valid node"
 
         logging.info("Rebooting node %s using kexec", self.node)
-        self.execute_remote_command(f"{GITHUB_CI_REPO}/utils/kexec.sh {args}", 255, ignore_rc=True)
+        self.execute_remote_command(f"{GITHUB_CI_REPO}/utils/kexec.sh {args}", [0, 255])
 
         self.wait_for_node(ping_attempts=10, ssh_attempts=10)
 
