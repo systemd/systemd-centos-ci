@@ -131,8 +131,6 @@ fi
 # Set timeouts for QEMU and nspawn tests to kill them in case they get stuck
 export QEMU_TIMEOUT=1200
 export NSPAWN_TIMEOUT=1200
-# Set QEMU_SMP to speed things up
-export QEMU_SMP=$(nproc)
 # Arch Linux requires booting with initrd, as all commonly used filesystems
 # are compiled in as modules
 export SKIP_INITRD=no
@@ -212,6 +210,9 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         fi
 
         export TEST_PARALLELIZE=1
+        # Set QEMU_SMP appropriately (regarding the parallelism)
+        # OPTIMAL_QEMU_SMP is part of the common/task-control.sh file
+        export QEMU_SMP=$OPTIMAL_QEMU_SMP
         # Set the test dir to something predictable so we can refer to it later
         export TESTDIR="/var/tmp/systemd-test-${t##*/}"
 
