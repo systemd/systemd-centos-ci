@@ -70,3 +70,10 @@ ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-
 ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:systemd-centos-ci-centos9"
 LOCAL_REPO_ID="mrc0mmand-systemd-centos-ci-centos9-stream9"
 sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64 aarch64 ppc64le s390x"
+
+# centos-9-stream patched kernel (temporary)
+# FIXME: drop once https://issues.redhat.com/browse/RHEL-32384 is resolved
+ORIGINAL_REPO="https://copr.fedorainfracloud.org/coprs/mrc0mmand/c9s-kernel-debug/repo/centos-stream-9/mrc0mmand-c9s-kernel-debug-centos-stream-9.repo"
+ORIGINAL_REPO_ID="copr:copr.fedorainfracloud.org:mrc0mmand:c9s-kernel-debug"
+LOCAL_REPO_ID="mrc0mmand-c9s-kernel-debug-stream9"
+sync_repo "$ORIGINAL_REPO" "$ORIGINAL_REPO_ID" "$LOCAL_REPO_ID" "x86_64"
