@@ -504,6 +504,9 @@ def main():
 
             # Upgrade the hypervisor, so we get the latest QEMU & kernel
             logging.info("PHASE 1.5: Upgrading the hypervisor")
+            # FIXME: drop the custom kernel once RHEL-32384 is resolved
+            kernel_repo = "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-c9s-kernel-debug-stream9/mrc0mmand-c9s-kernel-debug-stream9.repo"
+            ac.execute_remote_command(f"dnf -y config-manager --add-repo {kernel_repo}")
             ac.execute_remote_command("dnf -y --refresh upgrade")
             ac.kexec_to_latest()
 
