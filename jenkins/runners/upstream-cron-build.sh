@@ -41,12 +41,12 @@ cd systemd-centos-ci
 run_arch_remaining_sanitizer_job() {
     # Run the "leftover" ASan/UBSan job (i.e. the one which is not run by
     # the `upstream-vagrant-archlinux-sanitizers` job for each PR)
-    ./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+    ./agent-control.py --pool metal-ec2-c5n-centos-9s-x86_64 \
                        --vagrant arch-sanitizers-gcc \
                        --no-index \
                        ${ARGS:+"${ARGS[@]}"}
 
-    #./agent-control.py --pool metal-ec2-c5n-centos-8s-x86_64 \
+    #./agent-control.py --pool metal-ec2-c5n-centos-9s-x86_64 \
     #                   --vagrant arch-sanitizers-clang \
     #                   --no-index \
     #                   ${ARGS:+"${ARGS[@]}"}
