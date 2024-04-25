@@ -194,6 +194,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-71-HOSTNAME       # systemd-hostnamed
         test/TEST-72-SYSUPDATE      # systemd-sysupdate
         test/TEST-73-LOCALE         # systemd-localed
+        test/TEST-74-AUX-UTILS      # auxiliary utils (busctl, sd-delta, sd-mount, ...)
         test/TEST-75-RESOLVED       # systemd-resolved
     )
 
