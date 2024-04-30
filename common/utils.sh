@@ -523,7 +523,7 @@ lcov_collect() {
     local build_dir="${2:?}"
     shift 2
 
-    if ! lcov "$@" --directory "$build_dir" --capture --output-file "$output_file"; then
+    if ! lcov "$@" --directory "$build_dir" --capture --exclude "*.gperf" --output-file "$output_file"; then
         _err "Failed to capture coverage data from '$build_dir'"
         return 1
     fi
