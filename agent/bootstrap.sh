@@ -314,9 +314,9 @@ done
 coredumpctl_collect
 
 # Configure kdump
-kdumpctl status || kdumpctl restart
-kdumpctl showmem
-kdumpctl rebuild
+#kdumpctl status || kdumpctl restart
+#kdumpctl showmem
+#kdumpctl rebuild
 
 echo "-----------------------------"
 echo "- REBOOT THE MACHINE BEFORE -"
