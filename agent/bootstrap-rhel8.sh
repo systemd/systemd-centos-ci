@@ -77,7 +77,7 @@ ADDITIONAL_DEPS=(
 
 # Install and enable EPEL
 cmd_retry dnf -y install epel-release epel-next-release dnf-plugins-core
-cmd_retry dnf config-manager --enable epel --enable powertools
+cmd_retry dnf config-manager --enable epel --enable crb
 # Upgrade the machine to get the most recent environment
 cmd_retry dnf -y upgrade
 # Install systemd's build dependencies
@@ -186,7 +186,10 @@ fi
             -Dslow-tests=true
             -Dtests=unsafe
             -Dinstall-tests=true
-            --werror
+            # FIXME?: --werror
+            # gcc in RHEL 9 has some additional warnings enabled for which we don't have the respective
+            # patches in RHEL 8's systemd
+            #--werror
             -Dman=true
             -Dhtml=true
     )
@@ -220,6 +223,27 @@ else
     CGROUP_KERNEL_ARGS="systemd.unified_cgroup_hierarchy=0 systemd.legacy_systemd_cgroup_controller=1"
 fi
 
+# Disable irqbalance, as we don't really need it and it sometimes SIGTRAPs, causing spurious
+# coredumps
+systemctl disable --now irqbalance
+
+# dbus-broker on RHEL 9 is not compatible with systemd < 243, so replace it with dbus-daemon
+dnf -y install dbus-daemon
+systemctl disable dbus-broker
+systemctl disable --global dbus-broker
+systemctl enable dbus-daemon
+systemctl enable --global dbus-daemon
+
+# Several test/test-functions tweaks to make it work with RHEL 9
+#
+# RHEL 8's test/test-functions overwrites $QEMU_OPTIONS instead of appending to
+# it, so setting it as usual won't work. Let's, temporarily, patch
+# test/test-functions directly
+sed -i '0,/QEMU_OPTIONS=".*/s//&\n-cpu Nehalem \\/' test/test-functions
+# Make it work on systems where dbus-broker is the default
+sed -i '/dbus.service/d' test/test-functions
+sed -i '/dbus.socket/a\    inst /etc/systemd/system/dbus.service' test/test-functions
+
 # Let's check if the new systemd at least boots before rebooting the system
 (
     # Ensure the initrd contains the same systemd version as the one we're
@@ -228,7 +252,7 @@ fi
     # comments in `testsuite.sh` for the explanation
     export INITRD="/var/tmp/ci-sanity-initramfs-$(uname -r).img"
     cp -fv "/boot/initramfs-$(uname -r).img" "$INITRD"
-    dracut --kver "$LATEST_KERNEL" -o "multipath rngd" --filesystems ext4 --rebuild "$INITRD"
+    dracut --kver "$LATEST_KERNEL" -o "multipath rngd dbus-broker" -a dbus-daemon --filesystems ext4 --rebuild "$INITRD"
 
     centos_ensure_qemu_symlink
 
@@ -243,7 +267,11 @@ fi
     export QEMU_TIMEOUT=600
     # Disable nspawn version of the test
     export TEST_NO_NSPAWN=1
-    export QEMU_OPTIONS="-cpu max"
+    # Work around 'Fatal glibc error: CPU does not support x86-64-v2'
+    # See:
+    #   - https://bugzilla.redhat.com/show_bug.cgi?id=2060839
+    #   - https://access.redhat.com/solutions/6833751
+    export QEMU_OPTIONS="-cpu Nehalem"
 
     make -C test/TEST-01-BASIC clean setup run clean
 
@@ -257,7 +285,7 @@ fi
 SYSTEMD_LOG_LEVEL=debug systemctl daemon-reexec
 [[ -n "${XDG_RUNTIME_DIR:-}" ]] && SYSTEMD_LOG_LEVEL=debug systemctl --user daemon-reexec
 
-dracut -f --regenerate-all
+dracut -o dbus-broker -a dbus-daemon -f --regenerate-all
 
 # Check if the new dracut image contains the systemd module to avoid issues
 # like systemd/systemd#11330
