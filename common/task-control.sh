@@ -179,7 +179,7 @@ exectask_retry() {
     local task_command="${2:?Missing task command}"
     local retries="${3:-$TASK_RETRY_DEFAULT}"
     local ec=0
-    local orig_testdir
+    local orig_testdir orig_nspawn_arguments
 
     for ((i = 1; i <= retries; i++)); do
         local logfile="$LOGDIR/${task_name}_${i}.log"
@@ -202,7 +202,8 @@ exectask_retry() {
             rm -f "$TESTDIR/pass"
 
             # Also, set a unique name for each nspawn container to prevent scope clash
-            export NSPAWN_ARGUMENTS="--machine=${task_name}--${i}"
+            orig_nspawn_arguments="${orig_nspawn_arguments:-$NSPAWN_ARGUMENTS}"
+            export NSPAWN_ARGUMENTS="$orig_nspawn_arguments --machine=${task_name}--${i}"
         fi
 
         # shellcheck disable=SC2086
