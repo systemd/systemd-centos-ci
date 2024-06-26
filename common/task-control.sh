@@ -202,7 +202,7 @@ exectask_retry() {
             rm -f "$TESTDIR/pass"
 
             # Also, set a unique name for each nspawn container to prevent scope clash
-            orig_nspawn_arguments="${orig_nspawn_arguments:-$NSPAWN_ARGUMENTS}"
+            orig_nspawn_arguments="${orig_nspawn_arguments:-${NSPAWN_ARGUMENTS:-}}"
             export NSPAWN_ARGUMENTS="$orig_nspawn_arguments --machine=${task_name}--${i}"
         fi
 
