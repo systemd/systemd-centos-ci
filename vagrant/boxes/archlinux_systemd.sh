@@ -29,9 +29,9 @@ pacman --needed --noconfirm -Sy base base-devel bpf btrfs-progs acl audit bash-c
 #       the GNU one doesn't support -U option required by test/TEST-12-ISSUE-3171
 pacman --needed --noconfirm -S coreutils bind busybox cpio dhclient dhcp dhcpcd diffutils dnsmasq dosfstools e2fsprogs erofs-utils \
     evemu expect fsverity-utils gdb gnutls inetutils jq knot keyutils lcov libdwarf libelf mdadm mtools net-tools nfs-utils \
-    nftables ntp nvme-cli open-iscsi openbsd-netcat opensc perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect \
-    python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress time tpm2-tools \
-    softhsm swtpm vim wireguard-tools qemu-base
+    nftables nmap ntp nvme-cli open-iscsi openbsd-netcat opensc perl-capture-tiny perl-datetime perl-json-xs python-pefile python-pexpect \
+    python-psutil python-pyelftools python-pyparsing python-pytest rsync screen socat squashfs-tools strace stress stress-ng time \
+    tpm2-tools softhsm swtpm vim wireguard-tools qemu-base
 # Install SELinux-aware packages
 # See:
 #   - https://github.com/archlinuxhardened/selinux
