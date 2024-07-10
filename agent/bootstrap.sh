@@ -111,6 +111,7 @@ ADDITIONAL_DEPS=(
     squashfs-tools
     strace
     stress # EPEL
+    stress-ng
     time
     tpm2-tools
     tpm2-tss-devel
