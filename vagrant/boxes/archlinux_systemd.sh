@@ -48,6 +48,10 @@ yes y | pacman --needed -Sy checkpolicy coreutils-selinux findutils-selinux libs
     pambase-selinux policycoreutils psmisc-selinux selinux-refpolicy-arch semodule-utils util-linux-selinux
 set -o pipefail
 
+# FIXME: downgrade screen to < 5.0.0, as it's a bit broken
+# See: https://savannah.gnu.org/bugs/?66171
+pacman --noconfirm -U https://archive.archlinux.org/packages/s/screen/screen-4.9.1-2-x86_64.pkg.tar.zst
+
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
 echo -e 'vagrant\nvagrant' | passwd
