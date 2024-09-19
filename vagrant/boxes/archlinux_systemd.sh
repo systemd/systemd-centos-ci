@@ -52,6 +52,10 @@ set -o pipefail
 # See: https://savannah.gnu.org/bugs/?66171
 pacman --noconfirm -U https://archive.archlinux.org/packages/s/screen/screen-4.9.1-2-x86_64.pkg.tar.zst
 
+# FIXME: downgrade tzdata to 2024a, since 2024b breaks test-time-util
+# See: https://github.com/systemd/systemd/issues/34471
+pacman --noconfirm -U https://archive.archlinux.org/packages/t/tzdata/tzdata-2024a-2-x86_64.pkg.tar.zst
+
 # Unlock root account and set its password to 'vagrant' to allow root login
 # via ssh
 echo -e 'vagrant\nvagrant' | passwd
