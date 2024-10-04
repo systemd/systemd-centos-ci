@@ -61,10 +61,7 @@ pushd selinux-policy
 dnf -y builddep selinux-policy.spec
 ./make-rhat-patches.sh
 fedpkg local
-# Temporarily use dnf4 (even though the binary says dnf-3...) to install
-# the just built RPMs until [0] is resolved
-# [0] https://bugzilla.redhat.com/show_bug.cgi?id=2225014
-dnf-3 install -y noarch/selinux-policy-*
+dnf install -y noarch/selinux-policy-*
 popd
 
 # Force relabel on next boot
@@ -75,6 +72,10 @@ git clone https://github.com/dracut-ng/dracut-ng
 pushd dracut-ng
 ./configure
 make -j "$(nproc)"
+# FIXME: newer dracut moved test modules under the test/ directory and created
+#         symlinks to the original location, which causes some issues
+# See: https://github.com/dracut-ng/dracut-ng/issues/695
+rm -rf /usr/lib/dracut/modules.d/80test*
 make install
 dracut --version
 
