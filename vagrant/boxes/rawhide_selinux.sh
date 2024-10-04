@@ -17,8 +17,8 @@ fi
 dnf upgrade -y
 
 # Install build & test dependencies
-dnf install -y attr busybox cryptsetup dnf5-plugins dosfstools fedpkg git nc qemu-kvm rpm-build rpmdevtools rust socat \
-               strace time tmt tpm2-tss-devel 'python3dist(jinja2)'
+dnf install -y attr busybox cryptsetup dnf5-plugins dosfstools fedpkg git jq nc qemu-kvm rpm-build rpmdevtools rust socat \
+               strace time tmt tpm2-tss-devel util-linux-script 'python3dist(jinja2)'
 dnf builddep -y dracut systemd
 
 # Unlock root account and set its password to 'vagrant' to allow root login
