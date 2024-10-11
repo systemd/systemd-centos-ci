@@ -13,6 +13,10 @@ if ! dnf -y update fedora-repos fedora-gpg-keys; then
       update fedora-repos fedora-gpg-keys
 fi
 
+# FIXME: disable the openh264 repo, since it has broken signatures on current Rawhide
+# See: https://pagure.io/releng/issue/12275
+dnf config-manager setopt fedora-cisco-openh264.enabled=0
+
 # Upgrade the system
 dnf upgrade -y
 
