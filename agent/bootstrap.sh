@@ -131,6 +131,9 @@ cmd_retry dnf -y config-manager --enable epel --enable epel-next --enable crb
 # Local mirror of https://copr.fedorainfracloud.org/coprs/mrc0mmand/systemd-centos-ci-centos9/
 cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.cloud.ci.centos.org/job/reposync/lastSuccessfulBuild/artifact/repos/mrc0mmand-systemd-centos-ci-centos9-stream9/mrc0mmand-systemd-centos-ci-centos9-stream9.repo"
 cmd_retry dnf -y update
+# FIXME: temporarily skip the crb-source repo, since it currently has borked signatures
+#        (and we don't need it in this particular case)
+dnf config-manager --save --setopt crb-source.skip_if_unavailable=1
 # --skip-unavailable is necessary for archs without gnu-efi (like ppc64le)
 cmd_retry dnf -y --skip-unavailable builddep systemd
 cmd_retry dnf -y install "${ADDITIONAL_DEPS[@]}"
