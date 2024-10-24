@@ -342,8 +342,10 @@ coredumpctl_init() {
     # is never set. Let's work around this by sourcing the file explicitly if
     # it exists
     if [[ -f /etc/profile.d/debuginfod.sh ]]; then
+        set +u
         # shellcheck source=/dev/null
         source /etc/profile.d/debuginfod.sh
+        set -u
     fi
 
     return 0
