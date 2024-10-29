@@ -143,6 +143,9 @@ if rpm -q setroubleshoot-server; then
     dnf -y remove setroubleshoot-server
 fi
 
+# FIXME: pin tzdata to 2024a-2.el9.noarch until https://github.com/systemd/systemd/issues/34471 is resolved.
+cmd_retry dnf -y downgrade tzdata-2024a-2.el9.noarch
+
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 echo "Cloning repo: $REPO_URL"
