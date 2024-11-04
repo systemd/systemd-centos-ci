@@ -62,7 +62,7 @@ if ! exectask "TEST-06-SELINUX" "make -C test/TEST-06-SELINUX clean setup run"; 
 fi
 
 # systemd-related tests from the SELinux test suite
-exectask "fedora-selinux-testsuite" "tmt -vvv --root selinux run --id fedora-selinux-testsuite plan --name systemd"
+exectask "fedora-selinux-testsuite" "tmt -vvv --feeling-safe --root selinux run --id fedora-selinux-testsuite plan --name systemd"
 # Note: the --include "*/" rule is important, otherwise the following --exclude '*' rule excludes
 #       all subdirectories before they can be matched by the first --include '*.txt' rule. This also
 #       causes all empty directories to by copied over as well, but that's mitigated by
