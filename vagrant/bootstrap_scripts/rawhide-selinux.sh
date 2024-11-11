@@ -72,11 +72,9 @@ git clone https://github.com/dracut-ng/dracut-ng
 pushd dracut-ng
 ./configure
 make -j "$(nproc)"
-# FIXME: newer dracut moved test modules under the test/ directory and created
-#         symlinks to the original location, which causes some issues
-# See: https://github.com/dracut-ng/dracut-ng/issues/695
-rm -rf /usr/lib/dracut/modules.d/80test*
 make install
+# Fix SELinux labels on module files
+restorecon -Rv /usr/lib/dracut
 dracut --version
 
 systemd-analyze set-log-level debug
