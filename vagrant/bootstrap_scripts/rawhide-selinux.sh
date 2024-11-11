@@ -77,6 +77,8 @@ make -j "$(nproc)"
 # See: https://github.com/dracut-ng/dracut-ng/issues/695
 rm -rf /usr/lib/dracut/modules.d/80test*
 make install
+# Fix SELinux labels on module files
+restorecon -Rv /usr/lib/dracut
 dracut --version
 
 systemd-analyze set-log-level debug
