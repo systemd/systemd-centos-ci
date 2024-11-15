@@ -548,7 +548,9 @@ lcov_collect() {
 # Returns:
 #   0 on success, 1 otherwise (i.e. no reports found, invalid data, etc.)
 lcov_merge() {
-    local lcov_args=()
+    # lcov 2.1 added more consistency checks that trip over coverage collected from systemd, as the coverage
+    # collected during shutdown might not be complete; let's just ignore the errors for now
+    local lcov_args=(--ignore-errors inconsistent)
     local file
     local output_file="${1:?}"
     shift
