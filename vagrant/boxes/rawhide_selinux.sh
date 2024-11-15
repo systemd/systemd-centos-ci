@@ -20,6 +20,8 @@ dnf config-manager setopt fedora-cisco-openh264.enabled=0
 # Upgrade the system
 dnf upgrade -y
 
+# Install NFS tools required by Vagrant's "synced folder" functionality
+dnf install -y nfs-utils libnfs-utils portmap
 # Install build & test dependencies
 dnf install -y attr busybox cryptsetup dnf5-plugins dosfstools fedpkg git jq nc qemu-kvm rpm-build rpmdevtools rust socat \
                strace time tmt tpm2-tss-devel util-linux-script 'python3dist(jinja2)'
