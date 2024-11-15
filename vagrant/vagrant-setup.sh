@@ -8,7 +8,7 @@ LIB_ROOT="$(dirname "$0")/../common"
 # shellcheck source=common/utils.sh
 . "$LIB_ROOT/utils.sh" || exit 1
 
-VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.4.1/vagrant-2.4.1-1.x86_64.rpm"
+VAGRANT_PKG_URL="https://releases.hashicorp.com/vagrant/2.4.3/vagrant-2.4.3-1.x86_64.rpm"
 WORKAROUNDS_DIR="$(dirname "$(readlink -f "$0")")/workarounds"
 
 set -eu
