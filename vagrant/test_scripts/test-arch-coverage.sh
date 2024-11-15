@@ -197,7 +197,7 @@ exectask "coredumpctl_collect" "coredumpctl_collect"
 
 # Merge all "coverage-info" files from the integration tests into one file
 exectask "lcov-merge-coverage" "lcov_merge everything.coverage-info $COVERAGE_DIR"
-exectask "lcov-dump-coverage-report" "lcov --list everything.coverage-info"
+exectask "lcov-dump-coverage-report" "lcov --ignore-errors inconsistent --list everything.coverage-info"
 # Coveralls repo token is set via the .coveralls.yml configuration file generated
 # in vagrant/vagrant-ci-wrapper.sh
 exectask "coveralls-upload" "coveralls report --format=lcov everything.coverage-info"
