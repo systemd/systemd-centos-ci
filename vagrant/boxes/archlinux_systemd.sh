@@ -169,19 +169,18 @@ MACHINE_ID="$(</etc/machine-id)"
 # we return non-zero if we, for whatever reason, fail to parse the version, just to make
 # debugging easier.
 KERNEL_VER="$(pacman -Ql linux | grep vmlinuz | sed -nr 's/^.+\/([^/]+)\/vmlinuz$/\1/p;tx;q1;:x')"
+BOOT="$(bootctl --print-boot-path)"
 
 bootctl install
-cat >/efi/loader/entries/arch.conf <<EOF
+cat >"$BOOT/loader/entries/arch.conf" <<EOF
 title ArchLinux
 linux /$MACHINE_ID/$KERNEL_VER/linux
 initrd /$MACHINE_ID/$KERNEL_VER/initrd
 options root=UUID=$(findmnt -n -o UUID /) rw console=ttyS0 net.ifnames=0
 EOF
 # Follow the recommended layout from the Boot Loader Specification
-mkdir -p "/efi/$MACHINE_ID/$KERNEL_VER"
-mv -v /boot/vmlinuz-linux "/efi/$MACHINE_ID/$KERNEL_VER/linux"
-mv -v /boot/initramfs-linux.img "/efi/$MACHINE_ID/$KERNEL_VER/initrd"
+mkdir -p "$BOOT/$MACHINE_ID/$KERNEL_VER"
+mv -v /boot/vmlinuz-linux "$BOOT/$MACHINE_ID/$KERNEL_VER/linux"
+mv -v /boot/initramfs-linux.img "$BOOT/$MACHINE_ID/$KERNEL_VER/initrd"
 bootctl status
 pacman -Rcnsu --noconfirm grub
-# shellcheck disable=SC2114
-rm -rf /boot

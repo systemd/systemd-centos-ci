@@ -103,7 +103,7 @@ if [[ "${VAGRANT_FILE##*/}" == "Vagrantfile_archlinux_systemd" ]]; then
     vagrant ssh -c 'lsblk; df -h /'
     # Also, sanity-check the whole BLS stuff
     # shellcheck disable=SC2016
-    vagrant ssh -c 'sudo bash -xec "ls -lR /efi; cat /etc/machine-id; [[ -e /efi/$(</etc/machine-id)/$(uname -r)/linux ]]"'
+    vagrant ssh -c 'sudo bash -xec "ls -lR $(bootctl -x); cat /etc/machine-id; [[ -e $(bootctl -x)/$(</etc/machine-id)/$(uname -r)/linux ]]"'
     vagrant halt
 fi
 
