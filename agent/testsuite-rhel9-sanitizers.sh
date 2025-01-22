@@ -40,7 +40,7 @@ else
 fi
 
 # Dump current ASan config
-ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}help=1" "$BUILD_DIR/systemctl" is-system-running &>"$LOGDIR/asan_config.txt"
+ASAN_OPTIONS="${ASAN_OPTIONS:+$ASAN_OPTIONS:}help=1" "$BUILD_DIR/systemctl" is-active systemd-journald.service &>"$LOGDIR/asan_config.txt"
 
 # FIXME: test-execute
 # This test occasionally timeouts when running under sanitizers. Until the root
