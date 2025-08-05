@@ -453,7 +453,7 @@ def main():
             remote_ref = ""
 
         # Setup artifacts storage
-        artifacts_dir = tempfile.mkdtemp(prefix="artifacts_", dir=".")
+        artifacts_dir = os.path.relpath(tempfile.mkdtemp(prefix="artifacts_", dir="."))
         ac.artifacts_storage = artifacts_dir
 
         if not "centos-7-" in args.pool:
