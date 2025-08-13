@@ -126,9 +126,6 @@ cmd_retry dnf -y config-manager --add-repo "https://jenkins-systemd.apps.ocp.clo
 cmd_retry dnf -y install --enablerepo epel,epel-next qemu-kvm scsi-target-utils
 cmd_retry dnf -y config-manager --set-disabled "mrc0mmand-systemd-centos-ci-centos9-stream9"
 
-# FIXME: pin tzdata to 2024a-2.el9.noarch until https://github.com/systemd/systemd/issues/34471 is resolved.
-cmd_retry dnf -y downgrade tzdata-2024a-2.el9.noarch
-
 # Fetch the upstream systemd repo
 test -e systemd && rm -rf systemd
 git clone "$REPO_URL" systemd
