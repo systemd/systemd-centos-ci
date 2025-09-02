@@ -88,6 +88,15 @@ import sys
 sys.exit(77)
 EOF
 
+# FIXME (also not really): test-fs-util with newer kernel
+# This test fails with newer kernels, because we're missing a couple of patches in RHEL 8. Since there's no
+# CentOS 8 (nor CentOS Stream 8), we run the tests on C9S and hit this issue. It's very unlikely we'll backport
+# the necessary patches to RHEL 8, so drop the failing test for now.
+#
+# See:
+#   - https://github.com/redhat-plumbers/systemd-rhel8/issues/434
+sed -i '/a = strjoina(p, "\/lnk");/,/timespec_load/d' src/test/test-fs-util.c
+
 # Run the internal unit tests (make check)
 exectask "ninja-test" "meson test -C build --print-errorlogs --timeout-multiplier=3"
 # Copy over meson test artifacts
