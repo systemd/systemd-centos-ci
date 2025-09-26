@@ -166,7 +166,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         test/TEST-81-GENERATORS     # various systemd generators
     )
 
-    for t in "${INTEGRATION_TESTS[@]}"; do
+    for t in test/TEST-??-*; do
         # Some of the newer tests might not be available in stable branches,
         # so let's skip them instead of failing
         if [[ ! -d "$t" ]]; then
