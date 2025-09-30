@@ -185,6 +185,7 @@ if [[ $NSPAWN_EC -eq 0 ]]; then
         # We don't ship homed in RHEL
         #test/TEST-46-HOMED          # systemd-homed
         test/TEST-50-DISSECT        # systemd-dissect
+        test/TEST-53-TIMER
         test/TEST-54-CREDS          # credentials & stuff
         test/TEST-55-OOMD           # systemd-oomd
         test/TEST-58-REPART         # systemd-repart
