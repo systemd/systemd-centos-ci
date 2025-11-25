@@ -77,16 +77,10 @@ sed -i '/TEST_LIST=/aTEST_LIST=("${TEST_LIST[@]/\\/usr\\/lib\\/systemd\\/tests\\
 #   https://github.com/systemd/systemd/commit/a1e3f0f38b43e68ff9ea33ab1935aed4edf6ed7f
 echo 'int main(void) { return 77; }' >src/test/test-barrier.c
 
-# FIXME (not really): test-execute and parse-hwdb
-# Both tests are not compatible with newer packages on RHEL 9 and backporting all the necessary stuff would
-# be a major PITA. Since we run both of these tests in other CIs (both externally and internally), let's just
-# not bother here.
+# FIXME (not really): test-execute
+# This test is not compatible with newer packages on RHEL 9 and backporting all the necessary stuff would be a
+# major PITA. Since we run it in other CIs (both externally and internally), let's just not bother here.
 echo 'int main(void) { return 77; }' >src/test/test-execute.c
-cat >hwdb/parse_hwdb.py <<EOF
-#!/usr/bin/python3
-import sys
-sys.exit(77)
-EOF
 
 # FIXME (also not really): test-fs-util with newer kernel
 # This test fails with newer kernels, because we're missing a couple of patches in RHEL 8. Since there's no
