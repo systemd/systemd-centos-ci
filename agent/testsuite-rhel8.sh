@@ -155,6 +155,19 @@ for t in test/TEST-??-*; do
     # about them, so let's tell it to whitelist all known syscalls
     export NSPAWN_ARGUMENTS="--system-call-filter=@known"
 
+    if grep 'seccomp_init_for_arch(.*SCMP_ACT_ERRNO(EPERM)' src/nspawn/nspawn-seccomp.c; then
+        # In very old RHEL 8 systemd versions (8.6.0 and older) we're missing patch series [0] that configure
+        # nspawn's seccomp filters to return ENOSYS instead of EPERM for unknown syscalls. And given we have
+        # to run the CI for RHEL 8 systemd on C9S, we get a bunch of unknown syscalls when running nspawn which
+        # breaks the nspawn runs (the workaround above with $NSPAWN_ARGUMENTS doesn't help here).
+        #
+        # Given the series we're missing is not trivial to backport, especially into such old systemd versions,
+        # let's just skip the nspawn runs there to have at least some test coverage.
+        #
+        # [0] https://github.com/redhat-plumbers/systemd-rhel8/pull/286
+        export TEST_NO_NSPAWN=1
+    fi
+
     # Suffix the $TESTDIR of each retry with an index to tell them apart
     export MANGLE_TESTDIR=1
     # FIXME: retry each task again if it fails (i.e. run each task twice at most)
