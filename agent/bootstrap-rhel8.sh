@@ -103,11 +103,10 @@ git remote add upstream "https://github.com/systemd/systemd"
 git fetch upstream
 # test: make TEST-27 non-racy
 git show 324ca05459422b55cb6fa04318552541159c239a | git apply --verbose --recount || :
-if git diff --quiet ..remotes/origin/rhel-8.2.0 || git diff --quiet ..remotes/origin/rhel-8.4.0; then
+if grep -q "static int request_parse_arguments_iterator(" src/journal-remote/journal-gatewayd.c; then
     # Fix build with µhttpd 0.9.71
     git show ca86de228e19cea268ec3eeabc9097d7c28fbf24 | git apply --verbose --recount || :
 fi
-
 
 # It's impossible to keep the local SELinux policy database up-to-date with
 # arbitrary pull request branches we're testing against.
